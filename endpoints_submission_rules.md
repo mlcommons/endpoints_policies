@@ -479,25 +479,113 @@ An **Available** software component must be well-supported for general use:
 - **Binary/closed-source:** The binary must be made available as a release or as a "beta" release with a public commitment that optimizations will be included in a future official release. The beta must be available to customers as a clear part of the release sequence.
 - The software must be available at the time of submission.
 
+An **Available** system must use an Available software stack — the set of software components that substantially determine ML performance but are not in the uploaded source code.
+
+| Category | Examples | Availability Rule |
+|---|---|---|
+| **ML frameworks** | PyTorch, TensorFlow, JAX | Any commit in an official public repository. Open PRs that add architecture support are permitted, provided the PR is publicly accessible. |
+| **Inference servers** | TensorRT-LLM, vLLM, SGLang, Triton | Open-source: any public commit + accessible open PRs. Commercial: official release or labeled beta in the formal release sequence (see below). |
+| **Accelerator compute libraries** | cuDNN, cuBLAS, NCCL, ROCm HIP | Official release or publicly available labeled beta in the formal release sequence. One-off private binary drops shared only with specific customers do not qualify. |
+| **Hardware drivers** | CUDA driver, ROCm driver, NIC firmware | Official release or publicly available beta, downloadable through a standard vendor channel at the time of submission. |
+| **Quantization / optimization tools** | bitsandbytes, AutoAWQ, llama.cpp, GPTQ | Same rules as ML frameworks if open-source; same rules as accelerator compute libraries if closed-source binary. |
+| **Custom OS / kernel patches** | Custom Linux kernel builds, BIOS/firmware | Exempt if unmodified commodity software. Custom patches that substantially affect ML performance must be in an upstream-merged commit or publicly accessible PR. Private patches are not permitted. |
+| **Submission code / custom kernels** | Custom CUDA kernels, Flash Attention variants | Not part of the software stack — must be included in the submitted source code package. |
+
+**Labeled beta qualification.** A closed-source binary may qualify as Available if it is a labeled beta in the formal release sequence, provided: (1) the vendor has publicly committed that the optimizations will be included in a future official release; (2) the beta is offered to customers as a standard step in the release process — not a one-off private engagement; and (3) the beta is publicly downloadable at the time of submission. A release candidate satisfying these criteria qualifies; an engineering sample under NDA distributed to selected partners does not.
+
+Software must be available at the time of **submission**. If a software component becomes unavailable between submission and publication, the submitter must notify the review committee. The committee may allow the submission to proceed if an equivalent public release is available, or may require reclassification.
+
+#### 7.2.4 Available Models
+
+The model weights and tokenizer used in the submission must be available through commercially accessible channels (e.g., a public model hub under a commercially permissive license, a vendor model download portal, or inclusion in the software product).
+
+Model weights distributed under licenses that prohibit commercial deployment do not qualify the system as Available. Such submissions must be classified as Preview or RDI.
+
+#### 7.2.5 Division-Specific Available Requirements
+
+**Standardized division.** Hardware, software stack, and model must all meet §7.2.1–7.2.4. For CoN submissions, the endpoint URL must remain accessible for at least **90 days** after publication to support reproducibility verification; submitters must provide a point of contact for access requests during this period.
+
+**Serviced division.** The endpoint must be at **full GA tier** — not a "Public Preview," "Open Beta," or "Generally Available in Preview" tier, even if publicly accessible. Preview-tier endpoints typically lack SLA commitments, may be subject to breaking changes, and may be withdrawn without notice; they do not represent the provider's full production commitment. Where the provider's own internal GA definition draws a distinction between preview-accessible and production-GA, the production-GA designation is required.
+
+The **endpoint URL submitted for benchmarking must be the same endpoint that any paying customer uses in production.** Submitters may not use a capacity-reserved, dedicated, or otherwise privileged endpoint not available to the general public (e.g., a dedicated inference cluster standing up only for the benchmark run, or an internally hosted mirror with relaxed rate limits). Submissions found to have used non-public or specially provisioned endpoints are subject to withdrawal regardless of when the discovery is made.
+
+The endpoint's **terms of service must permit benchmarking** by third parties. Any MLCommons member in good standing must be able to independently access the endpoint under standard terms and attempt to reproduce the published results. A Serviced submission whose ToS prohibits competitive benchmarking or automated performance testing does not qualify for Available status. Submitters must confirm at submission time that no provision of their ToS, acceptable use policy, or rate-limiting policies would prevent a member from conducting a good-faith reproducibility test.
+
+**RDI division.** RDI division submissions carry RDI publication status and cannot qualify as Available or Preview. If the system subsequently becomes commercially available, the submitter must create a new Standardized or Serviced submission.
+
+
 ### 7.3 Preview
 
-A **Preview** system is one that does not qualify as Available at the time of submission, but for which the submitter commits to qualifying as Available within a **180-day window** from the submission date.
+A **Preview** system does not qualify as Available at the time of submission, but the submitter commits to making it Available within **180 days** of its first publication in MLPerf Endpoints, and commits to re-submitting as Available at that time.
 
-Submitter commitments for Preview status:
+Preview results are published with a **"Preview — Available by [date]"** tag. If the system does not achieve Available status within the 180-day window, the result is automatically invalidated.
 
-1. The system will qualify as Available within 180 days.
-2. The submitter will resubmit and publish results as an Available system within that window, showing equal or better performance (allowing up to a **5% degradation** to account for variance inherent to endpoints workloads — the high-interactivity region of the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit higher run-to-run variance than traditional batch inference).
+#### 7.3.1 Preview Window and Clock
 
-   > [!NOTE]
-   > **[WG Approval Required]** — The 5% Preview-to-Available margin is a proposal pending working group ratification. Until approved, implementations should treat this as provisional and flag any results that would only pass under the 5% (vs. 2%) threshold.
-3. If the Preview system is not subsequently published as Available within the commitment window, the Preview result is marked as **invalid**.
+- **Clock start:** The date of the publication cycle in which the result *first appears* — not the raw submission date.
+- **Clock duration:** 180 calendar days from the clock start.
+- **Clock anchor:** Anchored to the first publication date. Pareto updates, corrections, or system description amendments do not reset the clock.
 
-#### Software Waiver for Preview
+*Example:* A result first published in the 2026-04-C1 cycle (April 30, 2026) has an availability deadline of October 27, 2026.
 
-For a Preview submission only, the Available software stack requirement is waived for software necessary to support newly developed hardware components that substantially determine ML performance (e.g., a new ML accelerator).
+#### 7.3.2 Software Waiver for Preview
 
-"Newly developed" means the component was not Available as of the previous submission round and was not submitted as Preview in that round. All other parts of the software stack must still meet the Available software stack requirements.
+The Available software stack requirement (§7.2.3) is waived for software components necessary to support **newly developed hardware** that substantially determines ML performance (e.g., a new ML accelerator). "Newly developed" means the hardware was not Available as of the previous publication cycle and was not submitted as Preview in that cycle. All other software stack components must still meet the Available requirements.
 
+#### 7.3.3 Performance Continuity Requirement
+
+When a Preview submission transitions to Available, the re-submitted result must achieve equal or better performance compared to the Preview result. A degradation of up to **5%** is accepted to account for variance inherent to endpoints workloads — the high-interactivity region of the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit higher run-to-run variance than traditional batch inference.
+
+> [!NOTE]
+> **[WG Approval Required]** — The 5% Preview-to-Available margin is a proposal pending working group ratification. Until approved, treat this as provisional and flag any results that pass only under the 5% (vs. 2%) threshold.
+
+The tolerance applies to each reported metric independently.
+
+#### 7.3.4 Declaration Requirements
+
+Submitters claiming Preview status must, at submission time:
+
+1. Set `"availability_status": "preview"` in the system description.
+2. State a `"target_availability_date"` within the 180-day window as an ISO 8601 date.
+3. Identify **with specificity** which components are not yet available — e.g., *"The X100 GPU is expected to begin customer shipments in Q3 2026."* Vague statements such as *"targeting H2 2026"* are not sufficient.
+
+#### 7.3.5 Preview Tracker and Expiration
+
+MLCommons maintains a **Preview Availability Tracker** — a public document listing all active Preview results, their first publication dates, target availability dates, and days remaining. It is updated with each publication cycle.
+
+At expiration of the 180-day window:
+
+- **Available re-submission published:** Preview result is superseded by the Available result.
+- **No re-submission, no extension:** Preview result is **invalidated** and removed at the next publication cycle. Invalidated results are not archived — they are removed.
+- **Approved extension in force:** Result remains under Preview status for the extended period.
+
+#### 7.3.6 Extensions
+
+A **one-time extension of up to 60 calendar days** may be granted by the review chair, subject to:
+
+- Request submitted at least **30 days before the expiration date**.
+- Written explanation of the delay and a revised, specific availability date within the extended window.
+- Only one extension is permitted per submission. A second extension will be denied; the result will be invalidated. The submitter may re-submit under RDI.
+
+#### 7.3.7 Transition to Available
+
+When a Preview system achieves commercial availability:
+
+1. The submitter notifies the review committee via a GitHub issue on the submission thread.
+2. The submitter makes a new Available submission with updated system description (`"availability_status": "available"`, `"availability_url"` pointing to a public product or ordering page).
+3. The new submission follows the standard automated compliance and peer review process.
+4. If the hardware or software configuration changed materially between Preview and GA, the submitter must re-run the benchmarks. Relabeling an existing Preview result as Available without re-running is not permitted if the configuration changed.
+5. Upon successful review, the Available result is published in the next cycle and the Preview result is retired.
+
+#### 7.3.8 Permitted Uses of Preview Results
+
+Preview results may be referenced in public communications subject to the standard MLCommons footnote:
+
+> *"MLPerf™ name and logo are trademarks of MLCommons. Results are preliminary — peer review pending. For more information, see mlcommons.org."*
+
+All external references must use the qualified designation **"MLPerf Endpoints Preview."** Omitting the "Preview" qualifier when referencing an unfinalized result is a violation of MLCommons usage guidelines.
+
+---
 ### 7.4 RDI (Research, Development, or Internal)
 
 An **RDI** system contains one or more components that do not meet the Available or Preview criteria. There is no commitment or timeline associated with RDI status.
