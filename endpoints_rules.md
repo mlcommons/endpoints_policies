@@ -11,7 +11,16 @@
 ## Table of Contents
 
 1. [Basics](#1-basics)
-2. [Divisions](#2-divisions)
+2. [Divisions and Deployment Scenarios](#2-divisions-and-deployment-scenarios)
+   - [2.1 Client Deployment Scenarios](#21-client-deployment-scenarios)
+   - [2.2 Standardized Division](#22-standardized-division)
+   - [2.3 Serviced Division](#23-serviced-division)
+   - [2.4 RDI Division](#24-rdi-research-development-and-internal-division)
+   - [2.5 Division Summary](#25-division-summary)
+   - [2.6 Reproducibility Requirements](#26-reproducibility-requirements)
+   - [2.7 Transparency Requirements](#27-transparency-requirements)
+   - [2.8 Tokenizer Rules](#28-tokenizer-rules)
+   - [2.9 Model Equivalence Rules (Standardized Division)](#29-model-equivalence-rules-standardized-division)
 3. [Benchmarks and Models](#3-benchmarks-and-models)
    - [3.1 Benchmark Definition](#31-benchmark-definition)
    - [3.2 Supported Models](#32-supported-models)
@@ -65,17 +74,324 @@ The benchmark is designed to be:
 
 ---
 
-## 2. Divisions
+## 2. Divisions and Deployment Scenarios
 
-MLPerf Endpoints has three divisions.
+MLPerf Endpoints replaces the traditional Closed/Open division structure from MLPerf Inference with three divisions tailored to endpoint benchmarking: Standardized, Serviced, and RDI. All divisions use the same pareto collection methodology ([§5](#5-pareto-collection-methodology)) and run requirements ([§6](#6-run-requirements-per-measurement-point)). A submission must declare exactly one division.
 
-| Division | Description |
+The Available/Preview/RDI publication status categories defined in [Submission Rules §7](endpoints_submission_rules.md#7-publication) continue to apply independently of division.
+
+### 2.1 Client Deployment Scenarios
+
+MLPerf Endpoints defines two scenarios that determine how the client infrastructure connects to the System Under Test (SUT).
+
+#### 2.1.1 Client on Prem (CoP)
+
+The submitter hosts both the client infrastructure and the endpoint server infrastructure. The client and server may be co-located in the same data center or connected via a local network.
+
+- The submitter provides and operates both client and server infrastructure.
+- The client must use the MLPerf Endpoints reference client (`inference_endpoint` from `github.com/mlcommons/endpoints`) without modification, compiled from the tagged revision for the submission round.
+- Network latency between client and server is included in all timing measurements.
+- The submitter must document the network topology between client and server, including type of interconnect, number of hops, and measured baseline network latency.
+- On-prem submissions must be self-contained: all components required to replicate the result must be documented and provided.
+
+#### 2.1.2 Client over Network (CoN)
+
+MLCommons is responsible for the client infrastructure, which interrogates the System Under Test via an endpoint accessed over the public Internet.
+
+- MLCommons operates the client infrastructure at a designated location.
+- The submitter provides a publicly accessible endpoint URL that the MLCommons client can reach.
+- All timing measurements include public Internet network latency between the MLCommons client and the submitter's endpoint.
+- CoN submitters must provide equivalent containers and code to replicate the server in alternative locations, clusters, or data centers for identical hardware and software configurations.
+- The endpoint must conform to the MLPerf Endpoints reference API specification.
+
+> [!NOTE]
+> The specific MLCommons client locations, network requirements, and scheduling procedures for CoN submissions will be published separately by the working group.
+
+#### 2.1.3 Scenario Summary
+
+| Property | Client on Prem (CoP) | Client over Network (CoN) |
+|---|---|---|
+| Client operator | Submitter | MLCommons |
+| Server operator | Submitter | Submitter |
+| Network | Local / data center | Public Internet |
+| Network latency included | Yes | Yes |
+| Reference client required | Yes | Yes (MLCommons-hosted) |
+
+---
+
+### 2.2 Standardized Division
+
+The Standardized division is the primary benchmark division, requiring strict adherence to model equivalence rules and full code visibility. It replaces the traditional "Closed" division from MLPerf Inference.
+
+**Transparency:** Whitebox — all source code, model weights, configurations, and optimization details must be disclosed.
+
+**Available Scenarios:** Client on Prem (CoP) and Client over Network (CoN), reported as separate sub-divisions.
+
+#### 2.2.1 General Rules
+
+- Requires pre-processing, post-processing, and a model equivalent to the reference or alternative implementation, per the model equivalence rules defined in these rules.
+- Allows calibration for quantization. Does not allow any retraining, fine-tuning, pruning, or sparsification of model weights.
+- All submissions must be reproducible: complete source code for the inference server, client integration, and all optimization scripts must be submitted.
+- On-prem (CoP) submissions must be self-contained.
+
+**Allowed optimization techniques:**
+
+- Quantization (with calibration only; no retraining).
+- KV-cache optimizations.
+- Kernel fusion and operator-level optimizations.
+- Hardware-specific memory management and scheduling.
+- Continuous / in-flight batching.
+- Speculative decoding (within model equivalence constraints).
+
+**Not allowed:** Retraining, fine-tuning, pruning, sparsification, response caching, deliberate token dispatch delays, or any modification of the request/response stream outside the reference API specification.
+
+#### 2.2.2 Client over Network (CoN) — Additional Rules
+
+When submitting to the Standardized division via the CoN scenario, the following additional rules apply:
+
+- CoN submitters may choose to submit to CoP instead, but must follow all CoN compliance rules when doing so.
+- Servers must not modify incoming or outgoing request/response streams outside the provided MLPerf Endpoints reference API specification.
+- No pre-processing of incoming requests (e.g., changing precision or data layout) or post-processing of outgoing responses (e.g., gather, reduction, ArgMax) beyond what is specified in the reference implementation.
+- Server must not deliberately delay token dispatch to manipulate TTFT or TPS/User metrics.
+- Server must not cache responses or requests across queries.
+
+> [!NOTE]
+> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Standardized CoN scenario is under development by the working group.
+
+#### 2.2.3 Result Naming
+
+Unqualified use of "MLPerf Endpoints" refers to results from the Standardized division. Example: *"MLPerf Endpoints result of 5,000 tokens/s at concurrency 64."*
+
+---
+
+### 2.3 Serviced Division
+
+The Serviced division benchmarks publicly available, generally accessible inference-as-a-service endpoints. This is a new division unique to MLPerf Endpoints, designed to benchmark commercial Gen AI API offerings.
+
+**Transparency:** Greybox — the endpoint behavior must be reproducible and auditable, but full internal implementation details need not be disclosed. The API interface, model identity, and pricing must be public.
+
+**Available Scenarios:** Client over Network (CoN) only.
+
+#### 2.3.1 Rules
+
+- The endpoint must be a publicly available, generally accessible commercial service. "Generally accessible" means any customer meeting standard terms of service can obtain access.
+- Performance must be reproducible: the endpoint must deliver consistent results when benchmarked at different times within a reasonable window.
+- Audit and accuracy tests are required to verify the endpoint produces correct outputs.
+- The submitter must disclose: the model name and version as advertised by the service, the API endpoint URL, the pricing model and rates at time of submission, and any rate limits or quotas that apply.
+- Serviced submissions may augment the base reference model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms. Any such augmentations must be disclosed.
+- Response caching across queries is not allowed.
+
+**Optimization transparency:**
+
+| Category | Requirement |
 |---|---|
-| **Standardized** | The submitter operates their own hardware and software stack, using standard open-weight models. The endpoint is deployed on hardware owned or leased by the submitter. This is the primary division for hardware vendors and cloud providers benchmarking their own infrastructure. |
-| **Serviced** | The submitter benchmarks a third-party inference API endpoint (e.g., a cloud provider's hosted model API). The submitter does not control or disclose the underlying hardware or serving stack. System descriptions reflect what is known from public documentation and API behavior. |
-| **RDI** (Research, Development, or Internal) | The system contains one or more components that do not meet the [Available](#71-available) or [Preview](#72-preview) criteria. Results are published with an RDI designation. See [§7.3](#73-rdi-research-development-or-internal) for resubmission timing rules. |
+| Precision | Required |
+| Speculative decode, fusion, changes | Disclosure required (no source code required) |
+| Model quantization | Optional |
 
-A submission must declare exactly one division. All three divisions use the same pareto collection methodology ([§5](#5-pareto-collection-methodology)) and run requirements ([§6](#6-run-requirements-per-measurement-point)).
+#### 2.3.2 Result Naming
+
+Results must use the qualified name "MLPerf Endpoints Serviced." Example: *"MLPerf Endpoints Serviced result of 3,200 tokens/s at concurrency 32."*
+
+---
+
+### 2.4 RDI (Research, Development, and Internal) Division
+
+The RDI division provides a category for experimental, pre-release, or internal systems that do not meet Standardized or Serviced requirements. It replaces the traditional "Open" division.
+
+**Transparency:** Blackbox — no audit or compliance tests required. Internal implementation details need not be disclosed.
+
+**Available Scenarios:** Client on Prem (CoP) or Client over Network (CoN). Server may be self-hosted, hybrid, or cloud-hosted. CoP and CoN are not reported as separate sub-divisions.
+
+#### 2.4.1 Rules
+
+- Must use the standard MLPerf Endpoints performance and accuracy datasets.
+- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT P50/P99) using the same measurement methodology.
+- Must use the same base reference model. RDI submissions may augment the model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms.
+- No audit or compliance tests required. No code visibility requirement.
+- Submitters must report achieved accuracy on the accuracy dataset.
+
+For RDI publication status and the cooling-off period for RDI hardware transitioning to Available or Preview, see [Submission Rules §7.4](endpoints_submission_rules.md#74-rdi-research-development-or-internal).
+
+#### 2.4.2 Result Naming
+
+Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf Endpoints RDI result of 8,000 tokens/s at concurrency 128."*
+
+---
+
+### 2.5 Division Summary
+
+| Property | Standardized | Serviced | RDI |
+|---|---|---|---|
+| Transparency | Whitebox | Greybox | Blackbox |
+| Scenarios | CoP, CoN (separate) | CoN only | CoP or CoN (single) |
+| Model Equivalence | Required | Augmentation allowed | Augmentation allowed |
+| Code Visibility | Full | API-level | None |
+| Audit / Compliance | Yes | Yes (audit + accuracy) | No |
+| Retraining Allowed | No | Yes (with disclosure) | Yes |
+| Public Availability | Not required | Required (GA service) | Not required |
+
+---
+
+### 2.6 Reproducibility Requirements
+
+| Division | By Any 3rd Party (MLC Peer) | On 3rd Party System / Datacenter | On Publicly Available Endpoint |
+|---|---|---|---|
+| Standardized — CoP | Required | Required | N/A |
+| Standardized — CoN | Required | Required | N/A |
+| Serviced — CoN | Required | Optional | Required |
+| RDI | Optional | Optional | Optional |
+
+- **By Any 3rd Party (MLC Peer):** A review committee member or designated auditor can reproduce the benchmark result using the submitted materials. For Standardized, this means building from provided source code and configurations. For Serviced, this means running the benchmark against the public endpoint.
+- **On 3rd Party System / Datacenter:** For Standardized, the submitter must provide containers, drivers, and code sufficient to replicate the setup. For Serviced, this is optional because the endpoint is accessed remotely regardless of client location.
+- **On Publicly Available Endpoint:** Only applicable to the Serviced division, where the endpoint must be a generally accessible commercial service.
+
+---
+
+### 2.7 Transparency Requirements
+
+**Source Code**
+
+| Division | Code to Reproduce On-Prem | Code to Reproduce Remote Server |
+|---|---|---|
+| Standardized — CoP | Required | Required |
+| Standardized — CoN | Required | Required |
+| Serviced — CoN | N/A | Optional |
+| RDI | Optional | Optional |
+
+**Hardware**
+
+| Division | All Rack / Node Hardware | Primary Accelerator Details | Mapping Configurations (TP, EP, PP, Batching) |
+|---|---|---|---|
+| Standardized — CoP | Required | Required | Required |
+| Standardized — CoN | Required | Required | Required |
+| Serviced — CoN | Optional | Required | Optional |
+| RDI | Required | Required | Optional |
+
+Primary accelerator details include: accelerator model, count, memory capacity, and interconnect type. Mapping configurations include: tensor parallelism (TP), expert parallelism (EP), pipeline parallelism (PP), batch size, and other deployment parameters. For Serviced submissions, full rack hardware disclosure is optional, but the primary accelerator must be identified.
+
+---
+
+### 2.8 Tokenizer Rules
+
+Different tokenizers can produce different token counts depending on batch or chunk size. To ensure consistent measurement across divisions:
+
+- The **reference tokenizer** output is the canonical measurement for token counting across all divisions.
+- All performance metrics (System TPS, TPS/User, TTFT) are computed using reference tokenizer token counts.
+- Submitters using alternative tokenizers must report mapping factors or demonstrate equivalence.
+
+> [!NOTE]
+> **[WIP]** — Detailed tokenizer equivalence rules and batch/chunk variability handling are under development by the working group.
+
+---
+
+### 2.9 Model Equivalence Rules (Standardized Division)
+
+> [!WARNING]
+> **[WIP — WG Input Required]** — This entire section is a working draft. The model equivalence rules must be aligned with and should not stray from the definitions in [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc). All subsections below require review and ratification by the working group before they can be treated as policy. Nothing in this section represents finalized rules.
+
+These rules define what it means for a Standardized division submission to be "model equivalent" to the reference implementation. The accuracy quality target (§4.3) is the ultimate arbiter of model equivalence: a submission that passes the accuracy gate is considered equivalent regardless of internal implementation choices. The rules below define which implementation choices are permitted in reaching that accuracy gate.
+
+#### 2.9.1 Reference Implementation
+
+> [!NOTE]
+> **[WIP — align with inference_rules.adoc §reference-implementation]**
+
+Each benchmark has a **reference implementation** published in the MLPerf Endpoints reference repository. The reference implementation defines:
+
+- The canonical model weights and tokenizer.
+- The required input and output format (including prompt templates and chat templates).
+- The accuracy evaluation methodology and quality target.
+- The endpoint API interface.
+
+An **alternative reference implementation** may be designated by the working group for a specific architecture or hardware class, subject to passing the same accuracy quality target as the primary reference implementation.
+
+#### 2.9.2 Pre-Processing Equivalence
+
+> [!NOTE]
+> **[WIP — align with inference_rules.adoc closed division pre-processing rules]**
+
+The server-side pre-processing applied to each incoming request must be functionally equivalent to the reference implementation:
+
+- **Tokenization:** Must produce the same token IDs as the reference tokenizer for the same input text. Submitters using an alternative tokenizer implementation must demonstrate token-for-token equivalence on the accuracy dataset.
+- **Chat template / prompt formatting:** The system prompt, user turn formatting, and special tokens (BOS, EOS, role markers) must match the canonical chat template defined in the benchmark specification. Modifications to the chat template that change the effective input to the model are not permitted.
+- **Input truncation:** If the reference implementation truncates inputs that exceed the model's context window, the submitter's truncation method must produce the same result.
+
+#### 2.9.3 Model Weight Rules
+
+> [!NOTE]
+> **[WIP — align with inference_rules.adoc closed division model rules]**
+
+All Standardized division submissions must begin from the **canonical model weights** specified in the benchmark definition (identified by Hugging Face model ID or a published checksum).
+
+**Allowed weight transformations:**
+
+| Transformation | Allowed | Conditions |
+|---|---|---|
+| Post-training quantization | ✓ | Calibration dataset only. No gradient updates. Must be disclosed. |
+| Weight format conversion | ✓ | e.g., fp32 → fp16 → bf16, transposition, tiling for hardware layout. |
+| INT8 / INT4 / FP8 quantization | ✓ | Any precision supported by the hardware. Must pass accuracy gate. |
+| AWQ, GPTQ, bitsandbytes-style methods | ✓ | Post-training only. Calibration data must be disclosed. |
+| Block-sparse weight pruning | ✗ | Not permitted. |
+| Unstructured pruning | ✗ | Not permitted. |
+| Fine-tuning / LoRA / adapter layers | ✗ | Any gradient-based weight update is not permitted. |
+| Retraining from scratch or continued pre-training | ✗ | Not permitted. |
+| Knowledge distillation to a smaller architecture | ✗ | Not permitted. |
+
+#### 2.9.4 Speculative Decoding
+
+> [!WARNING]
+> **[WIP — WG Input Required]** — The constraints below were not taken directly from inference_rules.adoc and must not be treated as policy. The working group must define speculative decoding rules for MLPerf Endpoints from first principles or by explicit adoption of the inference rules definition. Do not implement compliance checks based on this subsection.
+
+Speculative decoding is permitted in the Standardized division, subject to the following constraints:
+
+- **Draft model disclosure.** The draft model used must be identified by name, version, and source. A draft model that is not publicly disclosed and available is not permitted.
+- **Draft model weights.** The draft model must use publicly available weights from the same model family (e.g., a smaller checkpoint of the same base model, or the same model with a draft head trained on public data). A custom draft model trained specifically for benchmark performance is not permitted.
+- **Verification step.** The target model used in the verification step must be the canonical model with permitted weight transformations (§2.9.3) applied. The verification step may not be approximated, skipped, or replaced by a secondary draft model.
+- **Number of speculative tokens.** The number of draft tokens per step (`k`) must be declared in the submission YAML. It may vary dynamically, but the distribution must be reported.
+- **Output equivalence.** Speculative decoding must produce outputs that are token-for-token identical to what the target model would generate without speculation — i.e., the verification step must not introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Approximate speculative decoding methods that alter the output distribution are not permitted in the Standardized division.
+
+#### 2.9.5 KV Cache Rules
+
+> [!WARNING]
+> **[WIP — WG Input Required]** — KV cache rules were not taken directly from inference_rules.adoc and must be defined by the working group. The inference rules address KV cache in the context of the closed division; those definitions should be the starting point for this section.
+
+- **KV cache quantization.** The KV cache may be stored at reduced precision (e.g., INT8, INT4, FP8 KV). This must be disclosed and does not require working group pre-approval, provided the submission passes the accuracy gate.
+- **Paged / virtual KV cache.** Paged attention and virtual KV cache implementations (e.g., vLLM's PagedAttention) are permitted.
+- **KV cache compression.** Structured KV cache compression methods (e.g., H2O, SnapKV, sliding-window eviction) are permitted if they are part of the reference implementation or a designated alternative implementation. Compression methods not in the reference must be disclosed and are subject to Methodology objections during peer review.
+- **Cross-request KV sharing.** Sharing KV cache state across independent requests (prefix caching, prompt caching) is **permitted** as a serving optimization, provided: (1) the output tokens produced are identical to what would be produced without caching; and (2) the cache is not used to share information from one user's response into another user's generation (no cross-user context leakage).
+- **Response caching.** Returning a cached response verbatim to a request that matches a previous request is **not permitted**. Every request must go through the forward pass.
+
+#### 2.9.6 Attention Mechanism Rules
+
+> [!WARNING]
+> **[WIP — WG Input Required]** — Attention mechanism rules were not taken directly from inference_rules.adoc. Working group should review the inference rules closed division definitions and adopt or adapt as appropriate for the Endpoints context.
+
+The attention mechanism may be replaced with any functionally equivalent implementation:
+
+- Flash Attention, Flash Attention 2, Flash Attention 3, and equivalent hardware-optimized attention kernels are permitted.
+- Grouped Query Attention (GQA) and Multi-Query Attention (MQA) are permitted if present in the canonical model architecture.
+- Sliding window attention and local attention are permitted if present in the canonical model architecture.
+- Changes to the attention pattern that are **not** present in the canonical model (e.g., converting full attention to sparse attention, adding sink tokens not in the reference) are not permitted.
+
+#### 2.9.7 Post-Processing Equivalence
+
+> [!NOTE]
+> **[WIP — align with inference_rules.adoc closed division post-processing rules]**
+
+- **Detokenization.** The response text must be produced by applying the reference detokenizer to the generated token IDs.
+- **Stop token handling.** The generation must halt on the same stop tokens and EOS conditions defined in the benchmark specification.
+- **Sampling.** For benchmarks using greedy decoding (temperature = 0), the submission must also use greedy decoding. For benchmarks specifying a sampling configuration, the submission must use the same sampling parameters as specified in the benchmark definition.
+- **Output stream.** With `stream_all_chunks = true`, every output token must be dispatched to the client as it is generated. Buffering token dispatch is not permitted.
+
+#### 2.9.8 Accuracy Gate
+
+> [!NOTE]
+> **[WIP — accuracy tolerance values to be specified per benchmark, aligned with inference_rules.adoc accuracy targets]**
+
+A Standardized division submission passes model equivalence if and only if it meets the **accuracy quality target** defined for the benchmark, evaluated using the reference evaluation methodology on the accuracy dataset. Passing the accuracy gate is necessary and sufficient for model equivalence.
+
+The accuracy quality target and tolerance relative to the reference score are specified per benchmark in the benchmark definition.
 
 ---
 
@@ -99,7 +415,7 @@ The set of supported benchmark models is defined per submission round and mainta
 
 ### 3.3 Weight Transformations
 
-Submitters may apply quantization, format conversion, or other weight transformations to the reference weights, subject to the accuracy quality target. All transformations must be documented in the submission.
+Submitters may apply quantization, format conversion, or other weight transformations to the reference weights, subject to the accuracy quality target. All transformations must be documented in the submission. For the Standardized division, the full set of permitted and prohibited transformations is defined in [§2.9.3 Model Weight Rules](#293-model-weight-rules).
 
 ---
 
@@ -533,6 +849,19 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 **Question:** What are the ratified values for minimum run duration, warmup period, minimum query count, and dataset subset rules?
 
 **Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values. All values in that section are pending working group ratification based on empirical validation data.
+
+### Division and Scenario Open Items
+
+| Item | Current Proposal | Status |
+|---|---|---|
+| Allowed techniques for Standardized CoN | Framework defined, details TBD | TBD |
+| Tokenizer equivalence rules | Reference tokenizer as canonical | TBD |
+| Serviced division audit procedures | Required, details TBD | TBD |
+| Caching rules for Serviced division | Not allowed across queries | Proposed |
+| Response stream modification rules | Not allowed outside reference API | Proposed |
+| Future division for new models/datasets | To be determined by WG | TBD |
+| Fabric vs. bus restrictions (Standardized CoN) | Not imposed (borrowed from Network Division) | Proposed |
+| Batch/chunk tokenizer variability | Reference tokenizer output is canonical | Proposed |
 
 ---
 
