@@ -433,6 +433,8 @@ A system is **Available** if all of its components that substantially determine 
 | 3 | **Public Evidence** | There is externally verifiable public evidence that the component is actually shipping or available to purchase *today* — not merely announced, previewed, or soft-launched. See [§7.2.1](#721-public-evidence--proof-of-shipment-not-announcement) below. |
 | 4 | **Reasonably Available** | The component or system is reasonably available for purchase or rent by additional third parties by the submission date. See [§7.2.2](#722-reasonably-available) below. |
 
+**Assessing availability — preponderance of evidence.** Availability is a judgment call and no single data point is conclusive. The review committee evaluates availability based on the totality of available positive and negative signals. Signals indicating a product is likely available include: a sales representative actively willing to take orders; pricing on the vendor's website or obtainable on request; customer case studies referencing the product as deployed; official press releases confirming the product is *shipping*. In case of conflicting information, a vendor is not penalized for uneven availability across geographies or channels, provided availability exists in at least one market.
+
 #### 7.2.1 Public Evidence — Proof of Shipment, Not Announcement
 
 Evidence must prove the component is actually shipping or orderable *today* — not just announced. The following are **not sufficient** on their own:
@@ -452,6 +454,10 @@ Evidence that *is* sufficient includes:
 - Public purchase orders or customer shipment confirmations available in securities filings or regulatory disclosures.
 
 For **component vendors** (accelerators, ASICs, memory, networking): the criterion is assessed from the component's position in the supply chain. The component must be available to ship to system integrators, OEMs, and ODMs under standard commercial terms.
+
+**Custom SKUs.** See [§7.5](#75-custom-sku-classification-custom-sku) for the rules governing custom SKUs and hardware in large-scale production that is not available to all comparable customers.
+
+**Vendor's own GA definition.** If the submitting organization has a formal internal process that defines when a product is generally available (e.g., "open shipping status," "phase 4 exit," "FCS"), the submitted system must satisfy that internal definition *in addition to* all criteria above.
 
 #### 7.2.2 Reasonably Available
 
