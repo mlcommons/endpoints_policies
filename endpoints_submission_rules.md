@@ -186,6 +186,18 @@ All review timelines, update windows, and objection deadlines are anchored to th
 
 *Inherits from [General Submission Rules §4.3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#benchmark-roadmap-schedule) without modification.*
 
+### 4.5 Review Cycle Example
+
+The figure below illustrates three representative scenarios for a submission made on **August 10, 2026** (Monday). It shows how automated checks, peer review, objection resolution, provisional publication, and cohort publication all interact across calendar time.
+
+![MLPerf Endpoints Submission and Review Cycle](review_cycle.svg)
+
+**Scenario 1 — Fails automated checks:** The submission is found non-compliant during Week 0 and is rejected. The submitter may correct and resubmit.
+
+**Scenario 2 — Objections resolved in peer review:** Automated checks pass on August 12. An objection is filed August 21, responded to August 26, and fully resolved August 28 — before peer review closes on September 2. Early finalization applies; results publish in the **2026-09-C0** cohort.
+
+**Scenario 3 — Provisional publication; objections carry into resolution:** The submitter opts in to provisional publication. Automated checks pass August 12; the "peer review pending" result becomes visible at the **2026-08-C1** cohort (August 19), running in parallel with peer review. An objection filed August 27 carries into the objection resolution window. The objector provides a validation schedule; resolution is confirmed September 9. Results are finalized in the **2026-09-C1** cohort (September 16), at which point the "peer review pending" tag is removed.
+
 ---
 
 ## 5. Submission
