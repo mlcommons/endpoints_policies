@@ -22,7 +22,7 @@
 3. [Operating Principles](#3-operating-principles)
 4. [Schedule](#4-schedule)
    - [4.1 Rolling Submission Model](#41-rolling-submission-model)
-   - [4.2 Publication Cycles and Embargo](#42-publication-cycles-and-embargo)
+   - [4.2 Publication Cohorts and Embargo](#42-publication-cohorts-and-embargo)
    - [4.3 Submission-to-Publication Alignment](#43-submission-to-publication-alignment)
    - [4.4 Benchmark Roadmap](#44-benchmark-roadmap)
 5. [Submission](#5-submission)
@@ -35,10 +35,10 @@
    - [5.7 Logging Requirements](#57-logging-requirements)
    - [5.8 Compliance Testing](#58-compliance-testing)
 6. [Review](#6-review)
-   - [6.1 Automated Compliance (Week 1)](#61-automated-compliance-week-1)
-   - [6.2 Early Publication](#62-early-publication)
+   - [6.1 Automated Compliance (Week 0)](#61-automated-compliance-week-0)
+   - [6.2 Provisional Publication](#62-provisional-publication)
    - [6.3 Peer Review (Weeks 1–3)](#63-peer-review-weeks-13)
-   - [6.4 Objection Resolution (Weeks 3–6)](#64-objection-resolution-weeks-36)
+   - [6.4 Objection Resolution (Weeks 4–6)](#64-objection-resolution-weeks-46)
    - [6.5 Review Timeline Summary](#65-review-timeline-summary)
    - [6.6 Late Objections (Post Week 6)](#66-late-objections-post-week-6)
    - [6.7 Filing Objections](#67-filing-objections)
@@ -92,11 +92,11 @@ The review process is designed to:
 
 ### 2.1 Structure
 
-The review committee for a given publication cycle consists of representatives from organizations that have participated in MLPerf Endpoints within the preceding **6 months or 12 publication cycles, whichever is longer**, counting backward from the first day of the publication month.
+The review committee for a given cohort consists of representatives from organizations that have participated in MLPerf Endpoints within the preceding **6 months or 12 cohorts, whichever is longer**, counting backward from the first day of the publication month.
 
 "Participated" means the organization has at least one MLPerf Endpoints result that has completed the full review process and been published without a "peer review pending" tag (i.e., finalized results). Results that were published but are still carrying the "peer review pending" tag do not count toward participation eligibility. Organizations whose only finalized results within the lookback period were subsequently withdrawn are not eligible for committee membership.
 
-> **Example:** A submission published in the 2026-12-C1 cycle draws its review committee from organizations that submitted results published on or after 2026-06-01.
+> **Example:** A submission published in the 2026-12-C1 cohort draws its review committee from organizations that submitted results published on or after 2026-06-01.
 
 ### 2.2 Review Chair
 
@@ -150,34 +150,37 @@ MLPerf Endpoints uses a **rolling submission model**. Submitters may submit on a
 
 This section replaces the batch submission schedule defined in the MLPerf General Submission Rules §4 for MLPerf Endpoints submissions.
 
-### 4.2 Publication Cycles and Embargo
+### 4.2 Publication Cohorts and Embargo
 
-MLCommons publishes results on a bi-weekly cadence, on the **1st and 3rd Wednesday of each month**.
+MLCommons publishes results on a bi-weekly cadence, on the **1st and 3rd Wednesday of each month at 8:00 AM Pacific Time**.
 
-Each publication cycle is identified as:
+Each cohort is identified as:
 
-- `YYYY-MM-C0` — published on the 1st Wednesday of the month.
-- `YYYY-MM-C1` — published on the 3rd Wednesday of the month.
+- `YYYY-MM-C0` — published on the 1st Wednesday of the month at 8:00 AM PT.
+- `YYYY-MM-C1` — published on the 3rd Wednesday of the month at 8:00 AM PT.
 
-> **Example:** A submission received on a Monday could appear in the next Wednesday's publication cycle at the earliest, subject to passing automated compliance checks and the 1 business-day alignment window (see [§4.3](#43-submission-to-publication-alignment)).
+> **Example:** A submission received on a Monday could appear in the next Wednesday's cohort at the earliest, subject to passing automated compliance checks and the 1 business-day alignment window (see [§4.3](#43-submission-to-publication-alignment)).
 
 #### Publication Embargo
 
-Submitters may request that MLCommons hold publication of their results until a specific embargo date, declared at the time of submission. Results may be embargoed for **up to 60 days after the completion of review** (i.e., after all objections are resolved and the "peer review pending" tag would otherwise be removed).
+Submitters may request that MLCommons hold publication of their results until a specific embargo date, declared at the time of submission.
+
+- **For standard (confidential) submissions:** results are not public until review is complete. The embargo date delays public release of finalized results. Results may be embargoed for **up to 60 days after the completion of review**.
+- **For provisional publication submissions** (see [§6.2](#62-provisional-publication)): the embargo date delays when the "peer review pending" result first becomes publicly visible, and may be set to any date before finalization of results.
 
 Rules for embargoed submissions:
 
-- The embargo date must be declared in the submission metadata and cannot be extended after submission.
-- The full review process (automated compliance, peer review, objection resolution) proceeds normally under the embargo — the embargo only delays public release of finalized results.
-- All review committee members are notified of the embargo and must commit in writing to honoring the confidentiality of the results and the review until the embargo lifts.
-- If the embargo date falls between two publication cycles, results are published in the first cycle on or after the embargo date.
-- Submissions under embargo are not eligible for early publication (see [§6.2](#62-early-publication)).
+- The embargo date must be declared in the submission metadata.
+- The full review process (automated compliance, peer review, objection resolution) proceeds normally under the embargo — the embargo only delays public release.
+- The embargo date **may be changed after submission**, but any change must be broadcast immediately to all review committee members.
+- All review committee members are informed of the embargo date.
+- Results under embargo are published on the requested embargo date and are not tied to the regular cohort schedule.
 
 ### 4.3 Submission-to-Publication Alignment
 
-A submission is eligible for the next publication cycle if it passes automated compliance checks (see [§6.1 Automated Compliance](#61-automated-compliance-week-1)) at least 1 business day before the Wednesday publication date. Submissions that do not clear automated checks in time roll to the following cycle.
+A submission is eligible for the next cohort if it passes automated compliance checks (see [§6.1 Automated Compliance](#61-automated-compliance-week-1)) at least 1 business day before the Wednesday publication date. Submissions that do not clear automated checks in time roll to the following cohort.
 
-All review timelines, update windows, and objection deadlines are anchored to the **publication cycle in which a submission first appears** — not the raw submission date.
+All review timelines, update windows, and objection deadlines are anchored to the **cohort in which a submission first appears** — not the raw submission date.
 
 ### 4.4 Benchmark Roadmap
 
@@ -194,7 +197,7 @@ All review timelines, update windows, and objection deadlines are anchored to th
 > [!NOTE]
 > **[TBD — Pending MLCommons input]** — It is not yet decided whether a formal pre-submission registration step is required for MLPerf Endpoints, or whether signing the CLA is sufficient. MLCommons needs to weigh in on whether registration serves a practical purpose in the rolling submission model (e.g., for tooling access, NDA workflows, or committee composition tracking). The following text reflects the current working assumption and will be updated once MLCommons provides guidance.
 
-Submitters must sign the relevant MLCommons CLA before making their first submission. There is no advance registration deadline for rolling submissions.
+The **individual making the submission** must have signed the relevant MLCommons CLA. The CLA requirement applies to that individual — it is not required that every member of their organization has signed. There is no advance registration deadline for rolling submissions.
 
 ### 5.2 How to Submit
 
@@ -252,9 +255,9 @@ Submitters must run the automated compliance validator prior to submission. The 
 
 ## 6. Review
 
-### 6.1 Automated Compliance (Week 1)
+### 6.1 Automated Compliance (Week 0)
 
-During the first week after submission, automated compliance checks are executed. These checks verify:
+Automated compliance checks are executed immediately after submission. The checks must complete within **one calendar week (Week 0)**, but may complete much sooner — as quickly as one day depending on submission size and queue depth. These checks verify:
 
 - All required submission materials are present (YAML configurations, result artifacts, system descriptions).
 - The pareto curve satisfies minimum point count and region coverage requirements (minimum 7 points structured as 1 + 3 + 3; maximum 32 points total).
@@ -265,47 +268,66 @@ During the first week after submission, automated compliance checks are executed
 
 The full list of automated checks is defined in [MLPerf Endpoints Rules §9](endpoints_rules.md#9-compliance-validation).
 
-### 6.2 Early Publication
+**If a submission fails any automated check by the end of Week 0, it is rejected.** The submitter is notified of the specific failures and may correct the issues and resubmit as a new submission. Rejected submissions do not enter the peer review phase. The peer review period begins as soon as all automated checks have passed.
 
-By default, submissions that pass automated compliance checks are published before peer review completes, carrying a **"peer review pending"** tag. This enables submitters to reference new results in time-sensitive contexts — such as keynote presentations, product launches, and press briefings — without waiting for the full peer review cycle.
+### 6.2 Provisional Publication
 
-#### Opting Out of Early Publication
+By default, submissions enter a **fully confidential review cycle**: results and artifacts are visible to the review committee and other submitters, but are not published publicly until the review is complete (all objections resolved, no pending objections remaining). Results are published in the first cohort after finalization.
 
-Submitters may opt out of early publication at the time of submission. If a submitter opts out:
+#### Opting In to Provisional Publication
 
-- The submission enters the review pipeline but results are **not published** until the full review is complete (all objections resolved, no pending objections remaining, "peer review pending" tag would be removed).
-- The entire review process is conducted confidentially: results and artifacts are visible to the review committee and other submitters, but not to the public.
-- The review committee must be informed of the opt-out at the start of the review cycle.
-- Results are published in the first publication cycle after finalization.
+Submitters may **opt in** to provisional publication at the time of submission. If a submitter opts in:
 
-The opt-out choice is irrevocable after submission. Submitters who opt out may not subsequently request early publication of those results.
+- Results are published before peer review completes, carrying a **"peer review pending"** tag. This allows submitters to reference new results in time-sensitive contexts — such as keynote presentations, product launches, and press briefings — without waiting for the full review cycle.
+- The review committee is informed of the opt-in at the start of the review cycle.
+
+The opt-in choice is irrevocable after submission. Submitters who do not opt in may not subsequently request provisional publication of those results.
+
+#### Embargo for Provisional Publication
+
+Submitters who opt in to provisional publication may additionally declare an **embargo date** — a hold on when the "peer review pending" result first becomes publicly visible. The embargo date may be any date before the finalization of results. See [§4.2](#42-publication-cohorts-and-embargo) for general embargo rules, including how to change the embargo date after submission.
 
 > [!IMPORTANT]
 > Any reference to results carrying the "peer review pending" tag — by MLCommons, submitters, press, or third parties — must include the standard MLCommons footnote stating that results are **preliminary and subject to change** pending peer review. The exact footnote text is defined in the MLPerf Results Messaging Guidelines.
 
 ### 6.3 Peer Review (Weeks 1–3)
 
-From the date of first publication through the end of week 3, the submission is open to peer review. Review committee members may:
+Once automated compliance checks pass, the submission enters the peer review phase, which runs through the end of Week 3. Review committee members may:
 
 - Examine the submission materials, run logs, and configuration files.
-- File objections as GitHub issues on the submission repository (see [§6.6 Filing Objections](#66-filing-objections)).
+- File objections as GitHub issues on the submission repository (see [§6.7 Filing Objections](#67-filing-objections)).
 - Request clarification from the submitter via the issue thread.
+
+**No new objections may be filed after the close of the peer review window (end of Week 3).** Objections not filed during this window are not eligible for the objection resolution phase and may only be raised through the late objection process (see [§6.6](#66-late-objections-post-week-6)).
 
 **Response timelines within the peer review window:**
 
-- Once an objection is filed, the **submitter must post an initial response within 3 business days**. The response should either acknowledge the issue and describe the intended fix, or contest the objection with a counter-argument and supporting evidence.
-- After the submitter responds, the **objecting party has 3 business days** to acknowledge the response, withdraw the objection, or indicate that the issue remains unresolved and will carry into the objection resolution window.
-- If the submitter does not respond within 3 business days, the review chair may flag the objection as uncontested and carry it directly into the resolution window.
+- Once an objection is filed, the **submitter must post an initial response within 3 business days**, counting from the day the objection is filed. Business day counting accounts for local public holidays in the submitter's primary operating jurisdiction — days falling on a local holiday do not count against the window. The response must either acknowledge the issue and include a **schedule for resolution** — which may extend into the objection resolution window if needed — or contest the objection with a counter-argument and supporting evidence.
+- After the submitter responds, the **objecting party has 2 business days** to acknowledge the response, withdraw the objection, or indicate that the issue remains unresolved and will carry into the objection resolution window. The objecting party may also provide a **schedule or timeline** for testing and validating the proposed resolution, in which case the objection remains open until that validation is complete or the stated timeline has elapsed.
 
-### 6.4 Objection Resolution (Weeks 3–6)
+**Submitter non-response penalties.** Failure to respond to a filed objection triggers automatic penalties based on elapsed business days since the objection was filed. Business day counting follows the same local holiday rule as the response window. These penalties apply throughout both the peer review and objection resolution windows and are enforced by the review chair without requiring a separate motion.
 
-From week 3 through week 6, all filed objections must be resolved or escalated.
+| Business days elapsed without submitter response | Penalty |
+|---|---|
+| 3 business days | Results finalization is automatically delayed by **1 publication cohort**. |
+| 6 business days | Delay increases to **2 publication cohorts**. |
+| 10 business days | The submission is **rejected**. The submitter may correct the issues and resubmit as a new submission. |
+
+Penalties are cumulative and non-reversible — responding after a penalty threshold has been crossed does not remove the penalty, though subsequent response may prevent further escalation. The review chair must notify the submitter and all review committee members when a penalty threshold is crossed.
+
+**Early finalization.** Objections may be fully resolved during the peer review window. If all objections are resolved or withdrawn before the end of Week 3, the submission is eligible for **early finalization** — it does not need to wait for the close of the objection resolution window. The review chair certifies early finalization and the submission is queued for the next available cohort.
+
+### 6.4 Objection Resolution (Weeks 4–6)
+
+From Week 4 through Week 6, all filed objections carried over from the peer review window must be resolved. All objections must reach resolution; escalation to dispute resolution is reserved for cases where the parties cannot agree on the facts or interpretation.
 
 **Response timelines within the resolution window:**
 
-- For each open objection entering the resolution window, the **submitter must provide a fix or formal resolution response within 3 business days**.
-- After the submitter's resolution response, the **objecting party has 3 business days** to either acknowledge resolution or explicitly escalate. Silence after 3 business days is treated as acknowledgment of resolution.
+- For each open objection entering the resolution window, the **submitter must provide a fix or formal resolution response within 3 business days**, accounting for local holidays, consistent with the resolution schedule declared during peer review. Non-response penalties from [§6.3](#63-peer-review-weeks-13) continue to apply.
+- After the submitter's resolution response, the **objecting party has 2 business days** to either acknowledge resolution, explicitly explain — with specificity — why the response is not sufficient to close the objection, or provide a **schedule or timeline** for testing and validating the resolution. Silence after 3 business days is treated as acknowledgment of resolution and the objection is automatically withdrawn.
 - If the review chair determines that a resolution timeline is not being met, they may intervene to set a binding deadline or call a resolution meeting.
+
+**Meeting escalation.** If an objection is not close to resolution **12 business days after it was first filed**, or if any open objection is entering Week 5 of the review cycle, the review chairs may call a meeting with the relevant parties to expedite and close the issue. Attendance at such a meeting is expected of both the objector and the submitter.
 
 An objection is considered resolved when:
 
@@ -314,7 +336,7 @@ An objection is considered resolved when:
 - The objecting party withdraws the objection, or
 - The objecting party does not respond within 3 business days of the submitter's resolution response.
 
-Unresolved objections at the end of week 6 are escalated to the dispute resolution process (see [§9](#9-dispute-resolution)).
+Unresolved objections at the end of Week 6 are escalated to the dispute resolution process (see [§9](#9-dispute-resolution)).
 
 Once all objections are resolved or withdrawn, the "peer review pending" tag is removed and the submission's results are finalized.
 
@@ -322,19 +344,18 @@ Once all objections are resolved or withdrawn, the "peer review pending" tag is 
 
 | Phase | Window | Key Actions |
 |---|---|---|
-| Automated Compliance | Week 1 | Automated checks run; early publication with "peer review pending" tag (unless opted out). |
-| Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub; submitter has 3 business days to respond to each objection. |
-| Objection Resolution | Weeks 3–6 | Objections resolved, withdrawn, or escalated; submitter has 3 business days to respond; objector has 3 business days to acknowledge or escalate; submission finalized or withdrawn. |
-| Late Objections ⚠️ | Week 6+ | Reproducibility, availability, and validity objections via dispute resolution process. **[WIP — pending WG approval]** |
+| Automated Compliance | Week 0 (up to 1 week; may complete in as little as 1 day) | Automated checks run. Pass → advances to peer review immediately. Fail by end of Week 0 → **rejected**; submitter may resubmit. Results remain confidential by default; provisional publication if submitter opted in (subject to embargo). |
+| Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 cohort at 3 biz days, +2 cohorts at 6, rejected at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
+| Objection Resolution | Weeks 4–6 | Open objections must be resolved; same non-response penalty schedule applies; objector has 2 business days to explain insufficiency or provide validation schedule (silence = withdrawn after 3 days); chairs may call meeting if objection is 12+ biz days old or entering Week 5; submission finalized or escalated to dispute resolution. |
+| Late Objections ⚠️ | Post Week 6 | Availability and validity objections only via dispute resolution process. **[WIP — pending WG approval]** |
 
 ### 6.6 Late Objections (Post Week 6)
 
 > [!WARNING]
 > **[WIP — Pending Working Group Approval]** — The late objection policy is under active discussion and has not yet been ratified by the working group. The grounds, process, and time limits described below are a current proposal and are subject to change.
 
-After week 6, late objections may be raised only on the following grounds:
+After Week 6, late objections may be raised only on the following grounds:
 
-- **Reproducibility** — a committee member or auditor demonstrates that the published results cannot be reproduced using the provided artifacts and methodology.
 - **Availability** — the system does not meet the availability status claimed at submission.
 - **Validity** — specific metric values are found to be incorrect or inconsistent with known hardware capabilities.
 
@@ -353,7 +374,7 @@ The only exception is same-system reproducibility: when re-running on the **exac
 
 ### 6.7 Filing Objections
 
-Objections must be filed as GitHub issues on the submission repository before the end of week 3. Each objection must:
+Objections must be filed as GitHub issues on the submission repository before the end of Week 3. Each objection must:
 
 - Cite the specific offending material (log excerpts, configuration values, reproduction attempts).
 - Reference the applicable rule or section number.
@@ -369,7 +390,7 @@ Objections filed during peer review must be categorized as one of the following 
 |---|---|---|
 | **Compliance Failure** | Submission does not meet stated rules (point count, region coverage, run duration, load pattern, etc.). | High — may require withdrawal. |
 | **Methodology** | Disagreement with how the benchmark was configured or executed (e.g., dataset handling, warmup procedure). | High. |
-| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin (see [§6.6 Reproducibility Expectations](#66-late-objections-post-week-6)). Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. | High — but must exceed the allowed variability margin to be actionable. |
+| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)). Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window — they are not eligible as late objections after week 7. | High — but must exceed the allowed variability margin to be actionable. |
 | **Validity of Results** | Specific metric values appear incorrect, inconsistent, or incompatible with known hardware capabilities. | High. |
 | **Division Rules** | Submission placed in wrong division, or system does not meet division requirements (availability, API compliance, etc.). The review committee may allow the submitting organization to reclassify to the correct division rather than withdraw. | Medium. |
 | **Availability** | System claimed as Available or Preview does not meet the availability requirements at the stated date. The review committee may allow the submitting organization to reclassify (e.g., from Available to Preview or RDI) rather than withdraw. | Medium. |
@@ -394,9 +415,9 @@ Meeting requests must include a written agenda and specific questions to be addr
 |---|---|---|
 | Review committee | All results, all code, all run artifacts. | All results, all code, all run artifacts. |
 | Submitters | All results, all code, all run artifacts. | All results, all code, all run artifacts. |
-| Public | Results carrying the "peer review pending" tag only (for submissions that have not opted out of early publication). No access to code or submission artifacts. | All results, all code, all submission artifacts. |
+| Public | Results carrying the "peer review pending" tag only (for submissions that have opted in to provisional publication, once any declared embargo has lifted). No access to code or submission artifacts. | All results, all code, all submission artifacts. |
 
-For submissions that have opted out of early publication (see [§6.2](#62-early-publication)), the public has no visibility until results are finalized.
+For submissions that have not opted in to provisional publication (see [§6.2](#62-provisional-publication)), the public has no visibility until results are finalized.
 
 ### 6.11 Withdrawing Results
 
@@ -406,7 +427,7 @@ A submission may be withdrawn at any time up until finalization. Post-finalizati
 
 ## 7. Publication
 
-MLCommons publishes all results per the bi-weekly cadence defined in [§4.2 Publication Cycles and Embargo](#42-publication-cycles-and-embargo). After publication, code and results are public and free for use under the MLPerf Terms of Use.
+MLCommons publishes all results per the bi-weekly cadence defined in [§4.2 Publication Cohorts and Embargo](#42-publication-cohorts-and-embargo). After publication, code and results are public and free for use under the MLPerf Terms of Use.
 
 ### 7.1 Results Categories
 
@@ -420,7 +441,7 @@ Results are divided into three publication status categories based on the availa
 | **Preview** | Does not yet qualify as Available; submitter commits to Available status within 180 days. | Available except software supporting substantially new hardware. |
 | **RDI** (Research, Development, or Internal) | Does not meet Available or Preview requirements. | Does not meet Available or Preview requirements. |
 
-An RDI component may not be submitted as Available or Preview until the publication cycle after next, or **221 days** after first publication as RDI, whichever is longer.
+An RDI component may not be submitted as Available or Preview until the cohort after next, or **221 days** after first publication as RDI, whichever is longer.
 
 ### 7.2 Available
 
@@ -473,14 +494,6 @@ However, it is allowed for the qualifying pre-submission rentals or purchases to
 
 An **Available** system must use an **Available** software stack — the set of software components that substantially determine ML performance but are not in the uploaded source code (e.g., the inference framework, ML accelerator library, kernel-level drivers).
 
-An **Available** software component must be well-supported for general use:
-
-- **Open source:** May be based on any commit in an "official" repo, plus optionally any PRs to support a particular architecture.
-- **Binary/closed-source:** The binary must be made available as a release or as a "beta" release with a public commitment that optimizations will be included in a future official release. The beta must be available to customers as a clear part of the release sequence.
-- The software must be available at the time of submission.
-
-An **Available** system must use an Available software stack — the set of software components that substantially determine ML performance but are not in the uploaded source code.
-
 | Category | Examples | Availability Rule |
 |---|---|---|
 | **ML frameworks** | PyTorch, TensorFlow, JAX | Any commit in an official public repository. Open PRs that add architecture support are permitted, provided the PR is publicly accessible. |
@@ -522,7 +535,7 @@ Preview results are published with a **"Preview — Available by [date]"** tag. 
 
 #### 7.3.1 Preview Window and Clock
 
-- **Clock start:** The date of the publication cycle in which the result *first appears* — not the raw submission date.
+- **Clock start:** The date of the cohort in which the result *first appears* — not the raw submission date.
 - **Clock duration:** 180 calendar days from the clock start.
 - **Clock anchor:** Anchored to the first publication date. Pareto updates, corrections, or system description amendments do not reset the clock.
 
@@ -530,7 +543,7 @@ Preview results are published with a **"Preview — Available by [date]"** tag. 
 
 #### 7.3.2 Software Waiver for Preview
 
-The Available software stack requirement (§7.2.3) is waived for software components necessary to support **newly developed hardware** that substantially determines ML performance (e.g., a new ML accelerator). "Newly developed" means the hardware was not Available as of the previous publication cycle and was not submitted as Preview in that cycle. All other software stack components must still meet the Available requirements.
+The Available software stack requirement (§7.2.3) is waived for software components necessary to support **newly developed hardware** that substantially determines ML performance (e.g., a new ML accelerator). "Newly developed" means the hardware was not Available as of the previous cohort and was not submitted as Preview in that cohort. All other software stack components must still meet the Available requirements.
 
 #### 7.3.3 Performance Continuity Requirement
 
@@ -551,12 +564,12 @@ Submitters claiming Preview status must, at submission time:
 
 #### 7.3.5 Preview Tracker and Expiration
 
-MLCommons maintains a **Preview Availability Tracker** — a public document listing all active Preview results, their first publication dates, target availability dates, and days remaining. It is updated with each publication cycle.
+MLCommons maintains a **Preview Availability Tracker** — a public document listing all active Preview results, their first publication dates, target availability dates, and days remaining. It is updated with each cohort.
 
 At expiration of the 180-day window:
 
 - **Available re-submission published:** Preview result is superseded by the Available result.
-- **No re-submission, no extension:** Preview result is **invalidated** and removed at the next publication cycle. Invalidated results are not archived — they are removed.
+- **No re-submission, no extension:** Preview result is **invalidated** and removed at the next cohort. Invalidated results are not archived — they are removed.
 - **Approved extension in force:** Result remains under Preview status for the extended period.
 
 #### 7.3.6 Extensions
@@ -594,7 +607,7 @@ An **RDI** system contains one or more components that do not meet the Available
 
 An RDI component may not be submitted as Available or Preview until the later of:
 
-- The publication cycle after next (i.e., at least two publication cycles after the RDI submission), or
+- The cohort after next (i.e., at least two cohorts after the RDI submission), or
 - **221 days** after first publication as RDI.
 
 This cooling-off period prevents misuse of RDI status to pre-publish results on unavailable hardware and then immediately reclassify as Available.
@@ -658,12 +671,12 @@ Rules for post-submission updates:
 
 #### Versioning and Historical Record
 
-MLCommons maintains a complete historical record of all versions of every pareto curve. Each version corresponds to the state of the submission at a given publication cycle.
+MLCommons maintains a complete historical record of all versions of every pareto curve. Each version corresponds to the state of the submission at a given cohort.
 
 - The **active results page** always displays the latest finalized version of each pareto curve.
 - **Older versions** of the pareto (prior to a point being superseded by a newer measurement) remain accessible and can be displayed on request, allowing users to compare performance across time.
-- All historical versions are aligned to publication cycles: the record shows which points were active in each `YYYY-MM-C0` / `YYYY-MM-C1` cycle.
-- Superseded points are clearly labeled in the historical view with the cycle in which they were replaced.
+- All historical versions are aligned to cohorts: the record shows which points were active in each `YYYY-MM-C0` / `YYYY-MM-C1` cohort.
+- Superseded points are clearly labeled in the historical view with the cohort in which they were replaced.
 
 ### 8.2 Corrections
 
@@ -725,8 +738,8 @@ Possible investigation outcomes:
 
 The dispute resolution process handles:
 
-- Objections that cannot be resolved through the standard peer review process ([§6.4](#64-objection-resolution-weeks-36)).
-- Late reproducibility, availability, or validity objections ([§6.5](#65-late-objections-post-week-6)).
+- Objections that cannot be resolved through the standard peer review process ([§6.4](#64-objection-resolution-weeks-46)).
+- Late availability and validity objections ([§6.6](#66-late-objections-post-week-6)).
 - Disagreements about rule interpretation.
 
 ### 9.2 Escalation Path
