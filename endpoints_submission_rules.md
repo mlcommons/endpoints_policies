@@ -441,23 +441,15 @@ Evidence must prove the component is actually shipping or orderable *today* — 
 - Product listings on a marketing or "coming soon" website.
 - Soft-launch press releases or blog posts describing a future availability date.
 - A "Preview" or "coming soon" entry in a cloud provider's product catalog.
+- A stated or anticipated launch date without accompanying proof of current availability.
 
 Evidence that *is* sufficient includes:
 
-- Clearly listed availability on the vendor's official product or pricing page (e.g., a product page with a "Buy now," "Order," or "Get started" call to action that is live and functional for qualifying customers).
+- Clearly listed availability on the vendor's official product or pricing page showing a live, functional call to action for qualifying customers (e.g., "Buy now," "Order," "Get started," or equivalent purchasing language — these are examples; other terms indicating an active, orderable listing are acceptable).
 - Public claims by the vendor explicitly stating the product is "now shipping," "generally available," or "in production" — in a press release, earnings call, official blog post, or equivalent public statement.
 - Publicly verifiable fulfillment data (a cloud provider's instance type appearing in live pricing and availability APIs, orderable by any qualifying customer).
 - Third-party review units or press loaner systems confirmed by the recipient.
 - Public purchase orders or customer shipment confirmations available in securities filings or regulatory disclosures.
-
-**Custom SKUs.** Vendors, OEMs, and ODMs may qualify custom SKUs as Available, including SKUs manufactured exclusively for specific large-volume customers (e.g., custom silicon variants produced at scale for a hyperscaler or strategic customer). A custom SKU qualifies as Available if all three conditions are met:
-
-1. The SKU has shipped to at least one customer.
-2. The SKU is available to purchase by similar customers (e.g., other hyperscalers or large-volume customers) at a volume determined by the vendor, with customizations available upon request if warranted by the customer's requirements.
-3. The differences between the custom SKU and any standard SKU are clearly and publicly documented by the vendor.
-
-> [!NOTE]
-> This provision applies to custom SKUs that *are* available to comparable customers — it is a positive qualification path, not an exception to the "reasonably available" criterion. Hardware that is not available to any comparable customer (e.g., one-off internal development silicon) remains subject to the open question in [§7.5](#75-open-question-custom-sku-classification-custom-sku).
 
 For **component vendors** (accelerators, ASICs, memory, networking): the criterion is assessed from the component's position in the supply chain. The component must be available to ship to system integrators, OEMs, and ODMs under standard commercial terms.
 
@@ -513,19 +505,29 @@ An RDI component may not be submitted as Available or Preview until the later of
 
 This cooling-off period prevents misuse of RDI status to pre-publish results on unavailable hardware and then immediately reclassify as Available.
 
-### 7.5 Open Question: Custom SKU Classification \[CUSTOM-SKU\]
+### 7.5 Custom SKU Classification \[CUSTOM-SKU\]
+
+#### Custom SKUs That Qualify as Available
+
+Vendors, OEMs, and ODMs may qualify custom SKUs as **Available**, including SKUs manufactured exclusively for specific large-volume customers (e.g., custom silicon variants produced at scale for a hyperscaler or strategic customer). A custom SKU qualifies as Available if all three conditions are met:
+
+1. The SKU has shipped to at least one customer.
+2. The SKU is available to purchase by similar customers (e.g., other hyperscalers or large-volume customers) at a volume determined by the vendor, with customizations available upon request if warranted by the customer's requirements.
+3. The differences between the custom SKU and any standard SKU are clearly and publicly documented by the vendor.
+
+#### Open Question: Hardware Not Orderable by Any Comparable Customer
 
 > [!NOTE]
-> **[WG Open Item]** — How should we classify hardware that is in production at hyperscalers or strategic customers but is not available for general purchase?
+> **[WG Open Item]** — How should we classify hardware that is in production at hyperscalers or strategic customers but is **not available** to any comparable customer for purchase?
 >
-> These systems do not qualify as **Available** (they fail the "reasonably available" criterion — no general customer can order them) and do not qualify as **Preview** (there may be no commitment to general availability). However, they are not prototypes or research hardware in the traditional RDI sense — the silicon is in production and shipping at volume.
+> These systems do not qualify as **Available** under the custom SKU path above (they fail criterion 2 — no comparable customer can order them), and do not qualify as **Preview** (there may be no commitment to general availability). However, they are not prototypes or research hardware in the traditional RDI sense — the silicon is in production and shipping at volume.
 >
 > **Proposed options under working group consideration:**
 >
 > 1. **Classify as RDI** — current default under these rules. Applies the 221-day cooling-off for future Available resubmission.
 > 2. **Create a new "Production" tier** — hardware that is in production but not generally orderable. This tier would sit between Available and RDI, without a cooling-off period, and with appropriate disclosure requirements.
 >
-> Until a decision is made, custom SKUs shipping only to select strategic customers default to RDI classification.
+> Until a decision is made, hardware shipping only to select strategic customers with no comparable ordering path defaults to **RDI** classification.
 
 ### 7.6 Results Table Content
 
