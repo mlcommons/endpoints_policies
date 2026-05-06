@@ -48,7 +48,11 @@
    - [6.11 Withdrawing Results](#611-withdrawing-results)
 7. [Publication](#7-publication)
    - [7.1 Results Categories](#71-results-categories)
-   - [7.2 Results Table Content](#72-results-table-content)
+   - [7.2 Available](#72-available)
+   - [7.3 Preview](#73-preview)
+   - [7.4 RDI (Research, Development, or Internal)](#74-rdi-research-development-or-internal)
+   - [7.5 Open Question: Custom SKU Classification](#75-open-question-custom-sku-classification-custom-sku)
+   - [7.6 Results Table Content](#76-results-table-content)
 8. [Post-Publication](#8-post-publication)
    - [8.1 Pareto Updates](#81-pareto-updates)
    - [8.2 Corrections](#82-corrections)
@@ -72,7 +76,7 @@ These rules define the submission, review, and publication process for the MLPer
 
 Where this document conflicts with the MLPerf General Submission Rules, this document takes precedence for MLPerf Endpoints submissions.
 
-Technical requirements — including benchmarks, metrics, the pareto collection methodology, division-specific rules, and availability criteria — are defined in the companion [MLPerf Endpoints Rules](endpoints_rules.md) document.
+Technical requirements — including benchmarks, metrics, the pareto collection methodology, and division-specific rules — are defined in the companion [MLPerf Endpoints Rules](endpoints_rules.md) document. Publication status categories and availability criteria are defined in [§7](#7-publication) of this document.
 
 The review process is designed to:
 
@@ -321,9 +325,12 @@ Once all objections are resolved or withdrawn, the "peer review pending" tag is 
 | Automated Compliance | Week 1 | Automated checks run; early publication with "peer review pending" tag (unless opted out). |
 | Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub; submitter has 3 business days to respond to each objection. |
 | Objection Resolution | Weeks 3–6 | Objections resolved, withdrawn, or escalated; submitter has 3 business days to respond; objector has 3 business days to acknowledge or escalate; submission finalized or withdrawn. |
-| Late Objections | Week 6+ | Reproducibility, availability, and validity objections via dispute resolution process. |
+| Late Objections ⚠️ | Week 6+ | Reproducibility, availability, and validity objections via dispute resolution process. **[WIP — pending WG approval]** |
 
 ### 6.6 Late Objections (Post Week 6)
+
+> [!WARNING]
+> **[WIP — Pending Working Group Approval]** — The late objection policy is under active discussion and has not yet been ratified by the working group. The grounds, process, and time limits described below are a current proposal and are subject to change.
 
 After week 6, late objections may be raised only on the following grounds:
 
@@ -332,6 +339,17 @@ After week 6, late objections may be raised only on the following grounds:
 - **Validity** — specific metric values are found to be incorrect or inconsistent with known hardware capabilities.
 
 Late objections are handled through the dispute resolution process (see [§9](#9-dispute-resolution)).
+
+#### Reproducibility Expectations
+
+Perfect reproducibility of results cannot be reasonably expected and must not be used to block publication unless the deviation is egregious. Due to natural variability in silicon, machine configuration, setup, power delivery, cooling, and thermal state, **a performance variability of up to 10% is expected and allowed** during the review period. Large-scale submissions (hundreds of accelerators) may exhibit even higher variance and should be assessed with proportionally greater tolerance.
+
+The only exception is same-system reproducibility: when re-running on the **exact same system** (e.g., during an audit), results must be **within 5%** of the original submission.
+
+**Accuracy must always pass** — the accuracy quality target is a hard gate with no variability allowance, both during automated compliance and throughout the review period.
+
+> [!NOTE]
+> **[WG Decision Required]** — The 10% performance variability margin and the 5% same-system threshold are current proposals and must be ratified by the working group before they can be enforced. The working group should consider whether different margins apply to different metric types (e.g., TTFT vs. system TPS) and whether large-scale submission thresholds need separate treatment.
 
 ### 6.7 Filing Objections
 
@@ -351,7 +369,7 @@ Objections filed during peer review must be categorized as one of the following 
 |---|---|---|
 | **Compliance Failure** | Submission does not meet stated rules (point count, region coverage, run duration, load pattern, etc.). | High — may require withdrawal. |
 | **Methodology** | Disagreement with how the benchmark was configured or executed (e.g., dataset handling, warmup procedure). | High. |
-| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. | High. |
+| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin (see [§6.6 Reproducibility Expectations](#66-late-objections-post-week-6)). Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. | High — but must exceed the allowed variability margin to be actionable. |
 | **Validity of Results** | Specific metric values appear incorrect, inconsistent, or incompatible with known hardware capabilities. | High. |
 | **Division Rules** | Submission placed in wrong division, or system does not meet division requirements (availability, API compliance, etc.). The review committee may allow the submitting organization to reclassify to the correct division rather than withdraw. | Medium. |
 | **Availability** | System claimed as Available or Preview does not meet the availability requirements at the stated date. The review committee may allow the submitting organization to reclassify (e.g., from Available to Preview or RDI) rather than withdraw. | Medium. |
@@ -394,7 +412,7 @@ MLCommons publishes all results per the bi-weekly cadence defined in [§4.2 Publ
 
 *Overrides [General Submission Rules §7.3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#results-categories).*
 
-Results are divided into three publication status categories. Full definitions, evidence requirements, and edge cases are in [MLPerf Endpoints Rules §6](endpoints_rules.md#6-publication-status).
+Results are divided into three publication status categories based on the availability of the hardware and software components at the time of submission.
 
 | Category | Hardware | Software |
 |---|---|---|
@@ -404,7 +422,112 @@ Results are divided into three publication status categories. Full definitions, 
 
 An RDI component may not be submitted as Available or Preview until the publication cycle after next, or **221 days** after first publication as RDI, whichever is longer.
 
-### 7.2 Results Table Content
+### 7.2 Available
+
+A system is **Available** if all of its components that substantially determine ML performance meet the following four-point test at the time of submission:
+
+| # | Criterion | Requirements |
+|---|---|---|
+| 1 | **Pricing** | Pricing is available — either publicly advertised or available upon request. |
+| 2 | **Shipment** | The component or system has been shipped to or rented by at least one third party. |
+| 3 | **Public Evidence** | There is externally verifiable public evidence that the component is actually shipping or available to purchase *today* — not merely announced, previewed, or soft-launched. See [§7.2.1](#721-public-evidence--proof-of-shipment-not-announcement) below. |
+| 4 | **Reasonably Available** | The component or system is reasonably available for purchase or rent by additional third parties by the submission date. See [§7.2.2](#722-reasonably-available) below. |
+
+#### 7.2.1 Public Evidence — Proof of Shipment, Not Announcement
+
+Evidence must prove the component is actually shipping or orderable *today* — not just announced. The following are **not sufficient** on their own:
+
+- Announcements at a conference, trade show, or keynote.
+- Product listings on a marketing or "coming soon" website.
+- Soft-launch press releases or blog posts describing a future availability date.
+- A "Preview" or "coming soon" entry in a cloud provider's product catalog.
+
+Evidence that *is* sufficient includes:
+
+- Clearly listed availability on the vendor's official product or pricing page (e.g., a product page with a "Buy now," "Order," or "Get started" call to action that is live and functional for qualifying customers).
+- Public claims by the vendor explicitly stating the product is "now shipping," "generally available," or "in production" — in a press release, earnings call, official blog post, or equivalent public statement.
+- Publicly verifiable fulfillment data (a cloud provider's instance type appearing in live pricing and availability APIs, orderable by any qualifying customer).
+- Third-party review units or press loaner systems confirmed by the recipient.
+- Public purchase orders or customer shipment confirmations available in securities filings or regulatory disclosures.
+
+**Custom SKUs.** Vendors, OEMs, and ODMs may qualify custom SKUs as Available, including SKUs manufactured exclusively for specific large-volume customers (e.g., custom silicon variants produced at scale for a hyperscaler or strategic customer). A custom SKU qualifies as Available if all three conditions are met:
+
+1. The SKU has shipped to at least one customer.
+2. The SKU is available to purchase by similar customers (e.g., other hyperscalers or large-volume customers) at a volume determined by the vendor, with customizations available upon request if warranted by the customer's requirements.
+3. The differences between the custom SKU and any standard SKU are clearly and publicly documented by the vendor.
+
+> [!NOTE]
+> This provision applies to custom SKUs that *are* available to comparable customers — it is a positive qualification path, not an exception to the "reasonably available" criterion. Hardware that is not available to any comparable customer (e.g., one-off internal development silicon) remains subject to the open question in [§7.5](#75-open-question-custom-sku-classification-custom-sku).
+
+For **component vendors** (accelerators, ASICs, memory, networking): the criterion is assessed from the component's position in the supply chain. The component must be available to ship to system integrators, OEMs, and ODMs under standard commercial terms.
+
+#### 7.2.2 Reasonably Available
+
+"Reasonably available" means the system or component is purchasable or rentable by any qualifying customer on commercially reasonable terms, including:
+
+1. **Non-discrimination.** Competitors must not be blocked from purchasing or renting the system. All software, drivers, firmware, and support services made available to any customer must be made available to any other qualifying customer, including direct competitors, on equivalent terms.
+2. **Access conditions.** Access to rent or purchase may be subject to conditions common to generally available products (financial qualifications, size of customer, support burden, export restrictions) but is not otherwise restricted — no "early access" approval requirements.
+3. **Supply and lead times.** Supply and lead times are subject to market conditions and demand at the time of purchase; they are not governed by these rules and are not required to be fixed or guaranteed. MLPerf reproducibility does not confer any priority slot or allocation right — a reviewer or auditor wishing to reproduce results is subject to the same supply and demand constraints as any other customer. Individual components and entire systems may be subject to supply-demand constraints appropriate to their scale and market.
+
+However, it is allowed for the qualifying pre-submission rentals or purchases to have been made with restrictions such as "early access" approval.
+
+#### 7.2.3 Available Software Stack
+
+An **Available** system must use an **Available** software stack — the set of software components that substantially determine ML performance but are not in the uploaded source code (e.g., the inference framework, ML accelerator library, kernel-level drivers).
+
+An **Available** software component must be well-supported for general use:
+
+- **Open source:** May be based on any commit in an "official" repo, plus optionally any PRs to support a particular architecture.
+- **Binary/closed-source:** The binary must be made available as a release or as a "beta" release with a public commitment that optimizations will be included in a future official release. The beta must be available to customers as a clear part of the release sequence.
+- The software must be available at the time of submission.
+
+### 7.3 Preview
+
+A **Preview** system is one that does not qualify as Available at the time of submission, but for which the submitter commits to qualifying as Available within a **180-day window** from the submission date.
+
+Submitter commitments for Preview status:
+
+1. The system will qualify as Available within 180 days.
+2. The submitter will resubmit and publish results as an Available system within that window, showing equal or better performance (allowing up to a **5% degradation** to account for variance inherent to endpoints workloads — the high-interactivity region of the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit higher run-to-run variance than traditional batch inference).
+
+   > [!NOTE]
+   > **[WG Approval Required]** — The 5% Preview-to-Available margin is a proposal pending working group ratification. Until approved, implementations should treat this as provisional and flag any results that would only pass under the 5% (vs. 2%) threshold.
+3. If the Preview system is not subsequently published as Available within the commitment window, the Preview result is marked as **invalid**.
+
+#### Software Waiver for Preview
+
+For a Preview submission only, the Available software stack requirement is waived for software necessary to support newly developed hardware components that substantially determine ML performance (e.g., a new ML accelerator).
+
+"Newly developed" means the component was not Available as of the previous submission round and was not submitted as Preview in that round. All other parts of the software stack must still meet the Available software stack requirements.
+
+### 7.4 RDI (Research, Development, or Internal)
+
+An **RDI** system contains one or more components that do not meet the Available or Preview criteria. There is no commitment or timeline associated with RDI status.
+
+#### RDI Cooling-Off Period
+
+An RDI component may not be submitted as Available or Preview until the later of:
+
+- The publication cycle after next (i.e., at least two publication cycles after the RDI submission), or
+- **221 days** after first publication as RDI.
+
+This cooling-off period prevents misuse of RDI status to pre-publish results on unavailable hardware and then immediately reclassify as Available.
+
+### 7.5 Open Question: Custom SKU Classification \[CUSTOM-SKU\]
+
+> [!NOTE]
+> **[WG Open Item]** — How should we classify hardware that is in production at hyperscalers or strategic customers but is not available for general purchase?
+>
+> These systems do not qualify as **Available** (they fail the "reasonably available" criterion — no general customer can order them) and do not qualify as **Preview** (there may be no commitment to general availability). However, they are not prototypes or research hardware in the traditional RDI sense — the silicon is in production and shipping at volume.
+>
+> **Proposed options under working group consideration:**
+>
+> 1. **Classify as RDI** — current default under these rules. Applies the 221-day cooling-off for future Available resubmission.
+> 2. **Create a new "Production" tier** — hardware that is in production but not generally orderable. This tier would sit between Available and RDI, without a cooling-off period, and with appropriate disclosure requirements.
+>
+> Until a decision is made, custom SKUs shipping only to select strategic customers default to RDI classification.
+
+### 7.6 Results Table Content
 
 Each results publication includes:
 
@@ -429,13 +552,22 @@ Submitters may add additional measurement points to their pareto curve during a 
 
 Rules for post-submission updates:
 
-- Only new measurement points may be added. Existing points may not be modified or withdrawn.
 - New points must follow the same measurement methodology, run duration, and accuracy requirements as the initial submission.
 - New points may be at any concurrency level within the defined regions, including the 10% High Throughput margin zone.
+- If a newly submitted point is at the same concurrency level as an existing point, the new result supersedes the old one and becomes the active displayed result. The previous result is not discarded — it is retained in the historical record (see [Versioning and Historical Record](#versioning-and-historical-record) below).
 - The submitter must provide updated YAML configurations and result artifacts for each new point.
 - Each update must be submitted as a clearly labeled amendment to the original submission.
 - **New points undergo the full review process** — automated compliance checks followed by the standard 6-week peer review and objection resolution lifecycle — before being finalized. They are published in the next available bi-weekly cycle after passing automated checks, carrying a "peer review pending" tag until review is complete.
 - The total number of points on a single submission's pareto may not exceed 32 at any time, including post-submission additions.
+
+#### Versioning and Historical Record
+
+MLCommons maintains a complete historical record of all versions of every pareto curve. Each version corresponds to the state of the submission at a given publication cycle.
+
+- The **active results page** always displays the latest finalized version of each pareto curve.
+- **Older versions** of the pareto (prior to a point being superseded by a newer measurement) remain accessible and can be displayed on request, allowing users to compare performance across time.
+- All historical versions are aligned to publication cycles: the record shows which points were active in each `YYYY-MM-C0` / `YYYY-MM-C1` cycle.
+- Superseded points are clearly labeled in the historical view with the cycle in which they were replaced.
 
 ### 8.2 Corrections
 
