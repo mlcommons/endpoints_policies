@@ -323,7 +323,7 @@ Once automated compliance checks pass, the submission enters the peer review pha
 |---|---|
 | 3 business days | Results finalization is automatically delayed by **1 publication cohort**. |
 | 6 business days | Delay increases to **2 publication cohorts**. |
-| 10 business days | The submission is **rejected**. The submitter may correct the issues and resubmit as a new submission. |
+| 10 business days | The submission is **withdrawn**. The submitter may correct the issues and resubmit as a new submission. |
 
 Penalties are cumulative and non-reversible — responding after a penalty threshold has been crossed does not remove the penalty, though subsequent response may prevent further escalation. The review chair must notify the submitter and all review committee members when a penalty threshold is crossed.
 
