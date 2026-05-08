@@ -68,8 +68,8 @@ MLPerf Endpoints measures the performance of *inference endpoints* serving gener
 The benchmark is designed to be:
 
 - **Fair** — standardized measurement methodology with compliance validation.
-- **Relevant** — covering operating points valued by real users: single-user interactive latency through high-throughput batch serving.
 - **Inclusive** — minimum 7 measurement points with flexible placement to accommodate systems of all scales.
+- **Relevant** — covering operating points valued by real users: single-user interactive latency through high-throughput batch serving.
 - **Extensible** — modular rules that can accommodate new models, metrics, and divisions without redesign.
 
 ---
@@ -429,8 +429,8 @@ Each measurement point on the pareto curve captures the following metrics at a s
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | Average output tokens per second experienced by a single user. `tps_per_user = system_tps / concurrency`. |
-| Time to First Token (P50) | `ttft_p50` | Median time from query issuance to receipt of the first output token, in milliseconds. |
-| Time to First Token (P99) | `ttft_p99` | 99th-percentile time to first token, in milliseconds. |
+| Time to First Token (P50) | `ttft_p50_ms` | Median time from query issuance to receipt of the first output token, in milliseconds. |
+| Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time to first token, in milliseconds. |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
 ### 4.2 Derived and Presentation Metrics
@@ -439,10 +439,10 @@ The following metrics are derived from primary measurements and used in publicat
 
 | Metric | Description |
 |---|---|
-| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. Plots `system_tps` on one axis against `tps_per_user` on the other, with each point corresponding to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. Plots `system_tps` on the y-axis against `tps_per_user` on the x-axis, with each point corresponding to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
 | **Concurrency vs. System TPS** | Shows aggregate throughput scaling with load. Each point annotated with its region. |
-| **Concurrency vs. TTFT P50 and P99** | Shows how first-token latency degrades with load. |
-| **Throughput vs. TTFT** | Alternative pareto view showing the direct throughput/latency tradeoff. |
+| **Concurrency vs. TTFT P50 and P95** | Shows how first-token latency degrades with load. |
+| **Concurrency vs. Interactivity** | Shows how interactivity, shown as `tps_per_user`, degrades with load. |
 
 ### 4.3 Accuracy Metric
 
@@ -659,10 +659,10 @@ Each measurement point must sustain the target concurrency for a minimum duratio
 
 | Concurrency Region | Minimum Duration (steady state) | Rationale |
 |---|---|---|
-| Low Latency (1–32) | 120 seconds | Reduced duration accounts for slower query completion at low concurrency. |
-| Low Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
-| Medium Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
-| High Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
+| Low Latency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at low concurrency. |
+| Low Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
+| Medium Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
+| High Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
 
 ### 6.3 Warmup Period
 
@@ -678,10 +678,10 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 
 | Concurrency Region | Minimum Completed Queries | Rationale |
 |---|---|---|
-| Low Latency (1–32) | 64 | Lower count acceptable given reduced run duration. |
-| Low Throughput | 512 | Sufficient for stable P99 estimates. |
-| Medium Throughput | 512 | Sufficient for stable P99 estimates. |
-| High Throughput | 512 | Sufficient for stable P99 estimates. |
+| Low Latency (1–32) | One pass over the low-latency dataset | Lower count acceptable given longer run duration. |
+| Low Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs. |
+| Medium Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
+| High Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
 
 > [!NOTE]
 > These minimum query counts require statistical validation against required sample sizes for target confidence intervals. Values are subject to adjustment pending working group ratification.
