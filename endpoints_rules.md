@@ -666,9 +666,73 @@ Each measurement point must sustain the target concurrency for a minimum duratio
 
 ### 6.3 Warmup Period
 
-*(Example values — subject to ratification.)*
+*(Requirements and thresholds below are subject to working group ratification.)*
 
-A warmup period of at least **60 seconds** at the target concurrency must precede the measurement period. Warmup events (before `TEST_STARTED`) are excluded from metric computation. The warmup ensures connection pools are populated, caches are warm, and the system is in steady state.
+A warmup period must precede every measurement period. Warmup events (all requests issued before `TEST_STARTED`) are excluded from metric computation. The purpose of warmup is to bring the system to steady state by eliminating one-time initialization artifacts — CUDA/HIP graph capture, XLA JIT compilation, KV cache pool allocation, batch-scheduler calibration, prefix-cache population, and collective-communication initialization — before any data contributing to reported metrics is collected.
+
+#### 6.3.1 Warmup Strategy
+
+Submitters must use a **hybrid warmup**: a minimum-floor phase followed by a convergence check.
+
+- The warmup floor is the **later** of:
+  - **60 seconds** of continuous requests at target concurrency, **or**
+  - **20 completed requests** at target concurrency.
+- After the floor is met, the run may proceed to measurement only when the **primary reporting metric** (TTFT for latency-bound runs; token throughput for throughput-bound runs) shows a coefficient of variation (CV = σ/μ) **below 5%** over a rolling window of at least 20 requests or 30 seconds, whichever encompasses more data.
+- If convergence is not reached within **300 seconds** of issuing the first warmup request, the run is still valid but the submitter must document the convergence status in the run log (see [§6.3.5](#635-documentation-requirements)).
+
+> [!NOTE]
+> The convergence check is a best-practice guard. For configurations where steady state is reached quickly (e.g., TensorRT-LLM with a pre-compiled engine at low concurrency), the floor will be the binding constraint. For high-concurrency or high-ISL workloads, convergence detection prevents premature measurement start.
+
+#### 6.3.2 Warmup Dataset
+
+The warmup workload must exercise the same code paths the measurement will exercise. A single short synthetic prompt repeated N times is not a compliant warmup dataset unless the benchmark itself uses exclusively short synthetic prompts.
+
+**Prompt selection.** Warmup prompts must be drawn from one of the following:
+
+- Representative samples from the benchmark performance dataset (preferred), **or**
+- Length-graduated synthetic prompts spanning the full ISL range of the benchmark dataset.
+
+For benchmarks with high ISL variance (e.g., inputs ranging from hundreds to thousands of tokens), the warmup dataset must include prompts at both ends of the input-length distribution. A warmup using only median-length prompts fails to trigger sequence-length-dependent optimizations (CUDA/HIP graph selection, TensorRT-LLM optimization profile activation, XLA program compilation) for long inputs.
+
+**Generation length.** Warmup requests must exercise output lengths representative of the benchmark. At minimum, the warmup must include requests that generate **100 or more output tokens**, so that the autoregressive decode loop, KV cache growth path, and decode-phase scheduling are exercised before measurement begins. For benchmarks with maximum output lengths above 1,000 tokens, at least a subset of warmup requests must target long decode chains.
+
+**Concurrency.** Warmup must be conducted at the **target concurrency** of the measurement point. Sequential (concurrency = 1) warmup does not prepare the batch scheduler, memory allocator, or queuing behavior for concurrent load. For target concurrency of 256 or higher, submitters should use a ramped warmup that gradually increases concurrent in-flight requests from a lower level to the target over the first 30 seconds of the warmup floor, to avoid excessive initial queuing.
+
+#### 6.3.3 Discard Policy
+
+All requests issued before `TEST_STARTED` are warmup requests and must not appear in any reported metric. Submitters must not retroactively include warmup data in performance calculations regardless of the metric being reported.
+
+Warmup request logs must be **retained separately** — not deleted — and must be available for reviewer inspection. Warmup curves contain diagnostic information; anomalous warmup profiles (e.g., TTFT failing to converge) are grounds for an objection under [§6.3 of the Submission Rules](endpoints_submission_rules.md#63-peer-review-weeks-13).
+
+#### 6.3.4 Platform-Specific Requirements
+
+The following minimum conditions must be satisfied before the warmup floor timer starts. These conditions address known platform-specific initialization behaviors that are not reflected in request-count or duration alone:
+
+| Platform | Minimum condition before warmup floor begins |
+|---|---|
+| NVIDIA GPU (vLLM) | CUDA graph capture complete for all batch sizes expected during measurement; FlashInfer JIT compilation triggered for the target architecture. |
+| NVIDIA GPU (TensorRT-LLM) | TensorRT engine compiled and loaded; at least one request completed at each active optimization profile's min, optimal, and max tensor shapes. |
+| AMD GPU (ROCm / vLLM) | HIP graph capture complete; at least one request completed at each GEMM shape expected during measurement to trigger CK/hipBLASLt kernel selection. |
+| Google TPU / XLA | XLA JIT compilation triggered for all input shape combinations (batch size × ISL combinations) expected during measurement. A minimum of 3 warmup iterations per shape must complete before the floor timer starts. |
+| SGLang (any accelerator) | Warmup prompts must include the same prefix patterns present in the benchmark dataset, to populate the RadixAttention tree with relevant entries before measurement. |
+
+Submitters using serving frameworks not listed here must document the platform-specific initialization steps performed during warmup and confirm that initialization is complete before `TEST_STARTED` is issued.
+
+#### 6.3.5 Documentation Requirements
+
+Each submission must include a warmup protocol declaration in the run metadata. The declaration must specify:
+
+- Warmup strategy used (hybrid floor + convergence, or floor-only with rationale for convergence exemption).
+- Total warmup duration (seconds from first warmup request to `TEST_STARTED`).
+- Total warmup requests issued and completed.
+- ISL/OSL range of warmup prompts (minimum, maximum, and approximate distribution).
+- Target concurrency during warmup and whether ramped concurrency was used.
+- Platform-specific initialization steps completed before the floor timer started.
+- Whether the CV convergence threshold was met before `TEST_STARTED`, and if not, the CV value at the time measurement began.
+
+> [!NOTE]
+> These documentation requirements are designed to make warmup auditable during peer review. Reviewers may request warmup logs as part of a reproducibility objection.
+
 
 ### 6.4 Minimum Completed Queries
 
