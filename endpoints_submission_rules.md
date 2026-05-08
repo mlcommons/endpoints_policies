@@ -315,7 +315,7 @@ Once automated compliance checks pass, the submission enters the peer review pha
 **Response timelines within the peer review window:**
 
 - Once an objection is filed, the **submitter must post an initial response within 3 business days**, counting from the day the objection is filed. Business day counting accounts for local public holidays in the submitter's primary operating jurisdiction — days falling on a local holiday do not count against the window. The response must either acknowledge the issue and include a **schedule for resolution** — which may extend into the objection resolution window if needed — or contest the objection with a counter-argument and supporting evidence.
-- After the submitter responds, the **objecting party has 2 business days** to acknowledge the response, withdraw the objection, or indicate that the issue remains unresolved and will carry into the objection resolution window. The objecting party may also provide a **schedule or timeline** for testing and validating the proposed resolution, in which case the objection remains open until that validation is complete or the stated timeline has elapsed.
+- After the submitter responds, the **objecting party has 2 business days** to acknowledge the response, retract the objection, or indicate that the issue remains unresolved and will carry into the objection resolution window. The objecting party may also provide a **schedule or timeline** for testing and validating the proposed resolution, in which case the objection remains open until that validation is complete or the stated timeline has elapsed.
 
 **Submitter non-response penalties.** Failure to respond to a filed objection triggers automatic penalties based on elapsed business days since the objection was filed. Business day counting follows the same local holiday rule as the response window. These penalties apply throughout both the peer review and objection resolution windows and are enforced by the review chair without requiring a separate motion.
 
@@ -327,7 +327,7 @@ Once automated compliance checks pass, the submission enters the peer review pha
 
 Penalties are cumulative and non-reversible — responding after a penalty threshold has been crossed does not remove the penalty, though subsequent response may prevent further escalation. The review chair must notify the submitter and all review committee members when a penalty threshold is crossed.
 
-**Early finalization.** Objections may be fully resolved during the peer review window. If all objections are resolved or withdrawn before the end of Week 3, the submission is eligible for **early finalization** — it does not need to wait for the close of the objection resolution window. The review chair certifies early finalization and the submission is queued for the next available cohort.
+**Early finalization.** Objections may be fully resolved during the peer review window. If all objections are resolved or retracted before the end of Week 3, the submission is eligible for **early finalization** — it does not need to wait for the close of the objection resolution window. The review chair certifies early finalization and the submission is queued for the next available cohort.
 
 ### 6.4 Objection Resolution (Weeks 4–6)
 
@@ -336,7 +336,7 @@ From Week 4 through Week 6, all filed objections carried over from the peer revi
 **Response timelines within the resolution window:**
 
 - For each open objection entering the resolution window, the **submitter must provide a fix or formal resolution response within 3 business days**, accounting for local holidays, consistent with the resolution schedule declared during peer review. Non-response penalties from [§6.3](#63-peer-review-weeks-13) continue to apply.
-- After the submitter's resolution response, the **objecting party has 2 business days** to either acknowledge resolution, explicitly explain — with specificity — why the response is not sufficient to close the objection, or provide a **schedule or timeline** for testing and validating the resolution. Silence after 3 business days is treated as acknowledgment of resolution and the objection is automatically withdrawn.
+- After the submitter's resolution response, the **objecting party has 2 business days** to either acknowledge resolution, explicitly explain — with specificity — why the response is not sufficient to close the objection, or provide a **schedule or timeline** for testing and validating the resolution. Silence after 3 business days is treated as acknowledgment of resolution and the objection is automatically retracted.
 - If the review chair determines that a resolution timeline is not being met, they may intervene to set a binding deadline or call a resolution meeting.
 
 **Meeting escalation.** If an objection is not close to resolution **12 business days after it was first filed**, or if any open objection is entering Week 5 of the review cycle, the review chairs may call a meeting with the relevant parties to expedite and close the issue. Attendance at such a meeting is expected of both the objector and the submitter.
@@ -345,20 +345,20 @@ An objection is considered resolved when:
 
 - The submitter addresses the concern to the objecting party's satisfaction, or
 - The review chair determines the objection is not substantiated, or
-- The objecting party withdraws the objection, or
+- The objecting party retracts the objection, or
 - The objecting party does not respond within 3 business days of the submitter's resolution response.
 
 Unresolved objections at the end of Week 6 are escalated to the dispute resolution process (see [§9](#9-dispute-resolution)).
 
-Once all objections are resolved or withdrawn, the "peer review pending" tag is removed and the submission's results are finalized.
+Once all objections are resolved or retracted, the "peer review pending" tag is removed and the submission's results are finalized.
 
 ### 6.5 Review Timeline Summary
 
 | Phase | Window | Key Actions |
 |---|---|---|
 | Automated Compliance | Week 0 (up to 1 week; may complete in as little as 1 day) | Automated checks run. Pass → advances to peer review immediately. Fail by end of Week 0 → **rejected**; submitter may resubmit. Results remain confidential by default; provisional publication if submitter opted in (subject to embargo). |
-| Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 cohort at 3 biz days, +2 cohorts at 6, rejected at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
-| Objection Resolution | Weeks 4–6 | Open objections must be resolved; same non-response penalty schedule applies; objector has 2 business days to explain insufficiency or provide validation schedule (silence = withdrawn after 3 days); chairs may call meeting if objection is 12+ biz days old or entering Week 5; submission finalized or escalated to dispute resolution. |
+| Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 cohort at 3 biz days, +2 cohorts at 6, withdrawn at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
+| Objection Resolution | Weeks 4–6 | Open objections must be resolved; same non-response penalty schedule applies; objector has 2 business days to explain insufficiency or provide validation schedule (silence = objection retracted after 3 days); chairs may call meeting if objection is 12+ biz days old or entering Week 5; submission finalized or escalated to dispute resolution. |
 | Late Objections ⚠️ | Post Week 6 | Availability and validity objections only via dispute resolution process. **[WIP — pending WG approval]** |
 
 ### 6.6 Late Objections (Post Week 6)
