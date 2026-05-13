@@ -254,6 +254,7 @@ In addition to the standard fields defined in [General Submission Rules §5.7](h
 | `benchmark_model` | The benchmark model name (e.g., `llama3-70b`). |
 | `max_supported_concurrency` | The declared Maximum Supported Concurrency `M`. |
 | `endpoint_url` | URL or description of the inference endpoint under test. |
+| `serving_framework` | Inference serving framework and version (e.g., `vLLM 0.4.0`). |
 
 ### 5.7 Logging Requirements
 
@@ -657,7 +658,7 @@ Each results publication includes:
 - Division (`Standardized` / `Serviced` / `RDI`).
 - Publication status (`Available` / `Preview` / `RDI`).
 - Pareto curve in step-function representation.
-- Key metrics at each submitted concurrency level: System Tokens/Second, TPS/User, TTFT P50, TTFT P99.
+- Key metrics at each submitted concurrency level: System Tokens/Second, TPS/User, TTFT P50, TTFT P95.
 - "Peer review pending" tag where applicable.
 
 ---
