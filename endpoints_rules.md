@@ -430,7 +430,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | Average output tokens per second experienced by a single user. `tps_per_user = system_tps / concurrency`. |
 | Time to First Token (P50) | `ttft_p50_ms` | Median time from query issuance to receipt of the first output token, in milliseconds. |
-| Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time to first token, in milliseconds. |
+| Time to First Token (P99) | `ttft_p99_ms` | 99th-percentile time to first token, in milliseconds. |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
 ### 4.2 Derived and Presentation Metrics
