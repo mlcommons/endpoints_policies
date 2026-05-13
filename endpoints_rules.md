@@ -699,7 +699,7 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 
 *(Example constraint — subject to ratification.)*
 
-One accuracy validation run is required per submission (not per measurement point). The accuracy run verifies that the system meets the benchmark's quality target. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
+Accuracy validation is required per submission (including per measurement point). The accuracy run verifies that the system meets the benchmark's quality target. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
 
 ---
 
