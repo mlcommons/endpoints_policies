@@ -206,12 +206,9 @@ The figure below illustrates three representative scenarios for a submission mad
 
 *Overrides General Submission Rules §5.1 (the eight-week advance registration requirement does not apply to rolling submissions).*
 
-> [!NOTE]
-> **[TBD — Pending MLCommons input]** — It is not yet decided whether a formal pre-submission registration step is required for MLPerf Endpoints, or whether signing the CLA is sufficient. MLCommons needs to weigh in on whether registration serves a practical purpose in the rolling submission model (e.g., for tooling access, NDA workflows, or committee composition tracking). The following text reflects the current working assumption and will be updated once MLCommons provides guidance.
-
 The **individual making the submission** must have signed the relevant MLCommons CLA. The CLA requirement applies to that individual — it is not required that every member of their organization has signed. 
 
-The individual must sign up on MLCommons PRISM portal. Once they sign up, they can generate submission token, which they need to provide as a CLI input argument to submit the submission.
+The individual making the submission must register on the MLCommons PRISM portal and generate a submission token. The token must be provided as a CLI argument when invoking the submission command.
 
 ### 5.2 How to Submit
 
