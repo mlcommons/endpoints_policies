@@ -235,7 +235,7 @@ Submissions are made through the MLCommons Endpoints submission API.
 
 1. **Upload runs.** For each benchmark run, the submitter calls `POST /runs`. The run data is stored to MLCommons-provided storage. Each run receives a UUID.
 
-2. **Create the submission.** Once all runs are uploaded, the submitter calls `POST /submissions`, referencing the run UUIDs along with `division`, `availability`, and the `early_publish` flag.
+2. **Create the submission.** Once all runs are uploaded, the submitter calls `POST /submissions`, referencing the run UUIDs along with `division`, `availability`, flag.
 
 **What happens after `POST /submissions`:**
 
@@ -243,7 +243,7 @@ Submissions are made through the MLCommons Endpoints submission API.
 - A confidential peer-review PR is automatically opened in the private MLCommons review repository. Reviewers and the submitting organization are granted access. Objections are filed as PR comments and must be resolved per §5.3.
 - On finalization, results are published in the public MLPerf Endpoints results repository and shown in the visualizer on the next publication-cycle date.
 
-Submissions must include all materials required by §5.1 (data) and §3 (system info, configuration).
+The submission must include all materials required by the [MLPerf Endpoints Rules](endpoints_rules.md) document.
 
 ### 5.3 Late Submissions
 
