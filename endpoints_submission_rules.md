@@ -236,6 +236,22 @@ A submission is made by placing an encrypted tarball in an MLCommons-provided cl
 
 The submission must include all materials required by the [MLPerf Endpoints Rules](endpoints_rules.md) document.
 
+Submissions are made through the MLCommons Endpoints submission API.
+
+**Workflow:**
+
+1. **Upload runs.** For each benchmark run, the submitter calls `POST /runs`. The run data is stored to MLCommons-provided storage. Each run receives a UUID.
+
+2. **Create the submission.** Once all runs are uploaded, the submitter calls `POST /submissions`, referencing the run UUIDs along with `division`, `availability`, and the `early_publish` flag.
+
+**What happens after `POST /submissions`:**
+
+- The submission checker is run on the submission bundle. On pass, the submission is assigned a publication cycle — the next 1st or 3rd Wednesday of the month with ≥1 business day of buffer — and enters peer review. On fail, the submission is rejected with the failing rule codes; the submitter may correct the issues and resubmit.
+- A confidential peer-review PR is automatically opened in the private MLCommons review repository. Reviewers and the submitting organization are granted access. Objections are filed as PR comments and must be resolved per §5.3.
+- On finalization, results are published in the public MLPerf Endpoints results repository and shown in the visualizer on the next publication-cycle date.
+
+Submissions must include all materials required by §5.1 (data) and §3 (system info, configuration).
+
 ### 5.3 Late Submissions
 
 The "late submissions" provisions of the General Submission Rules §5.3 do not apply to MLPerf Endpoints, as there is no fixed submission deadline.
