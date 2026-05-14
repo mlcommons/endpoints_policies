@@ -229,13 +229,6 @@ Register with PRISM by creating your account at MLCommons Member Central using y
 
 ### 5.2 How to Submit
 
-> [!NOTE]
-> **[TBD — Pending MLCommons input]** — The exact submission mechanism (encrypted tarball, web UI, GitHub PR, or other) for MLPerf Endpoints has not yet been finalized. MLCommons needs to specify the tooling and infrastructure. The following text reflects the approach used for MLPerf Inference and will be updated once the Endpoints submission tooling is defined.
-
-A submission is made by placing an encrypted tarball in an MLCommons-provided cloud storage bucket and confirming the submission using the MLCommons web UI, following the process described in [General Submission Rules §5.2](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#how-to-submit).
-
-The submission must include all materials required by the [MLPerf Endpoints Rules](endpoints_rules.md) document.
-
 Submissions are made through the MLCommons Endpoints submission API.
 
 **Workflow:**
