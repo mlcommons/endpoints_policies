@@ -206,7 +206,7 @@ The RDI division provides a category for experimental, pre-release, or internal 
 #### 2.4.1 Rules
 
 - Must use the standard MLPerf Endpoints performance and accuracy datasets.
-- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT P50/P99) using the same measurement methodology.
+- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT P50/P95) using the same measurement methodology.
 - Must use the same base reference model. RDI submissions may augment the model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms.
 - No audit or compliance tests required. No code visibility requirement.
 - Submitters must report achieved accuracy on the accuracy dataset.
@@ -430,7 +430,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | Average output tokens per second experienced by a single user. `tps_per_user = system_tps / concurrency`. |
 | Time to First Token (P50) | `ttft_p50_ms` | Median time from query issuance to receipt of the first output token, in milliseconds. |
-| Time to First Token (P99) | `ttft_p99_ms` | 99th-percentile time to first token, in milliseconds. |
+| Time to First Token (P95) | `ttft_p95_ms` | 99th-percentile time to first token, in milliseconds. |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
 ### 4.2 Derived and Presentation Metrics
