@@ -563,6 +563,7 @@ When a Preview submission transitions to Available, the re-submitted result must
 
 > [!NOTE]
 > **[WG Approval Required]** — The 5% Preview-to-Available margin is a proposal pending working group ratification. Until approved, treat this as provisional and flag any results that pass only under the 5% (vs. 2%) threshold.
+> Approved by TaskForce 
 
 The tolerance applies to each reported metric independently.
 
