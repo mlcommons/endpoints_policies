@@ -287,6 +287,9 @@ Different tokenizers can produce different token counts depending on batch or ch
 
 ### 2.9 Model Equivalence Rules (Standardized Division)
 
+> [!Note]
+>  This entire section is a working draft. The working group has agreed to use existing [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc) model equivalence and optimization rules for the initial v0.7 submission in June 2026.
+
 > [!WARNING]
 > **[WIP — WG Input Required]** — This entire section is a working draft. The model equivalence rules must be aligned with and should not stray from the definitions in [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc). All subsections below require review and ratification by the working group before they can be treated as policy. Nothing in this section represents finalized rules.
 
@@ -645,7 +648,8 @@ At no point shall the total number of measurement points on a single submission'
 ## 6. Run Requirements Per Measurement Point
 
 > [!WARNING]
-> **WORK IN PROGRESS** — This entire section is under active development. All constraints, thresholds, and duration values below are illustrative examples that have **not yet been ratified by the working group**. Final values will be determined through working group discussion and empirical validation. Do not implement compliance checks against these values until the working group issues ratified values.
+> **WORK IN PROGRESS** — This entire section is under active development. Final values will be determined through working group discussion and empirical validation.
+> Current constraints, thresholds, and duration values are locked for the v0.7 submission in June 2026 and have been approved by the TaskForce. 
 
 ### 6.1 Load Pattern
 
