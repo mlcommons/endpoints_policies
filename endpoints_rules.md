@@ -274,14 +274,17 @@ Primary accelerator details include: accelerator model, count, memory capacity, 
 
 ### 2.8 Tokenizer Rules
 
-Different tokenizers can produce different token counts depending on batch or chunk size. To ensure consistent measurement across divisions:
+Tokenizers can produce different token counts depending on how text is fed to them — the same output text tokenized as a single string versus tokenized as a sequence of streamed chunks can yield different counts, even with the same tokenizer. To ensure consistent and representative measurement across divisions:
 
 - The **reference tokenizer** output is the canonical measurement for token counting across all divisions.
-- All performance metrics (System TPS, TPS/User, TTFT) are computed using reference tokenizer token counts.
-- Submitters using alternative tokenizers must report mapping factors or demonstrate equivalence.
+- **Token counts are obtained by applying the reference tokenizer once to the entire coalesced output** — the full response text reassembled from the submission, tokenized as a single string. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
+  - *Fairness:* every submitter is scored against the same tokenizer applied the same way, independent of how their system batches, chunks, or streams during generation.
+  - *Representativeness:* this measures the tokens the user perceives in the final response, rather than implementation artifacts of streamed token boundaries that can differ across submitters.
+- Token-count metrics (System TPS, TPS/User) are derived from these coalesced-output counts. TTFT remains a latency measurement (time to receipt of the first output token from the submission, per §5) and is not derived from coalesced counts.
+- Submitters using alternative tokenizers must demonstrate equivalence to — or report mapping factors against — the reference tokenizer applied to the coalesced output.
 
 > [!NOTE]
-> **[WIP]** — Detailed tokenizer equivalence rules and batch/chunk variability handling are under development by the working group.
+> **[WIP]** — Edge-case handling (e.g., partial Unicode at chunk boundaries, special-token treatment, alternative-tokenizer equivalence criteria, and the definition of "coalesced output" for multi-turn or tool-use responses) is under development by the working group.
 
 ---
 
@@ -860,13 +863,13 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 | Item | Current Proposal | Status |
 |---|---|---|
 | Allowed techniques for Standardized CoN | Framework defined, details TBD | TBD |
-| Tokenizer equivalence rules | Reference tokenizer as canonical | TBD |
+| Tokenizer equivalence rules | Reference tokenizer as canonical; alternative tokenizers must show equivalence on coalesced output | Proposed |
 | Serviced division audit procedures | Required, details TBD | TBD |
 | Caching rules for Serviced division | Not allowed across queries | Proposed |
 | Response stream modification rules | Not allowed outside reference API | Proposed |
 | Future division for new models/datasets | To be determined by WG | TBD |
 | Fabric vs. bus restrictions (Standardized CoN) | Not imposed (borrowed from Network Division) | Proposed |
-| Batch/chunk tokenizer variability | Reference tokenizer output is canonical | Proposed |
+| Batch/chunk tokenizer variability | Apply reference tokenizer once to the entire coalesced output (not per-chunk) for all token-count metrics | Proposed |
 
 ---
 
