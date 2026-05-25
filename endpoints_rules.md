@@ -287,7 +287,7 @@ Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf En
 
 **Hardware details:** accelerator model, count, memory capacity, host CPU/memory, and the interconnect type and topology (e.g., NVLink, InfiniBand, Ethernet, routing layer). For Serviced submissions, full rack hardware disclosure is optional, but the primary accelerator must be identified.
 
-**Software / deployment configuration:** parallelism mapping (tensor parallelism `TP`, expert parallelism `EP`, pipeline parallelism `PP`), batch sizes, scheduling parameters, KV cache configuration, and any other parameters that materially affect throughput or latency. These must be fully disclosed for Standardized division submissions.
+**Software / deployment configuration:** parallelism mapping (e.g., tensor parallelism `TP`, expert parallelism `EP`, pipeline parallelism `PP`, sequence parallelism, data parallelism), batch sizes, scheduling parameters, KV cache configuration, and any other parameters that materially affect throughput or latency. These must be fully disclosed for Standardized division submissions.
 
 ---
 
