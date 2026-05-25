@@ -21,6 +21,7 @@
    - [2.5 Confidential and Not Precedent Setting](#25-confidential-and-not-precedent-setting)
 3. [Operating Principles](#3-operating-principles)
 4. [Schedule](#4-schedule)
+   - [4.0 v0.7 and v0.8 Submission Milestones](#40-v07-and-v08-submission-milestones)
    - [4.1 Rolling Submission Model](#41-rolling-submission-model)
    - [4.2 Publication Cohorts and Embargo](#42-publication-cohorts-and-embargo)
    - [4.3 Submission-to-Publication Alignment](#43-submission-to-publication-alignment)
@@ -146,6 +147,19 @@ The role of the review process is to ensure fairness of submissions, not to liti
 ---
 
 ## 4. Schedule
+
+### 4.0 v0.7 and v0.8 Submission Milestones
+
+> [!NOTE]
+> **Rule Stability** (cross-reference [§1 Basics](#1-basics)). These rules are *tentative* until v0.7 closes. Submitters should expect rules — particularly sections marked `[TENTATIVE — Subject to change after 2026-06-19]` in [`endpoints_rules.md`](endpoints_rules.md) — to evolve between v0.7 and v0.8 based on submitter feedback.
+
+| Date | Milestone | Notes |
+|---|---|---|
+| **2026-06-19** | MLPerf Endpoints **v0.7** submission deadline (Submission Round 1) | First endpoint submission round. Rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) apply. |
+| **2026-07-31** | MLPerf Inference **v6.1** submission deadline | Traditional MLPerf Inference round (separate process, governed by [inference_rules.adoc](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc) and the [General Submission Rules](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc)). Endpoints does **not** gate on this date; it is listed here for awareness. |
+| **2026-09-01** | MLPerf Endpoints **v0.8** submission deadline (Submission Round 2) + start of rolling submission | After v0.7 closes, rules are revised based on submitter feedback. Rolling submission ([§4.1](#41-rolling-submission-model)) begins on this date for v0.8 and beyond. |
+
+Until the v0.7 deadline, the rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) may be revised by working-group consensus or by the operating-principles 2/3 vote (inherited from [General Submission Rules §3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#operating-principles)). After v0.7 closes, rule revisions targeting v0.8 follow the same process. The sections most likely to change are those marked `[TENTATIVE — Subject to change after 2026-06-19]`.
 
 ### 4.1 Rolling Submission Model
 
