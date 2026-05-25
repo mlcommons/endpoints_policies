@@ -140,7 +140,7 @@ The Standardized division is the primary benchmark division, requiring strict ad
 **Operative requirements:**
 
 - Pre-processing, post-processing, and the model executed by the SUT must be equivalent to the reference implementation, per [§2.9](#29-model-equivalence-rules-standardized-division).
-- Submissions must be reproducible: configuration, server launch scripts, client integration scripts, and any optimization scripts (e.g., calibration recipes) must be submitted. The underlying serving framework and low-level software stack must satisfy the **Available** definition in the Submission Rules ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
+- Submissions must be reproducible: configuration, server launch scripts, and client integration scripts must be submitted. For numerical recipes such as calibration, the submission must either (a) describe the recipe in sufficient detail for an external team to reproduce it, or (b) provide the scripts / software that implement it. The underlying serving framework and low-level software stack must satisfy the **Available** definition in the Submission Rules ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
 - On-prem (CoP) submissions must be self-contained.
 
 **Disallowed optimizations** (Standardized division):
@@ -149,15 +149,15 @@ The Standardized division is the primary benchmark division, requiring strict ad
 - Discarding non-zero weight elements (pruning), except where the operation is *mathematically equivalent* to the dense reference (see [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications)).
 - Knowledge distillation to a different architecture.
 - Retraining, fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update — applied to the canonical model or to any draft model used in speculative decoding (see [§2.9.4](#294-speculative-decoding)).
-- Response caching: returning a cached response verbatim to a request that matches a previous request. Every request must go through the forward pass.
+- Response caching: returning a cached response *verbatim* to a request that matches a previous request, bypassing the forward pass. Every request must execute the forward pass. (Note: this is distinct from cross-query KV-cache reuse, which still executes the forward pass on a per-query, salt-uniquified token stream — see [§2.9.5 KV Cache Rules](#295-kv-cache-rules) for the operative rule.)
 - Coalescing identical queries (deduplicating duplicate queries in flight to amortize work across them).
 - Modifying weights during the timed portion of an inference run (online learning).
 - Benchmark detection: the framework or system must not detect a benchmark workload and behave differently.
 - Input-based optimization: the implementation must not encode any information about the content of the input dataset.
-- Deliberate token-dispatch delays, or any modification of the request/response stream outside the reference API specification.
+- Client-side dispatch manipulation: the reference client must not be modified to delay, batch, or reorder the dispatching of queries in order to manipulate TTFT, TPS/User, or other measured metrics. Server-side scheduling of received requests is governed by the normal serving rules and is not constrained by this bullet.
+- Modification of the request/response stream outside the reference API specification.
 - Weight-quantization algorithms whose specification is similar in size to the non-zero weights they produce (inherited from upstream — defeats principled-quantization intent).
-- Hard-coding the total number of queries; techniques that boost performance for fixed-length experiments but are inapplicable to long-running services (except in the offline scenario, which Endpoints does not currently use).
-- Techniques that only improve performance when identical or near-identical samples appear in a query (e.g., sorting samples in SSD/R-GAT-style benchmarks).
+- Hard-coding the total number of queries; techniques that boost performance for fixed-length experiments but are inapplicable to long-running services.
 
 > [!NOTE]
 > **Why blacklist-only?** Submitters frequently ask "is X allowed?" for techniques that don't exist yet (new quantization formats, novel kernels, alternative attention impls). A closed whitelist forces a rule change every time. Endpoints maintains a single disallowed list together with the Model Equivalence rules ([§2.9](#29-model-equivalence-rules-standardized-division)); anything not banned and consistent with model equivalence is permitted. The [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) provides interpretive guidance.
