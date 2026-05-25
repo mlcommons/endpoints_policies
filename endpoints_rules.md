@@ -520,10 +520,10 @@ The following metrics are derived from primary measurements and used in publicat
 
 | Metric | Description |
 |---|---|
-| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **X-axis:** `tps_per_user`. **Y-axis:** `system_tps`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
-| **Concurrency vs. System TPS** | **X-axis:** `concurrency`. **Y-axis:** `system_tps`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
-| **Concurrency vs. TTFT (P95)** | **X-axis:** `concurrency`. **Y-axis:** `ttft_p95_ms`. Shows how first-token latency degrades with load. P95 is the default and the only percentile plotted for v0.7; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
-| **Concurrency vs. Interactivity** | **X-axis:** `concurrency`. **Y-axis:** `tps_per_user`. Shows how per-user output rate degrades with load. |
+| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
+| **TTFT (P95) vs. Concurrency** | **Y-axis:** `ttft_p95_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P95 is the default and the only percentile plotted for v0.7; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
+| **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how per-user output rate degrades with load. |
 
 ### 4.3 Accuracy Metric
 
