@@ -21,6 +21,7 @@
    - [2.5 Confidential and Not Precedent Setting](#25-confidential-and-not-precedent-setting)
 3. [Operating Principles](#3-operating-principles)
 4. [Schedule](#4-schedule)
+   - [4.0 Submission Milestones](#40-submission-milestones)
    - [4.1 Rolling Submission Model](#41-rolling-submission-model)
    - [4.2 Publication Cohorts and Embargo](#42-publication-cohorts-and-embargo)
    - [4.3 Submission-to-Publication Alignment](#43-submission-to-publication-alignment)
@@ -77,6 +78,9 @@ These rules define the submission, review, and publication process for the MLPer
 Where this document conflicts with the MLPerf General Submission Rules, this document takes precedence for MLPerf Endpoints submissions.
 
 Technical requirements — including benchmarks, metrics, the pareto collection methodology, and division-specific rules — are defined in the companion [MLPerf Endpoints Rules](endpoints_rules.md) document. Publication status categories and availability criteria are defined in [§7](#7-publication) of this document.
+
+> [!NOTE]
+> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-19**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-19]`** in either this document or in [`endpoints_rules.md`](endpoints_rules.md) are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [§4.0 Submission Milestones](#40-submission-milestones) for the full milestone table.
 
 The review process is designed to:
 
@@ -143,6 +147,19 @@ The role of the review process is to ensure fairness of submissions, not to liti
 ---
 
 ## 4. Schedule
+
+### 4.0 Submission Milestones
+
+> [!NOTE]
+> **Rule Stability** (cross-reference [§1 Basics](#1-basics)). These rules are *tentative* until v0.7 closes. Submitters should expect rules — particularly sections marked `[TENTATIVE — Subject to change after 2026-06-19]` in [`endpoints_rules.md`](endpoints_rules.md) — to evolve between v0.7 and v1.0 based on submitter feedback.
+
+| Date | Milestone | Notes |
+|---|---|---|
+| **2026-06-19** | MLPerf Endpoints **v0.7** submission deadline (Submission Round 1) | First endpoint submission round. Rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) apply. |
+| **2026-07-31** | MLPerf Inference **v6.1** submission deadline | Traditional MLPerf Inference round (separate process, governed by [inference_rules.adoc](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc) and the [General Submission Rules](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc)). Endpoints does **not** gate on this date; it is listed here for awareness. |
+| **2026-09-01** *(tentative)* | MLPerf Endpoints **v1.0** submission deadline (Submission Round 2) + start of rolling submission | Date is tentative and subject to working-group confirmation. After v0.7 closes, rules are revised based on submitter feedback. Rolling submission ([§4.1](#41-rolling-submission-model)) begins on this date for v1.0 and beyond. |
+
+Until the v0.7 deadline, the rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) may be revised by working-group consensus or by the operating-principles 2/3 vote (inherited from [General Submission Rules §3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#operating-principles)). After v0.7 closes, rule revisions targeting v1.0 follow the same process. The sections most likely to change are those marked `[TENTATIVE — Subject to change after 2026-06-19]`.
 
 ### 4.1 Rolling Submission Model
 
@@ -658,7 +675,7 @@ Each results publication includes:
 - Division (`Standardized` / `Serviced` / `RDI`).
 - Publication status (`Available` / `Preview` / `RDI`).
 - Pareto curve in step-function representation.
-- Key metrics at each submitted concurrency level: System Tokens/Second, TPS/User, TTFT P50, TTFT P95.
+- Key metrics at each submitted concurrency level: **System Tokens/Second** (`system_tps`), **TPS/User** (`tps_per_user`), **TTFT P95** (`ttft_p95_ms`).
 - "Peer review pending" tag where applicable.
 
 ---
