@@ -124,29 +124,43 @@ MLCommons is responsible for the client infrastructure, which interrogates the S
 
 ### 2.2 Standardized Division
 
-The Standardized division is the primary benchmark division, requiring strict adherence to model equivalence rules and full code visibility. It replaces the traditional "Closed" division from MLPerf Inference.
+The Standardized division is the primary benchmark division, requiring strict adherence to model equivalence rules and full software disclosure. It replaces the traditional "Closed" division from MLPerf Inference.
 
-**Transparency:** Whitebox — all source code, model weights, configurations, and optimization details must be disclosed.
+**Transparency:** Whitebox — model weights, configurations, optimization details, and launch / integration scripts must be disclosed. The serving framework and low-level software stack must satisfy the **Available** definition in the Submission Rules ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)); they need not be open-sourced verbatim if the Available criteria are met.
 
 **Available Scenarios:** Client on Prem (CoP) and Client over Network (CoN), reported as separate sub-divisions.
 
 #### 2.2.1 General Rules
 
-- Requires pre-processing, post-processing, and a model equivalent to the reference or alternative implementation, per the model equivalence rules defined in these rules.
-- Allows calibration for quantization. Does not allow any retraining, fine-tuning, pruning, or sparsification of model weights.
-- All submissions must be reproducible: complete source code for the inference server, client integration, and all optimization scripts must be submitted.
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-19]`** This section ports the MLPerf Inference optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed entries below may be revised after v0.7 submitter feedback.
+
+**Inheritance.** Standardized division submissions inherit the model-equivalence and optimization rules of [MLPerf Inference §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). **This document is the source of truth and overrides upstream wherever the two conflict.** Where upstream uses a non-exhaustive list of allowed examples followed by a disallowed list, Endpoints uses a single **disallowed-only** formulation: anything not listed below and not in conflict with the [§2.9 Model Equivalence Rules](#29-model-equivalence-rules-standardized-division) is permitted. See [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) for clarifying examples.
+
+**Operative requirements:**
+
+- Pre-processing, post-processing, and the model executed by the SUT must be equivalent to the reference implementation, per [§2.9](#29-model-equivalence-rules-standardized-division).
+- Submissions must be reproducible: configuration, server launch scripts, client integration scripts, and any optimization scripts (e.g., calibration recipes) must be submitted. The underlying serving framework and low-level software stack must satisfy the **Available** definition in the Submission Rules ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
 - On-prem (CoP) submissions must be self-contained.
 
-**Allowed optimization techniques:**
+**Disallowed optimizations** (Standardized division):
 
-- Quantization (with calibration only; no retraining).
-- KV-cache optimizations.
-- Kernel fusion and operator-level optimizations.
-- Hardware-specific memory management and scheduling.
-- Continuous / in-flight batching.
-- Speculative decoding (within model equivalence constraints).
+- Wholesale weight replacement or supplements.
+- Discarding non-zero weight elements (pruning), except where the operation is *mathematically equivalent* to the dense reference (see [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications)).
+- Knowledge distillation to a different architecture.
+- Retraining, fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update — applied to the canonical model or to any draft model used in speculative decoding (see [§2.9.4](#294-speculative-decoding)).
+- Response caching: returning a cached response verbatim to a request that matches a previous request. Every request must go through the forward pass.
+- Coalescing identical queries (deduplicating duplicate queries in flight to amortize work across them).
+- Modifying weights during the timed portion of an inference run (online learning).
+- Benchmark detection: the framework or system must not detect a benchmark workload and behave differently.
+- Input-based optimization: the implementation must not encode any information about the content of the input dataset.
+- Deliberate token-dispatch delays, or any modification of the request/response stream outside the reference API specification.
+- Weight-quantization algorithms whose specification is similar in size to the non-zero weights they produce (inherited from upstream — defeats principled-quantization intent).
+- Hard-coding the total number of queries; techniques that boost performance for fixed-length experiments but are inapplicable to long-running services (except in the offline scenario, which Endpoints does not currently use).
+- Techniques that only improve performance when identical or near-identical samples appear in a query (e.g., sorting samples in SSD/R-GAT-style benchmarks).
 
-**Not allowed:** Retraining, fine-tuning, pruning, sparsification, response caching, deliberate token dispatch delays, or any modification of the request/response stream outside the reference API specification.
+> [!NOTE]
+> **Why blacklist-only?** Submitters frequently ask "is X allowed?" for techniques that don't exist yet (new quantization formats, novel kernels, alternative attention impls). A closed whitelist forces a rule change every time. Endpoints maintains a single disallowed list together with the Model Equivalence rules ([§2.9](#29-model-equivalence-rules-standardized-division)); anything not banned and consistent with model equivalence is permitted. The [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) provides interpretive guidance.
 
 #### 2.2.2 Client over Network (CoN) — Additional Rules
 
@@ -293,11 +307,8 @@ Tokenizers can produce different token counts depending on how text is fed to th
 
 ### 2.9 Model Equivalence Rules (Standardized Division)
 
-> [!Note]
->  This entire section is a working draft. The working group has agreed to use existing [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc) model equivalence and optimization rules for the initial v0.7 submission in June 2026.
-
-> [!WARNING]
-> **[WIP — WG Input Required]** — This entire section is a working draft. The model equivalence rules must be aligned with and should not stray from the definitions in [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc). All subsections below require review and ratification by the working group before they can be treated as policy. Nothing in this section represents finalized rules.
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-19]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas (most notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules) and drafter PTQ in [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
 
 These rules define what it means for a Standardized division submission to be "model equivalent" to the reference implementation. The accuracy quality target (§4.3) is the ultimate arbiter of model equivalence: a submission that passes the accuracy gate is considered equivalent regardless of internal implementation choices. The rules below define which implementation choices are permitted in reaching that accuracy gate.
 
@@ -328,24 +339,20 @@ The server-side pre-processing applied to each incoming request must be function
 
 #### 2.9.3 Model Weight Rules
 
-> [!NOTE]
-> **[WIP — align with inference_rules.adoc closed division model rules]**
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-19]`**
 
 All Standardized division submissions must begin from the **canonical model weights** specified in the benchmark definition (identified by Hugging Face model ID or a published checksum).
 
-**Allowed weight transformations:**
+Per [§2.2.1](#221-general-rules), weight transformations are governed by the inherited MLPerf Inference rules. The following transformations of the canonical weights are **disallowed**:
 
-| Transformation | Allowed | Conditions |
-|---|---|---|
-| Post-training quantization | ✓ | Calibration dataset only. No gradient updates. Must be disclosed. |
-| Weight format conversion | ✓ | e.g., fp32 → fp16 → bf16, transposition, tiling for hardware layout. |
-| INT8 / INT4 / FP8 quantization | ✓ | Any precision supported by the hardware. Must pass accuracy gate. |
-| AWQ, GPTQ, bitsandbytes-style methods | ✓ | Post-training only. Calibration data must be disclosed. |
-| Block-sparse weight pruning | ✗ | Not permitted. |
-| Unstructured pruning | ✗ | Not permitted. |
-| Fine-tuning / LoRA / adapter layers | ✗ | Any gradient-based weight update is not permitted. |
-| Retraining from scratch or continued pre-training | ✗ | Not permitted. |
-| Knowledge distillation to a smaller architecture | ✗ | Not permitted. |
+| Transformation | Disposition |
+|---|---|
+| Block-sparse weight pruning, unstructured pruning, or any operation that discards non-zero weight elements *without* a mathematically equivalent replacement | Not permitted. Pruning that produces asymptotically equivalent results to a dense reference (e.g., a dense matmul replaced by a sparse matmul that yields the same outputs) inherits the upstream "Replacing dense operations with mathematically equivalent sparse operations" allowance and is *not* a disallowed pruning. See [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications). |
+| Fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based update of weights | Not permitted. Applies equally to the canonical model and to any draft model used in speculative decoding (see [§2.9.4](#294-speculative-decoding)). |
+| Retraining from scratch, continued pre-training, or knowledge distillation to a different architecture | Not permitted. |
+| Modifying weights during the timed portion of an inference run (online learning) | Not permitted. |
+| Weight-quantization algorithms whose specification is similar in size to the non-zero weights they produce | Not permitted (inherited from upstream — defeats principled-quantization intent). |
 
 #### 2.9.4 Speculative Decoding
 
@@ -373,15 +380,11 @@ Speculative decoding is permitted in the Standardized division, subject to the f
 
 #### 2.9.6 Attention Mechanism Rules
 
-> [!WARNING]
-> **[WIP — WG Input Required]** — Attention mechanism rules were not taken directly from inference_rules.adoc. Working group should review the inference rules closed division definitions and adopt or adapt as appropriate for the Endpoints context.
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-19]`**
 
-The attention mechanism may be replaced with any functionally equivalent implementation:
-
-- Flash Attention, Flash Attention 2, Flash Attention 3, and equivalent hardware-optimized attention kernels are permitted.
-- Grouped Query Attention (GQA) and Multi-Query Attention (MQA) are permitted if present in the canonical model architecture.
-- Sliding window attention and local attention are permitted if present in the canonical model architecture.
-- Changes to the attention pattern that are **not** present in the canonical model (e.g., converting full attention to sparse attention, adding sink tokens not in the reference) are not permitted.
+- The attention implementation must compute outputs that are **mathematically equivalent** to the canonical model's attention. Implementations that compute the same output as canonical attention (e.g., Flash Attention 1/2/3 and similar hardware-optimized kernels, fused-softmax kernels, Sage Attention, Triton rewrites) are permitted under the inherited "mathematically equivalent transformations" allowance.
+- Changes to the *attention pattern* that are **not** present in the canonical model (e.g., converting full attention to sparse attention, adding sink tokens not in the canonical architecture, swapping in a different attention mask) are **not permitted**. If the canonical model uses Grouped-Query Attention (GQA), Multi-Query Attention (MQA), sliding-window attention, or local attention, the implementation must mirror that pattern — it must not introduce attention-pattern changes the canonical model lacks, nor remove patterns the canonical model has.
 
 #### 2.9.7 Post-Processing Equivalence
 
@@ -401,6 +404,41 @@ The attention mechanism may be replaced with any functionally equivalent impleme
 A Standardized division submission passes model equivalence if and only if it meets the **accuracy quality target** defined for the benchmark, evaluated using the reference evaluation methodology on the accuracy dataset. Passing the accuracy gate is necessary and sufficient for model equivalence.
 
 The accuracy quality target and tolerance relative to the reference score are specified per benchmark in the benchmark definition.
+
+#### 2.9.9 Q&A: Model Equivalence Clarifications
+
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-19]`** Q&A entries are interpretive guidance. If a Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and the Q&A entry will be revised.
+
+**Q1: Is post-training quantization (PTQ) with the published calibration set allowed?**
+A: Yes. PTQ is the canonical example of an allowed weight transformation, inherited from upstream. PTQ-style methods (AWQ, GPTQ, bitsandbytes) and arbitrary numerical formats (INT8/INT4/FP8 and similar) are allowed provided they (a) use only the published calibration set, (b) are publicly described to a level where they could be reproduced, (c) pass the accuracy gate, and (d) are disclosed in the submission YAML.
+
+**Q2: Is "mathematically equivalent" sparsification allowed?**
+A: Yes. Replacing a dense operation with a sparse operation that produces asymptotically equivalent results is allowed — inherited verbatim from upstream §Model Equivalence. What is disallowed is *pruning*: discarding non-zero weight elements in a way that *alters* the computation.
+
+**Q3: Are mathematically-equivalent attention implementations (Sage Attention, Flash-Attention variants, fused-softmax kernels, Triton rewrites) allowed?**
+A: Yes — see [§2.9.6](#296-attention-mechanism-rules). Implementations that compute the same output as the canonical attention are permitted. Implementations that *alter* the attention pattern (full→sparse, adding sink tokens, changing the mask) are not.
+
+**Q4: Are GQA, MQA, or sliding-window attention permitted in the implementation?**
+A: Only if they are present in the canonical model architecture. The implementation must mirror the canonical architecture; it must not introduce attention-pattern changes the canonical model does not have.
+
+**Q5: Is response or query caching allowed?**
+A: No. Returning a cached response verbatim to a request that matches a previous request is prohibited. Every request must go through the forward pass. KV-cache reuse (within or across queries) is a *serving optimization* governed by [§2.9.5](#295-kv-cache-rules), **not** response caching — the distinction is that KV-cache reuse still executes the forward pass on per-query tokens (which include a unique salt; see [§2.9.5.1](#2951-salting-mechanism)), whereas response caching skips compute entirely.
+
+**Q6: Is iteration coalescing — the server returning multiple generated tokens in a single network message — allowed?**
+A: *Open question.* See [Appendix A](#appendix-a-open-questions-and-working-group-items); the WG is discussing this in the context of Client-over-Network (CoN) scenarios. Until resolved, submitters must disclose any token-coalescing behavior and conservatively assume `stream_all_chunks = true` semantics. Token-count metrics use the reference tokenizer applied to the coalesced output (see [§2.8 Tokenizer Rules](#28-tokenizer-rules)).
+
+**Q7: What does "frozen drafter" mean in speculative decoding?**
+A: See [§2.9.4](#294-speculative-decoding). The drafter is frozen in the *training* sense: no fine-tuning, no RLHF, no continued pre-training, no swap for a custom-trained model. The drafter weights MAY be PTQ-quantized using the same calibration rules as the canonical model — this is an intentional Endpoints-specific deviation from upstream MLPerf Inference, which prohibits drafter quantization.
+
+**Q8: Can I use a different serving framework than the reference (vLLM vs. TensorRT-LLM vs. SGLang)?**
+A: Yes. Arbitrary frameworks and runtimes are inherited from upstream, provided the framework conforms to the rest of the rules (model equivalence, no benchmark detection, no input-based optimization, etc.). The framework must satisfy the **Available** definition ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
+
+**Q9: How does cross-request KV cache sharing interact with the salt mechanism?**
+A: See [§2.9.5 KV Cache Rules](#295-kv-cache-rules) and [§2.9.5.1 Salting Mechanism](#2951-salting-mechanism). Cross-request KV sharing is **blanket allowed** in Endpoints (this is the primary delta vs. upstream MLPerf Inference). The performance dataset injects a per-query salt between the shared system prompt and the per-query user context, so the only prefix two queries can share is the system prompt itself. Accuracy runs use the un-salted dataset.
+
+**Q10: How does the salt mechanism apply to clients that pre-tokenize prompts before sending to the SUT?**
+A: The operative rule ([§2.9.5.1](#2951-salting-mechanism)) is about the *token stream the SUT sees*, not about a particular client-side text-field implementation. A client that pre-tokenizes (e.g., SGLang-style adapters that send `input_tokens` rather than text) must ensure the *token stream* it sends to the SUT contains the unique per-query salt between the system-prompt tokens and the user-context tokens. Two clean ways to do this: (a) apply the salt to the text and then re-tokenize the result before sending, or (b) reserve a salt-marker token ID (or short sequence) and emit it inline. Applying the salt only to a `prompt` text field while sending the original `input_tokens` will *not* prevent KV reuse — the SUT never sees the text — and is non-compliant. The reference implementation in `mlcommons/endpoints` follows path (a); see the warning logged by `Dataset._apply_salt` in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the contract.
 
 ---
 
