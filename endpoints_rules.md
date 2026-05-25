@@ -79,9 +79,9 @@ The benchmark is designed to be:
 
 ## 2. Divisions and Deployment Scenarios
 
-MLPerf Endpoints replaces the traditional Closed/Open division structure from MLPerf Inference with three divisions tailored to endpoint benchmarking: Standardized, Serviced, and RDI. All divisions use the same pareto collection methodology ([§5](#5-pareto-collection-methodology)) and run requirements ([§6](#6-run-requirements-per-measurement-point)). A submission must declare exactly one division.
+MLPerf Endpoints replaces the traditional Closed/Open division structure from MLPerf Inference with three divisions tailored to endpoint benchmarking: **Standardized**, **Serviced**, and **RDI**. All divisions use the same pareto collection methodology ([§5](#5-pareto-collection-methodology)) and run requirements ([§6](#6-run-requirements-per-measurement-point)). A submission must declare exactly one division.
 
-The Available/Preview/RDI publication status categories defined in [Submission Rules §7](endpoints_submission_rules.md#7-publication) continue to apply independently of division.
+For readers familiar with MLPerf Inference's Closed/Open structure: **Standardized** plays the role of *Closed* (strict equivalence, full disclosure); **Serviced** is a new division for commercial endpoint services with no direct MLPerf Inference analog; **RDI** (Research / Development / Internal) plays the role of *Open* — no equivalence requirements, no Available-status requirement. The Available/Preview/RDI **publication status** dimension (defined in [Submission Rules §7](endpoints_submission_rules.md#7-publication)) is *orthogonal* to the division: a Standardized submission may be published as Available, Preview, or RDI status; a Serviced submission may be published as Available or Preview; an RDI-division submission is published only at RDI status.
 
 ### 2.1 Client Deployment Scenarios
 
@@ -92,7 +92,7 @@ MLPerf Endpoints defines two scenarios that determine how the client infrastruct
 The submitter hosts both the client infrastructure and the endpoint server infrastructure. The client and server may be co-located in the same data center or connected via a local network.
 
 - The submitter provides and operates both client and server infrastructure.
-- The client must use the MLPerf Endpoints reference client (`inference_endpoint` from `github.com/mlcommons/endpoints`) without modification, compiled from the tagged revision for the submission round.
+- The client must use the MLPerf Endpoints reference client (`inference_endpoint` from `github.com/mlcommons/endpoints`) without source-code modification, compiled from a commit accessible to the MLCommons review committee. Submitters MAY configure runtime behavior via the YAML configuration file the client accepts; everything that changes behavior MUST be expressible via that YAML. The client logs the commit SHA and the git "dirty" status of the working tree at run time; submissions whose runs report a dirty tree will not be accepted.
 - Network latency between client and server is included in all timing measurements.
 - The submitter must document the network topology between client and server, including type of interconnect, number of hops, and measured baseline network latency.
 - On-prem submissions must be self-contained: all components required to replicate the result must be documented and provided.
@@ -168,7 +168,7 @@ When submitting to the Standardized division via the CoN scenario, the following
 
 - CoN submitters may choose to submit to CoP instead, but must follow all CoN compliance rules when doing so.
 - Servers must not modify incoming or outgoing request/response streams outside the provided MLPerf Endpoints reference API specification.
-- No pre-processing of incoming requests (e.g., changing precision or data layout) or post-processing of outgoing responses (e.g., gather, reduction, ArgMax) beyond what is specified in the reference implementation.
+- The reference client performs all request pre-processing (e.g., tokenization, packing, precision conversion) and all response post-processing (e.g., detokenization, ArgMax, reduction). The SUT executes the model and the reference's serving path only; it does not transform request/response payloads beyond what the reference API specifies.
 - Server must not deliberately delay token dispatch to manipulate TTFT or TPS/User metrics.
 - Server must not cache responses or requests across queries.
 
@@ -285,7 +285,9 @@ Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf En
 | Serviced — CoN | Optional | Required | Optional |
 | RDI | Required | Required | Optional |
 
-Primary accelerator details include: accelerator model, count, memory capacity, and interconnect type. Mapping configurations include: tensor parallelism (TP), expert parallelism (EP), pipeline parallelism (PP), batch size, and other deployment parameters. For Serviced submissions, full rack hardware disclosure is optional, but the primary accelerator must be identified.
+**Hardware details:** accelerator model, count, memory capacity, host CPU/memory, and the interconnect type and topology (e.g., NVLink, InfiniBand, Ethernet, routing layer). For Serviced submissions, full rack hardware disclosure is optional, but the primary accelerator must be identified.
+
+**Software / deployment configuration:** parallelism mapping (tensor parallelism `TP`, expert parallelism `EP`, pipeline parallelism `PP`), batch sizes, scheduling parameters, KV cache configuration, and any other parameters that materially affect throughput or latency. These must be fully disclosed for Standardized division submissions.
 
 ---
 
@@ -293,7 +295,7 @@ Primary accelerator details include: accelerator model, count, memory capacity, 
 
 Tokenizers can produce different token counts depending on how text is fed to them — the same output text tokenized as a single string versus tokenized as a sequence of streamed chunks can yield different counts, even with the same tokenizer. To ensure consistent and representative measurement across divisions:
 
-- The **reference tokenizer** output is the canonical measurement for token counting across all divisions.
+- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its canonical Hugging Face repository — produces the canonical token count for the system under measurement. All token-count metrics (`system_tps`, `tps_per_user`, etc.) are computed from the reference tokenizer applied to the coalesced output, not from any tokenizer used internally by the SUT.
 - **Token counts are obtained by applying the reference tokenizer once to the entire coalesced output** — the full response text reassembled from the submission, tokenized as a single string. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
   - *Fairness:* every submitter is scored against the same tokenizer applied the same way, independent of how their system batches, chunks, or streams during generation.
   - *Representativeness:* this measures the tokens the user perceives in the final response, rather than implementation artifacts of streamed token boundaries that can differ across submitters.
@@ -319,8 +321,12 @@ These rules define what it means for a Standardized division submission to be "m
 
 Each benchmark has a **reference implementation** published in the MLPerf Endpoints reference repository. The reference implementation defines:
 
-- The canonical model weights and tokenizer.
-- The required input and output format (including prompt templates and chat templates).
+- The canonical model weights and the reference tokenizer (the tokenizer published with the model on Hugging Face).
+- The required input and output format.
+- The **dataset** used for performance and accuracy runs (Hugging Face dataset ID or download URL, plus the canonical split and any preprocessing recipe).
+- The **reference chat template** (Hugging Face chat-template string or the equivalent message-formatting spec). Submissions MUST use the reference chat template; alternative templates that produce different tokenized output are not permitted.
+- The **reference server / sampling parameters**: temperature, top-k, top-p, repetition penalty, greedy-vs-stochastic decoding flag, max output tokens, stop sequences. These MUST be set per the benchmark definition; submissions MUST NOT modify them.
+- The **speculative-decoding configuration** if the benchmark designates a drafter (drafter ID, precision, algorithm, default per-point configuration). See [§2.9.4](#294-speculative-decoding).
 - The accuracy evaluation methodology and quality target.
 - The endpoint API interface.
 
@@ -331,7 +337,7 @@ An **alternative reference implementation** may be designated by the working gro
 > [!NOTE]
 > **[WIP — align with inference_rules.adoc closed division pre-processing rules]**
 
-The server-side pre-processing applied to each incoming request must be functionally equivalent to the reference implementation:
+The server-side processing of each incoming request — both input pre-processing and output post-processing — must be functionally equivalent to the reference implementation:
 
 - **Tokenization:** Must produce the same token IDs as the reference tokenizer for the same input text. Submitters using an alternative tokenizer implementation must demonstrate token-for-token equivalence on the accuracy dataset.
 - **Chat template / prompt formatting:** The system prompt, user turn formatting, and special tokens (BOS, EOS, role markers) must match the canonical chat template defined in the benchmark specification. Modifications to the chat template that change the effective input to the model are not permitted.
@@ -481,12 +487,10 @@ A benchmark in MLPerf Endpoints is defined by a specific model, task, and qualit
 
 ### 3.2 Supported Models
 
-The set of supported benchmark models is defined per submission round and maintained in the MLPerf Endpoints reference repository. Each supported model specifies:
+The set of supported benchmark models is defined per submission round and maintained in the MLPerf Endpoints reference repository. The full per-model specification — canonical weights, dataset, chat template, server parameters, accuracy target, and (if applicable) drafter configuration — is given by the [reference implementation](#291-reference-implementation). Each supported model is identified by:
 
-- The canonical model weights (e.g., Hugging Face model ID or checksum).
-- The input/output format (token IDs or text, streaming or non-streaming).
-- The accuracy metric and quality target.
-- The dataset used for performance and accuracy runs.
+- A Hugging Face model ID (or equivalent checksummed source).
+- The task category (text generation, summarization, reasoning, etc.) and the input/output modality (text, token IDs, streaming, non-streaming).
 
 > [!NOTE]
 > The model list for each submission round is published in the MLPerf Endpoints reference repository at least 6 weeks before the submission round opens. New models may be proposed to the working group per the benchmark roadmap process defined in the MLPerf General Submission Rules §4.3.
@@ -937,6 +941,12 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 **Question:** What are the ratified values for minimum run duration, warmup period, minimum query count, and dataset subset rules?
 
 **Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values. All values in that section are pending working group ratification based on empirical validation data.
+
+### \[TOK-COUNT\] Coalesced-Output Tokenization and Reported Throughput
+
+**Question:** The reference-tokenizer-on-coalesced-output rule ([§2.8 Tokenizer Rules](#28-tokenizer-rules)) produces token counts that may be ~10–20% lower than what individual serving stacks report as "tokens/second" internally. Have MLC stakeholders and submitter organizations agreed that the published metric will be the coalesced-tokenizer count and not the serving-stack-reported count?
+
+**Context:** Flagged in PR #1 review by @nvzhihanj. Resolution is needed before v0.7 publishes side-by-side comparison charts. The current §2.8 wording (apply reference tokenizer once to the coalesced output) is the proposed rule; the open question is whether stakeholders accept that the published numbers will differ from internal serving-stack-reported numbers by the expected 10–20% margin.
 
 ### Division and Scenario Open Items
 
