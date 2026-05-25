@@ -64,7 +64,7 @@ These rules define the technical requirements for MLPerf Endpoints benchmark sub
 The submission, review, and publication *process* are defined separately in the companion [MLPerf Endpoints Submission Rules](endpoints_submission_rules.md) document.
 
 > [!NOTE]
-> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-19**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-19]`** are most likely to evolve between v0.7 and v0.8 (next submission **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [Submission Rules §4.0](endpoints_submission_rules.md#40-v07-and-v08-submission-milestones) for the full milestone table.
+> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-19**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-19]`** are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones) for the full milestone table.
 
 MLPerf Endpoints measures the performance of *inference endpoints* serving generative AI models. Unlike traditional MLPerf Inference benchmarks — which measure latency or throughput at a single operating point — MLPerf Endpoints characterizes the full performance *envelope* of a serving system as a Pareto curve across a range of concurrency levels.
 
@@ -946,7 +946,7 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 **Question:** The reference-tokenizer-on-coalesced-output rule ([§2.8 Tokenizer Rules](#28-tokenizer-rules)) produces token counts that may be ~10–20% lower than what individual serving stacks report as "tokens/second" internally. Have MLC stakeholders and submitter organizations agreed that the published metric will be the coalesced-tokenizer count and not the serving-stack-reported count?
 
-**Context:** Flagged in PR #1 review by @nvzhihanj. Resolution is needed before v0.7 publishes side-by-side comparison charts. The current §2.8 wording (apply reference tokenizer once to the coalesced output) is the proposed rule; the open question is whether stakeholders accept that the published numbers will differ from internal serving-stack-reported numbers by the expected 10–20% margin.
+**Context:** Resolution is needed before v0.7 publishes side-by-side comparison charts. The current §2.8 wording (apply reference tokenizer once to the coalesced output) is the proposed rule; the open question is whether stakeholders accept that the published numbers will differ from internal serving-stack-reported numbers by the expected 10–20% margin.
 
 ### Division and Scenario Open Items
 
