@@ -501,26 +501,34 @@ Submitters may apply quantization, format conversion, or other weight transforma
 
 ### 4.1 Primary Metrics
 
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-19]`** TTFT framing — see note below the table on percentile selection.
+
 Each measurement point on the pareto curve captures the following metrics at a specific concurrency level:
 
 | Metric | Symbol | Definition |
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | Average output tokens per second experienced by a single user. `tps_per_user = system_tps / concurrency`. |
-| Time to First Token (P50) | `ttft_p50_ms` | Median time from query issuance to receipt of the first output token, in milliseconds. |
-| Time to First Token (P95) | `ttft_p95_ms` | 99th-percentile time to first token, in milliseconds. |
+| Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time, in milliseconds, from query issuance to receipt of the first output token. |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
+
+> [!NOTE]
+> **TTFT percentiles under discussion.** The WG has agreed to use **P95** for the publication plot and as the primary TTFT metric in v0.7. Additional TTFT percentiles (e.g., P50, P99) are under discussion and may be added as a **secondary metrics** table in a later version. Until then, only `ttft_p95_ms` is required to be reported per measurement point; submitters MAY voluntarily report additional percentiles in their submission YAML, but they will not appear on the publication chart for v0.7.
 
 ### 4.2 Derived and Presentation Metrics
 
-The following metrics are derived from primary measurements and used in publication charts:
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-19]`**
+
+The following metrics are derived from primary measurements and used in publication charts. All charts use the percentile metric defined in [§4.1](#41-primary-metrics):
 
 | Metric | Description |
 |---|---|
-| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. Plots `system_tps` on the y-axis against `tps_per_user` on the x-axis, with each point corresponding to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
-| **Concurrency vs. System TPS** | Shows aggregate throughput scaling with load. Each point annotated with its region. |
-| **Concurrency vs. TTFT P50 and P95** | Shows how first-token latency degrades with load. |
-| **Concurrency vs. Interactivity** | Shows how interactivity, shown as `tps_per_user`, degrades with load. |
+| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **X-axis:** `tps_per_user`. **Y-axis:** `system_tps`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **Concurrency vs. System TPS** | **X-axis:** `concurrency`. **Y-axis:** `system_tps`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
+| **Concurrency vs. TTFT (P95)** | **X-axis:** `concurrency`. **Y-axis:** `ttft_p95_ms`. Shows how first-token latency degrades with load. P95 is the default and the only percentile plotted for v0.7; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
+| **Concurrency vs. Interactivity** | **X-axis:** `concurrency`. **Y-axis:** `tps_per_user`. Shows how per-user output rate degrades with load. |
 
 ### 4.3 Accuracy Metric
 
