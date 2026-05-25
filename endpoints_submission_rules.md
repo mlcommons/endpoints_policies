@@ -78,6 +78,9 @@ Where this document conflicts with the MLPerf General Submission Rules, this doc
 
 Technical requirements — including benchmarks, metrics, the pareto collection methodology, and division-specific rules — are defined in the companion [MLPerf Endpoints Rules](endpoints_rules.md) document. Publication status categories and availability criteria are defined in [§7](#7-publication) of this document.
 
+> [!NOTE]
+> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-19**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-19]`** in either this document or in [`endpoints_rules.md`](endpoints_rules.md) are most likely to evolve between v0.7 and v0.8 (next submission **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [§4.0 v0.7 and v0.8 Submission Milestones](#40-v07-and-v08-submission-milestones) for the full milestone table.
+
 The review process is designed to:
 
 - **Publish results quickly.** Submitters and the industry should not have to wait months for results to appear. The rolling model targets rapid, bi-weekly publication.
