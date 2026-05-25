@@ -356,16 +356,30 @@ Per [§2.2.1](#221-general-rules), weight transformations are governed by the in
 
 #### 2.9.4 Speculative Decoding
 
-> [!WARNING]
-> **[WIP — WG Input Required]** — The constraints below were not taken directly from inference_rules.adoc and must not be treated as policy. The working group must define speculative decoding rules for MLPerf Endpoints from first principles or by explicit adoption of the inference rules definition. Do not implement compliance checks based on this subsection.
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-19]`**
 
-Speculative decoding is permitted in the Standardized division, subject to the following constraints:
+Speculative decoding is permitted in the Standardized division for benchmarks that designate a drafter in the benchmark definition. The drafter is treated as part of the canonical reference and is **frozen** in the training sense:
 
-- **Draft model disclosure.** The draft model used must be identified by name, version, and source. A draft model that is not publicly disclosed and available is not permitted.
-- **Draft model weights.** The draft model must use publicly available weights from the same model family (e.g., a smaller checkpoint of the same base model, or the same model with a draft head trained on public data). A custom draft model trained specifically for benchmark performance is not permitted.
-- **Verification step.** The target model used in the verification step must be the canonical model with permitted weight transformations (§2.9.3) applied. The verification step may not be approximated, skipped, or replaced by a secondary draft model.
-- **Number of speculative tokens.** The number of draft tokens per step (`k`) must be declared in the submission YAML. It may vary dynamically, but the distribution must be reported.
-- **Output equivalence.** Speculative decoding must produce outputs that are token-for-token identical to what the target model would generate without speculation — i.e., the verification step must not introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Approximate speculative decoding methods that alter the output distribution are not permitted in the Standardized division.
+- **Frozen drafter (training).** The draft component (MTP head, EAGLE-style head, or analogous module) MUST be used as the published reference defines it: identical canonical weights (subject to the PTQ carve-out below), identical algorithm, and identical configuration *family* to the reference. The following transformations of the drafter are explicitly **disallowed**:
+  - Fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update.
+  - Continued pre-training or retraining.
+  - Swapping the drafter for a different model (including a different checkpoint of the same family, a smaller checkpoint, or a model trained specifically for benchmark performance).
+  - Any post-training method that updates drafter weights beyond the PTQ carve-out below.
+
+  In short: the drafter weights are a constant for fine-tuning/retraining/swap.
+
+- **PTQ on the drafter is permitted** (Endpoints-specific deviation from upstream). The drafter weights MAY be post-training quantized using the same rules that apply to the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, must be disclosed, must pass the accuracy gate. This is an intentional divergence from [upstream MLPerf Inference Appendix: Speculative Decoding](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#speculative-decoding), which prohibits drafter quantization. Endpoints permits it because PTQ is the canonical MLPerf optimization and treating drafter and target asymmetrically is unnecessarily restrictive given a working accuracy gate.
+
+- **Drafter availability scope.** Speculative decoding is enabled per `(benchmark, scenario)` combination as listed in the benchmark definition (mirroring upstream). If a benchmark does not designate a drafter, speculative decoding is not permitted for that benchmark.
+
+- **Drafter disclosure.** The drafter identity (name, version, source URL), precision, algorithm, and per-point configuration MUST be declared in the submission YAML.
+
+- **Pareto consistency.** All measurement points on a submission's pareto curve for a given `(benchmark, scenario)` MUST use the same drafter (same head, same algorithm). Different **configurations** of the same drafter (e.g., varying `speculative-num-steps` or `speculative-eagle-topk`) are permitted across pareto points, including disabling speculation entirely at some points. The drafter itself is fixed across the curve. The configuration values used at each point MUST be declared in the submission YAML, and any dynamic variation within a single point's run MUST be reported as a distribution.
+
+- **Verification step.** The target model in the verification step MUST be the canonical model with permitted transformations ([§2.9.3](#293-model-weight-rules)) applied. The verification step may not be approximated, skipped, or replaced by a secondary drafter.
+
+- **Output equivalence.** Speculative decoding MUST produce outputs that are token-for-token identical to what the target model would generate without speculation — the verification step MUST NOT introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Approximate speculative-decoding methods that alter the output distribution are not permitted in the Standardized division.
 
 #### 2.9.5 KV Cache Rules
 
