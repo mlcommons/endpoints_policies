@@ -798,29 +798,45 @@ Publication status categories — **Available**, **Preview**, and **RDI** — in
 An Endpoints submission must follow this directory structure:
 
 ```
-<submitting_organization>/
-  systems/
-    <system_desc_id>.json
-  src/
-    <benchmark_model>/
-      <implementation_id>/
-        <endpoint interface code and configuration>
-  pareto/
-    <system_desc_id>/
-      <benchmark_model>/
-        points/
-          point_<concurrency_level>.yaml    # one per measurement point
-        results/
-          point_<concurrency_level>/
-            mlperf_endpoints_log_summary.json
-            mlperf_endpoints_log_detail.json
-            system_desc.json 
-        accuracy/
-          accuracy_result.json
-          accuracy.txt
-  documentation/
-    calibration.adoc                        # if weight transformations applied
-    <additional documentation>
+ <org>/                                  # e.g. nvidia/, mycompany/  (replaceable)
+  ├── docs/                               # ORG-WIDE: about, contact, legal, submitter info
+  │
+  └── <system>/                           # e.g. H200-SXM-141GBx8_TRT/, GB300-NVL72_GB300-288GB_aarch64x72_TRT/
+      ├── docs/                           # SYSTEM-WIDE: hardware topology, cluster diagram, network/NVLink notes
+      ├── system_desc.json                # §8.2 — division, publication_status, max_supported_concurrency,
+      │                                   #         endpoint_url, serving_framework, hardware/SW stack
+      │
+      └── <model>/                        # e.g. deepseek-r1/, gpt-oss-120b/
+          ├── docs/                       # MODEL-WIDE: calibration.adoc (if quantized), software disclosure,
+          │                               #             dataset notes, prompt template, reproducibility recipe
+          │
+          ├── r<N>/                       # PARETO POINT per concurrency level (r1, r32, r256, r4096, …)
+          │   │                           #   — fully self-contained: own server config, own accuracy run
+          │   ├── docs/                   # POINT-SPECIFIC: run notes, anomalies, retry rationale
+          │   │
+          │   ├── point.yaml              # §8.3 — concurrency, region (low_latency | low/med/high_throughput |
+          │   │                           #          submitters_choice), runtime_settings, dataset
+          │   │
+          │   ├── src/                    # POINT-SPECIFIC endpoint interface code & config
+          │   │   └── <implementation_id>/    # e.g. trtllm/, vllm/, sglang/
+          │   │       ├── endpoint.yaml       # client-side endpoint config (api_type, model_params, dataset)
+          │   │       ├── server_run.md       # exact server launch command for THIS point
+          │   │       └── server_config/      # backend YAMLs tuned for THIS concurrency
+          │   │                               #   (batch size, max_seq_len, KV cache %, TP/EP/PP, etc.)
+          │   │
+          │   ├── accuracy/               # POINT-SPECIFIC accuracy run (rules update pending)
+          │   │   ├── accuracy_result.json
+          │   │   └── accuracy.txt
+          │   │
+          │   ├── mlperf_endpoints_log_summary.json   # §8.1 — aggregate metrics (QPS, TPS, TTFT, TPOT, latency %iles)
+          │   ├── mlperf_endpoints_log_detail.json    # §8.1 — per-request events
+          │   ├── run_metadata.json       # framework/parallelism/precision used for this point
+          │   └── report.txt              # human-readable summary
+          │
+          ├── sweep_summary.csv           # post-hoc aggregate across all r<N> points (one row per point)
+          └── sweep_distributions.csv     # percentile distributions across all r<N> points
+
+
 ```
 
 ### 8.2 System Description (`system_desc_id.json`)
