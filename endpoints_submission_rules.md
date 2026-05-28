@@ -225,7 +225,7 @@ The figure below illustrates three representative scenarios for a submission mad
 
 The **individual making the submission** must have signed the relevant MLCommons CLA. The CLA requirement applies to that individual — it is not required that every member of their organization has signed. 
 
-The individual making the submission must register on the MLCommons PRISM portal and generate a submission token. The token must be provided as a CLI argument when invoking the submission command.
+Register with PRISM by creating your account at MLCommons Member Central using your organization email id. Once a membership account has been created, you will be granted API creation access and sent an email notifying that, after which, you can sign in and create an API key with Service Scope MLPerf Endpoints from your API Keys dashboard.
 
 ### 5.2 How to Submit
 
