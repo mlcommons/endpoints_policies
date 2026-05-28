@@ -229,21 +229,23 @@ Register with PRISM by creating your account at MLCommons Member Central using y
 
 ### 5.2 How to Submit
 
-Submissions are made through the MLCommons Endpoints submission API.
+Submissions are made via the `endpoints-submission-cli`, authenticated with the PRISM API key from §5.1 (set as `PRISM_USER_API_TOKEN` or passed via `--token`).
 
 **Workflow:**
 
-1. **Upload runs.** For each benchmark run, the submitter calls `POST /runs`. The run data is stored to MLCommons-provided storage. Each run receives a UUID.
+1. **Run the benchmark.** For each Pareto point, run `inference-endpoint benchmark` with `--capture-sysinfo`. Each invocation writes a local run folder containing system info, configuration, and result summaries.
 
-2. **Create the submission.** Once all runs are uploaded, the submitter calls `POST /submissions`, referencing the run UUIDs along with `division`, `availability`, flag.
+2. **Register each run.** `endpoints-submission-cli runs create --path <folder>` uploads the run to MLCommons storage and returns a `run_id`.
 
-**What happens after `POST /submissions`:**
+3. **Create the submission.** `endpoints-submission-cli submissions create --run-ids ... --division <...> --scenario <...> --availability <...>` assembles the bundle from the registered runs and submits it.
 
-- The submission checker is run on the submission bundle. On pass, the submission is assigned a publication cycle — the next 1st or 3rd Wednesday of the month with ≥1 business day of buffer — and enters peer review. On fail, the submission is rejected with the failing rule codes; the submitter may correct the issues and resubmit.
-- A confidential peer-review PR is automatically opened in the private MLCommons review repository. Reviewers and the submitting organization are granted access. Objections are filed as PR comments and must be resolved per §5.3.
+**What happens on `submissions create`:**
+
+- The Submission Checker runs locally on the assembled bundle. On failure, nothing is uploaded; the submitter corrects the issues and resubmits.
+- On pass, the bundle is uploaded to MLCommons storage, the submission is assigned a publication cycle (next 1st or 3rd Wednesday with ≥1 business day of buffer), and a peer-review PR is automatically opened in the private MLCommons review repository. Reviewers and the submitting organization are granted access; objections are filed as PR comments and resolved per §6.
 - On finalization, results are published in the public MLPerf Endpoints results repository and shown in the visualizer on the next publication-cycle date.
 
-The submission must include all materials required by the [MLPerf Endpoints Rules](endpoints_rules.md) document.
+The submission must include all materials required by the [MLPerf Endpoints Rules](endpoints_rules.md) document. Detailed CLI usage — including amendments, withdrawal, and run lifecycle — is documented in the MLPerf Endpoints [Submission Guide](https://docs.google.com/document/d/1mgJrGqilxG9Kn_tzVFifSQQnuUWjMihVLMp_WNZRVRM/edit?usp=sharing).
 
 ### 5.3 Late Submissions
 
