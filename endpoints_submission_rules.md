@@ -233,11 +233,26 @@ Submissions are made via the `endpoints-submission-cli`, authenticated with the 
 
 **Workflow:**
 
-1. **Run the benchmark.** For each Pareto point, run `inference-endpoint benchmark` with `--capture-sysinfo`. Each invocation writes a local run folder containing system info, configuration, and result summaries.
+1. **Run the benchmark.** For each Pareto point, run `inference-endpoint benchmark` with config.yml having `system_info` section(if you want to automatically capture the system description). Each invocation writes a local run folder containing the following files:
 
-2. **Register each run.** `endpoints-submission-cli runs create --path <folder>` uploads the run to MLCommons storage and returns a `run_id`.
+```
+├── config.yaml
+├── events.jsonl
+├── metrics
+│   └── final_snapshot.json
+├── mlperf-system-info-single-node-0.json	# from sysinfo tool(number of files generated is based on the number of nodes used for the benchmark)
+├── report.txt
+├── result_summary.json
+├── results.json
+├── run_metadata.json
+├── sample_idx_map.json
+├── serving_config.json	# from sysinfo tool
+└── system_desc.json	# sysinfo tool + manual effort
+```
 
-3. **Create the submission.** `endpoints-submission-cli submissions create --run-ids ... --division <...> --scenario <...> --availability <...>` assembles the bundle from the registered runs and submits it.
+2. **Register each run.** `endpoints-submission-cli runs create --token <PRISM_USER_API_TOKEN> --path <folder>` uploads the run to MLCommons storage and returns a `run_id`.
+
+3. **Create the submission.** `endpoints-submission-cli submissions create --run-ids ... --division <...> --scenario <...> --availability <...>` assembles the bundle from the registered runs and submits it. Please refer to the detailed README for the [run](https://github.com/mlcommons/endpoints-submission-cli/blob/endpointsubcli/docs/endpoints-cli/usage/runs.md)) and [submission](https://github.com/mlcommons/endpoints-submission-cli/blob/endpointsubcli/docs/endpoints-cli/usage/submissions.md) command structures.
 
 **What happens on `submissions create`:**
 
