@@ -233,22 +233,7 @@ Submissions are made via the `endpoints-submission-cli`, authenticated with the 
 
 **Workflow:**
 
-1. **Run the benchmark.** For each Pareto point, run `inference-endpoint benchmark` with config.yml having `system_info` section(if you want to automatically capture the system description). Each invocation writes a local run folder containing the following files:
-
-```
-├── config.yaml
-├── events.jsonl
-├── metrics
-│   └── final_snapshot.json
-├── mlperf-system-info-single-node-0.json	# from sysinfo tool(number of files generated is based on the number of nodes used for the benchmark)
-├── report.txt
-├── result_summary.json
-├── results.json
-├── run_metadata.json
-├── sample_idx_map.json
-├── serving_config.json	# from sysinfo tool
-└── system_desc.json	# sysinfo tool + manual effort
-```
+1. **Run the benchmark.** For each Pareto point, run `inference-endpoint benchmark` with config.yml having `system_info` section(if you want to automatically capture the system description). Each invocation writes a local run folder containing system info, configuration, and result summaries.
 
 2. **Register each run.** `endpoints-submission-cli runs create --token <PRISM_USER_API_TOKEN> --path <folder>` uploads the run to MLCommons storage and returns a `run_id`.
 
