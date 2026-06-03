@@ -353,12 +353,6 @@ The following are **also disallowed** at run time:
 - **Approximate speculative-decoding methods that alter the output distribution.** The verification step MUST NOT introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Outputs MUST be token-for-token identical to what the target model would generate without speculation.
 - **Approximating, skipping, or replacing the verification step**, including replacing the target with a secondary drafter for verification. The target model in the verification step MUST be the canonical model with the permitted transformations of [§2.9.3](#293-model-weight-rules) applied.
 
-**Disclosure and run-time requirements:**
-
-- The drafter identity (name, version, source URL), precision, algorithm, and per-point configuration MUST be declared in the submission YAML.
-- All measurement points on a submission's pareto curve for a given benchmark MUST use the same drafter (same head, same algorithm). Different **configurations** of the same drafter (e.g., varying `speculative-num-steps` or `speculative-eagle-topk`) are permitted across pareto points, including disabling speculation entirely at some points. The drafter itself is fixed across the curve. The configuration values used at each point MUST be declared in the submission YAML, and any dynamic variation within a single point's run MUST be reported as a distribution.
-
-For PTQ on drafter weights, see [§2.9.8 Q&A Q6](#298-qa-model-equivalence-clarifications).
 
 #### 2.9.5 KV Cache Rules
 
@@ -371,7 +365,6 @@ For PTQ on drafter weights, see [§2.9.8 Q&A Q6](#298-qa-model-equivalence-clari
 - **KV cache quantization.** The KV cache may be stored at reduced precision (e.g., INT8, INT4, FP8 KV). This must be disclosed and does not require working group pre-approval, provided the submission passes the accuracy gate.
 - **Paged / virtual KV cache.** Paged attention and virtual KV cache implementations (e.g., vLLM's PagedAttention) are permitted.
 - **KV cache compression.** Structured KV cache compression methods (e.g., H2O, SnapKV, sliding-window eviction) are permitted if they are part of the reference implementation or a designated alternative implementation. Compression methods not in the reference must be disclosed and are subject to Methodology objections during peer review.
-- **Cross-request KV sharing.** Sharing KV cache state across independent requests (prefix caching, prompt caching) is **permitted** as a serving optimization, provided: (1) the output tokens produced are identical to what would be produced without caching; and (2) the cache is not used to share information from one user's response into another user's generation (no cross-user context leakage).
 - **Response caching.** Returning a cached response verbatim to a request that matches a previous request is **not permitted**. Every request must go through the forward pass.
 
 #### 2.9.6 Post-Processing Equivalence
@@ -418,13 +411,13 @@ A: No. Returning a cached response verbatim to a request that matches a previous
 A: *Open question.* See [Appendix A](#appendix-a-open-questions-and-working-group-items); the WG is discussing this in the context of Client-over-Network (CoN) scenarios. Until resolved, submitters must disclose any token-coalescing behavior and conservatively assume `stream_all_chunks = true` semantics. Token-count metrics use the reference tokenizer applied to the coalesced output (see [§2.8 Tokenizer Rules](#28-tokenizer-rules)).
 
 **Q6: Is PTQ allowed on the speculative-decoding drafter?**
-A: Yes. The drafter weights MAY be post-training quantized using the same rules as the canonical model ([§2.9.3 Model Weight Rules](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, must be disclosed, must pass the accuracy gate. The drafter remains *frozen* in every other training-side sense ([§2.9.4](#294-speculative-decoding)) — no fine-tuning, no RLHF, no continued pre-training, no swap for a custom-trained model.
+A: N/A
 
 **Q7: Can I use a different serving framework than the reference (vLLM vs. TensorRT-LLM vs. SGLang)?**
 A: Yes. Arbitrary frameworks and runtimes are inherited from upstream, provided the framework conforms to the rest of the rules (model equivalence, no benchmark detection, no input-based optimization, etc.). The framework must satisfy the **Available** definition ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
 
 **Q8: How does cross-request KV cache sharing interact with the salt mechanism?**
-A: See [§2.9.5 KV Cache Rules](#295-kv-cache-rules) and [§2.9.5.1 Salting Mechanism](#2951-salting-mechanism). Cross-request KV sharing is **blanket allowed** in Endpoints (this is the primary delta vs. upstream MLPerf Inference). The performance dataset injects a per-query salt between the shared system prompt and the per-query user context, so the only prefix two queries can share is the system prompt itself. Accuracy runs use the un-salted dataset.
+A: N/A
 
 **Q9: How does the salt mechanism apply to clients that pre-tokenize prompts before sending to the SUT?**
 A: The operative rule ([§2.9.5.1](#2951-salting-mechanism)) is about the *token stream the SUT sees*, not about a particular client-side text-field implementation. A client that pre-tokenizes (e.g., SGLang-style adapters that send `input_tokens` rather than text) must ensure the *token stream* it sends to the SUT contains the unique per-query salt between the system-prompt tokens and the user-context tokens. Two clean ways to do this: (a) apply the salt to the text and then re-tokenize the result before sending, or (b) reserve a salt-marker token ID (or short sequence) and emit it inline. Applying the salt only to a `prompt` text field while sending the original `input_tokens` will *not* prevent KV reuse — the SUT never sees the text — and is non-compliant. The reference implementation in `mlcommons/endpoints` follows path (a); see the warning logged by `Dataset._apply_salt` in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the contract.
@@ -533,6 +526,9 @@ There is no requirement to space points evenly within or across regions. Submitt
 The 3 submitter's-choice points may be placed in any of the four regions, including regions that already have a required point. For example, a submitter could place all 3 additional points in the High Throughput region to demonstrate scaling behavior, or distribute them to show overall consistency.
 
 ### 5.4 Regions of Interest
+
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** Regions of Interest (ROIs) are named for either latency or throughput, but in both cases they are constrained by concurrency. Please read the methodology carefully before proceeding.
 
 The concurrency space is divided into four regions.
 
