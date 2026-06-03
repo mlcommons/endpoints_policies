@@ -64,7 +64,7 @@ These rules define the technical requirements for MLPerf Endpoints benchmark sub
 The submission, review, and publication *process* are defined separately in the companion [MLPerf Endpoints Submission Rules](endpoints_submission_rules.md) document.
 
 > [!NOTE]
-> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-19**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-19]`** are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones) for the full milestone table.
+> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-26**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-26]`** are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones) for the full milestone table.
 
 MLPerf Endpoints measures the performance of *inference endpoints* serving generative AI models. Unlike traditional MLPerf Inference benchmarks — which measure latency or throughput at a single operating point — MLPerf Endpoints characterizes the full performance *envelope* of a serving system as a Pareto curve across a range of concurrency levels.
 
@@ -133,7 +133,7 @@ The Standardized division is the primary benchmark division, requiring strict ad
 #### 2.2.1 General Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** This section ports the MLPerf Inference optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed entries below may be revised after v0.7 submitter feedback.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** This section ports the MLPerf Inference optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed entries below may be revised after v0.7 submitter feedback.
 
 **Inheritance.** Standardized division submissions inherit the model-equivalence and optimization rules of [MLPerf Inference §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). **This document is the source of truth and overrides upstream wherever the two conflict.** Where upstream uses a non-exhaustive list of allowed examples followed by a disallowed list, Endpoints uses a single **disallowed-only** formulation: anything not listed below and not in conflict with the [§2.9 Model Equivalence Rules](#29-model-equivalence-rules-standardized-division) is permitted. See [§2.9.8 Q&A](#298-qa-model-equivalence-clarifications) for clarifying examples.
 
@@ -164,16 +164,11 @@ The Standardized division is the primary benchmark division, requiring strict ad
 
 #### 2.2.2 Client over Network (CoN) — Additional Rules
 
-When submitting to the Standardized division via the CoN scenario, the following additional rules apply:
-
-- CoN submitters may choose to submit to CoP instead, but must follow all CoN compliance rules when doing so.
-- Servers must not modify incoming or outgoing request/response streams outside the provided MLPerf Endpoints reference API specification.
-- The reference client performs all request pre-processing (e.g., tokenization, packing, precision conversion) and all response post-processing (e.g., detokenization, ArgMax, reduction). The SUT executes the model and the reference's serving path only; it does not transform request/response payloads beyond what the reference API specifies.
-- Server must not deliberately delay token dispatch to manipulate TTFT or TPS/User metrics.
-- Server must not cache responses or requests across queries.
-
+> [!CAUTION]
+> **`[ Subject to change after 2026-06-26]`** Serviced scenario is not supported for MLPerf Endpoints v0.7 
 > [!NOTE]
 > **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Standardized CoN scenario is under development by the working group.
+
 
 #### 2.2.3 Result Naming
 
@@ -183,28 +178,11 @@ Unqualified use of "MLPerf Endpoints" refers to results from the Standardized di
 
 ### 2.3 Serviced Division
 
-The Serviced division benchmarks publicly available, generally accessible inference-as-a-service endpoints. This is a new division unique to MLPerf Endpoints, designed to benchmark commercial Gen AI API offerings.
+> [!CAUTION]
+> **`[ Subject to change after 2026-06-26]`** Serviced scenario  is not supported for MLPerf Endpoints v0.7 
+> [!NOTE]
+> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Serviced scenario is under development by the working group.
 
-**Transparency:** Greybox — the endpoint behavior must be reproducible and auditable, but full internal implementation details need not be disclosed. The API interface, model identity, and pricing must be public.
-
-**Available Scenarios:** Client over Network (CoN) only.
-
-#### 2.3.1 Rules
-
-- The endpoint must be a publicly available, generally accessible commercial service. "Generally accessible" means any customer meeting standard terms of service can obtain access.
-- Performance must be reproducible: the endpoint must deliver consistent results when benchmarked at different times within a reasonable window.
-- Audit and accuracy tests are required to verify the endpoint produces correct outputs.
-- The submitter must disclose: the model name and version as advertised by the service, the API endpoint URL, the pricing model and rates at time of submission, and any rate limits or quotas that apply.
-- Serviced submissions may augment the base reference model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms. Any such augmentations must be disclosed.
-- Response caching across queries is not allowed.
-
-**Optimization transparency:**
-
-| Category | Requirement |
-|---|---|
-| Precision | Required |
-| Speculative decode, fusion, changes | Disclosure required (no source code required) |
-| Model quantization | Optional |
 
 #### 2.3.2 Result Naming
 
@@ -214,21 +192,11 @@ Results must use the qualified name "MLPerf Endpoints Serviced." Example: *"MLPe
 
 ### 2.4 RDI (Research, Development, and Internal) Division
 
-The RDI division provides a category for experimental, pre-release, or internal systems that do not meet Standardized or Serviced requirements. It replaces the traditional "Open" division.
+> [!CAUTION]
+> **`[ Subject to change after 2026-06-26]`** RDI scenario  is not supported for MLPerf Endpoints v0.7 
+> [!NOTE]
+> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the RDI scenario is under development by the working group.
 
-**Transparency:** Blackbox — no audit or compliance tests required. Internal implementation details need not be disclosed.
-
-**Available Scenarios:** Client on Prem (CoP) or Client over Network (CoN). Server may be self-hosted, hybrid, or cloud-hosted. CoP and CoN are not reported as separate sub-divisions.
-
-#### 2.4.1 Rules
-
-- Must use the standard MLPerf Endpoints performance and accuracy datasets.
-- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT P50/P95) using the same measurement methodology.
-- Must use the same base reference model. RDI submissions may augment the model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms.
-- No audit or compliance tests required. No code visibility requirement.
-- Submitters must report achieved accuracy on the accuracy dataset.
-
-For RDI publication status and the cooling-off period for RDI hardware transitioning to Available or Preview, see [Submission Rules §7.4](endpoints_submission_rules.md#74-rdi-research-development-or-internal).
 
 #### 2.4.2 Result Naming
 
@@ -310,7 +278,7 @@ Tokenizers can produce different token counts depending on how text is fed to th
 ### 2.9 Model Equivalence Rules (Standardized Division)
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas (most notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules) and drafter PTQ in [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas. Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
 
 These rules define what it means for a Standardized division submission to be "model equivalent" to the reference implementation. The accuracy quality target (§4.3) is the ultimate arbiter of model equivalence: a submission that passes the accuracy gate is considered equivalent regardless of internal implementation choices. The rules below define which implementation choices are permitted in reaching that accuracy gate.
 
@@ -346,7 +314,7 @@ The server-side processing of each incoming request — both input pre-processin
 #### 2.9.3 Model Weight Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`**
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
 
 All Standardized division submissions must begin from the **canonical model weights** specified in the benchmark definition (identified by Hugging Face model ID or a published checksum).
 
@@ -361,7 +329,9 @@ Per [§2.2.1](#221-general-rules), weight transformations are governed by the in
 #### 2.9.4 Speculative Decoding
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`**
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
+> [!NOTE]
+> **[Limited Use]** — Only DeepSeek R1 submissions are permitted to used speculative deocde, as per the [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence), and submitters must adhere to speculative decode rules and policies as of MLPerf Inference v6.0
 
 Speculative decoding is permitted for any benchmark whose definition designates a drafter (MTP head, EAGLE-style head, or analogous module). The drafter is treated as part of the canonical reference and is **frozen** in the training sense. The following transformations of the drafter are **disallowed**:
 
@@ -385,37 +355,15 @@ For PTQ on drafter weights, see [§2.9.8 Q&A Q6](#298-qa-model-equivalence-clari
 #### 2.9.5 KV Cache Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** This section **intentionally diverges from MLPerf Inference §KV-Cache**, which prohibits cross-query KV reuse. Endpoints targets agentic-style workloads where a shared system prompt across queries is the norm; prohibiting cross-query reuse would force submitters to artificially cripple production-style serving stacks. The salt mechanism in [§2.9.5.1](#2951-salting-mechanism) preserves measurement validity by ensuring caches cannot leak context beyond the system-prompt prefix.
-
-Per [§2.2.1](#221-general-rules), KV-cache management is governed by the inherited MLPerf Inference rules with the Endpoints-specific cross-query-reuse delta described below. The following KV-cache techniques are **disallowed**:
-
-- **Response caching that bypasses the forward pass.** Returning a cached response verbatim to a request that matches a previous request is not permitted. Every request must execute the forward pass. (Cross-query KV-cache reuse — covered by the Endpoints delta below — is *not* response caching: it still executes the forward pass on a salt-uniquified per-query token stream.)
-- **KV-cache compression methods that are not in the reference implementation and that have not been disclosed in the submission.** Compression methods that are part of the reference or a designated alternative implementation are permitted by default; submission-specific compression methods are subject to Methodology objections during peer review even after disclosure.
-
-**Endpoints-specific delta — cross-query KV reuse:** Sharing KV cache state across independent requests — including prefix / prompt caching of the shared system prompt — is permitted as a serving optimization, with no requirement of bit-for-bit output identity vs. an un-cached run and no requirement of cross-user partitioning. The performance dataset injects a per-query salt between the shared system prompt and the per-query user context (see [§2.9.5.1](#2951-salting-mechanism)). The salt guarantees that the only prefix two queries can share is the system prompt itself; any KV state derived from the user context cannot be reused across queries with different contexts.
-
-**Disclosure requirements:**
-
-- If the KV cache is stored at reduced precision (e.g., INT8, INT4, FP8 KV), the precision and quantization method MUST be disclosed in the submission YAML.
-- Any KV-cache compression method that is not part of the reference implementation MUST be disclosed in the submission YAML.
-- Paged / virtual KV cache implementations (e.g., vLLM's PagedAttention) are inherited as permitted under the upstream "Different in-memory representations" allowance and do not require separate disclosure beyond what is already captured in the serving-framework / software-stack disclosure.
-
-##### 2.9.5.1 Salting Mechanism
-
-The performance benchmark workload prepends a unique, deterministic-but-pseudorandom **salt** to each per-query user prompt at request-construction time. The salt:
-
-- **MUST** carry at least 64 bits of entropy per query.
-- **MUST** be generated from a seeded pseudo-random sequence (e.g., `random.Random(seed)`) where the seed is declared in the run configuration. This makes the salt sequence reproducible across runs with the same seed while still preventing cross-query KV reuse beyond the system prompt.
-- **MUST** be inserted *between* the system prompt and the user-context portion of the prompt, so the system prompt remains a shared prefix across queries (and is therefore cacheable as the legitimate optimization this section permits) while the user-context portion becomes per-query-unique.
-- **MUST** be generated at request-construction time, **not** stored in the dataset on disk, so that repeated runs of the same dataset always produce a per-query-unique salt sequence regardless of how many times the dataset is replayed. (Storing salt in the dataset would lose uniqueness across replays — see [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the reference rationale.)
-- **SHOULD** use the reference implementation in `mlcommons/endpoints` (`Dataset.with_salt(random.Random(seed))`, introduced in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305)).
-
-How a submitter's client achieves the per-query uniqueness above (e.g., for clients that pre-tokenize prompts) is an **implementation detail** addressed in [§2.9.8 Q&A Q9](#298-qa-model-equivalence-clarifications). The operative requirement is that the token stream actually seen by the SUT contains a unique per-query salt between the system prompt and the user context — not the *means* by which the client constructs that stream.
-
-**Accuracy runs use the un-salted reference dataset** to ensure model output matches the canonical implementation exactly. Submissions are not required to disable cross-query KV reuse in their serving stack for accuracy runs; the accuracy dataset simply omits the salt prefix, and the serving stack reuses KV as it would in production. This split (salted performance dataset, un-salted accuracy dataset) is the operational mechanism that allows blanket cross-query KV reuse without compromising the accuracy gate's role as a model-output check.
-
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
 > [!NOTE]
-> **Backward compatibility note.** This rule intentionally diverges from MLPerf Inference's KV-cache FAQ, which states KV state "does not apply across queries". Endpoints submissions are not portable to standard MLPerf Inference without disabling cross-query KV reuse; conversely, MLPerf Inference submissions that already prohibit cross-query reuse are trivially compliant with this section. Submitters should treat the two rule sets as **not** mutually compatible for code paths that rely on this delta.
+> **[Limited Use]** — KV Cache rules must conform to [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence) for MLPerf Endpoints v0.7 submissions. 
+
+- **KV cache quantization.** The KV cache may be stored at reduced precision (e.g., INT8, INT4, FP8 KV). This must be disclosed and does not require working group pre-approval, provided the submission passes the accuracy gate.
+- **Paged / virtual KV cache.** Paged attention and virtual KV cache implementations (e.g., vLLM's PagedAttention) are permitted.
+- **KV cache compression.** Structured KV cache compression methods (e.g., H2O, SnapKV, sliding-window eviction) are permitted if they are part of the reference implementation or a designated alternative implementation. Compression methods not in the reference must be disclosed and are subject to Methodology objections during peer review.
+- **Cross-request KV sharing.** Sharing KV cache state across independent requests (prefix caching, prompt caching) is **permitted** as a serving optimization, provided: (1) the output tokens produced are identical to what would be produced without caching; and (2) the cache is not used to share information from one user's response into another user's generation (no cross-user context leakage).
+- **Response caching.** Returning a cached response verbatim to a request that matches a previous request is **not permitted**. Every request must go through the forward pass.
 
 #### 2.9.6 Post-Processing Equivalence
 
@@ -429,8 +377,15 @@ How a submitter's client achieves the per-query uniqueness above (e.g., for clie
 
 #### 2.9.7 Accuracy Gate
 
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
 > [!NOTE]
-> **[WIP — accuracy tolerance values to be specified per benchmark, aligned with inference_rules.adoc accuracy targets]**
+> **[Limited Use]** — KV Cache rules must conform to [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence) for MLPerf Endpoints v0.7 submissions. 
+
+
+> [!NOTE]
+> **[WIP — accuracy tolerance values to be specified per benchmark, aligned with inference_rules.adoc accuracy targets]** and must comply with [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence) for MLPerf Endpoints v0.7 submissions. 
+
 
 A Standardized division submission passes model equivalence if and only if it meets the **accuracy quality target** defined for the benchmark, evaluated using the reference evaluation methodology on the accuracy dataset. Passing the accuracy gate is necessary and sufficient for model equivalence.
 
@@ -439,7 +394,7 @@ The accuracy quality target and tolerance relative to the reference score are sp
 #### 2.9.8 Q&A: Model Equivalence Clarifications
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** Q&A entries are interpretive guidance. If a Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and the Q&A entry will be revised.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** Q&A entries are interpretive guidance. If a Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and the Q&A entry will be revised.
 
 **Q1: Is post-training quantization (PTQ) with the published calibration set allowed?**
 A: Yes. PTQ is the canonical example of an allowed weight transformation, inherited from upstream. PTQ-style methods (AWQ, GPTQ, bitsandbytes) and arbitrary numerical formats (INT8/INT4/FP8 and similar) are allowed provided they (a) use only the published calibration set, (b) are publicly described to a level where they could be reproduced, (c) pass the accuracy gate, and (d) are disclosed in the submission YAML.
@@ -478,6 +433,12 @@ A benchmark in MLPerf Endpoints is defined by a specific model, task, and qualit
 
 ### 3.2 Supported Models
 
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
+> [!NOTE]
+> **[MLPerf v0.7 Submission Models]** — Only three models are supported for the inital v0.7 submission - DeepSeek R1, GPT-OSS 120B, and Llama3 8B. 
+> Submissions to each benchmarks must use the same datasets and meet accuracy targets as set for MLPerf Inference v6.0
+
 The set of supported benchmark models is defined per submission round and maintained in the MLPerf Endpoints reference repository. The full per-model specification — canonical weights, dataset, chat template, server parameters, accuracy target, and (if applicable) drafter configuration — is given by the [reference implementation](#291-reference-implementation). Each supported model is identified by:
 
 - A Hugging Face model ID (or equivalent checksummed source).
@@ -497,7 +458,7 @@ Submitters may apply quantization, format conversion, or other weight transforma
 ### 4.1 Primary Metrics
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** TTFT framing — see note below the table on percentile selection.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** TTFT framing — see note below the table on percentile selection.
 
 Each measurement point on the pareto curve captures the following metrics at a specific concurrency level:
 
@@ -514,7 +475,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 ### 4.2 Derived and Presentation Metrics
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`**
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
 
 The following metrics are derived from primary measurements and used in publication charts. All charts use the percentile metric defined in [§4.1](#41-primary-metrics):
 
