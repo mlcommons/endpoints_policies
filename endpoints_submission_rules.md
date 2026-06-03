@@ -229,12 +229,23 @@ Register with PRISM by creating your account at MLCommons Member Central using y
 
 ### 5.2 How to Submit
 
-> [!NOTE]
-> **[TBD — Pending MLCommons input]** — The exact submission mechanism (encrypted tarball, web UI, GitHub PR, or other) for MLPerf Endpoints has not yet been finalized. MLCommons needs to specify the tooling and infrastructure. The following text reflects the approach used for MLPerf Inference and will be updated once the Endpoints submission tooling is defined.
+Submissions are made via the `endpoints-submission-cli`, authenticated with the PRISM API key from §5.1 (set as `PRISM_USER_API_TOKEN` or passed via `--token`).
 
-A submission is made by placing an encrypted tarball in an MLCommons-provided cloud storage bucket and confirming the submission using the MLCommons web UI, following the process described in [General Submission Rules §5.2](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#how-to-submit).
+**Workflow:**
 
-The submission must include all materials required by the [MLPerf Endpoints Rules](endpoints_rules.md) document.
+1. **Run the benchmark.** For each Pareto point, run `inference-endpoint benchmark` with config.yml having `system_info` section(if you want to automatically capture the system description). Each invocation writes a local run folder containing system info, configuration, and result summaries.
+
+2. **Register each run.** `endpoints-submission-cli runs create --token <PRISM_USER_API_TOKEN> --path <folder>` uploads the run to MLCommons storage and returns a `run_id`.
+
+3. **Create the submission.** `endpoints-submission-cli submissions create --run-ids ... --division <...> --scenario <...> --availability <...>` assembles the bundle from the registered runs and submits it. Please refer to the detailed README for the [run](https://github.com/mlcommons/endpoints-submission-cli/blob/endpointsubcli/docs/endpoints-cli/usage/runs.md)) and [submission](https://github.com/mlcommons/endpoints-submission-cli/blob/endpointsubcli/docs/endpoints-cli/usage/submissions.md) command structures.
+
+**What happens on `submissions create`:**
+
+- The Submission Checker runs locally on the assembled bundle. On failure, nothing is uploaded; the submitter corrects the issues and resubmits.
+- On pass, the bundle is uploaded to MLCommons storage, the submission is assigned a publication cycle (next 1st or 3rd Wednesday with ≥1 business day of buffer), and a peer-review PR is automatically opened in the private MLCommons review repository. Reviewers and the submitting organization are granted access; objections are filed as PR comments and resolved per §6.
+- On finalization, results are published in the public MLPerf Endpoints results repository and shown in the visualizer on the next publication-cycle date.
+
+The submission must include all materials required by the [MLPerf Endpoints Rules](endpoints_rules.md) document. Detailed CLI usage — including amendments, withdrawal, and run lifecycle — is documented in the MLPerf Endpoints [Submission Guide](https://docs.google.com/document/d/1mgJrGqilxG9Kn_tzVFifSQQnuUWjMihVLMp_WNZRVRM/edit?usp=sharing).
 
 ### 5.3 Late Submissions
 
