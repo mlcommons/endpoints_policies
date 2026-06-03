@@ -99,6 +99,10 @@ The submitter hosts both the client infrastructure and the endpoint server infra
 
 #### 2.1.2 Client over Network (CoN)
 
+
+> [!CAUTION]
+> **`[ Subject to change after 2026-06-26]`** CoN scenario is not supported for MLPerf Endpoints v0.7 
+
 MLCommons is responsible for the client infrastructure, which interrogates the System Under Test via an endpoint accessed over the public Internet.
 
 - MLCommons operates the client infrastructure at a designated location.
@@ -166,6 +170,7 @@ The Standardized division is the primary benchmark division, requiring strict ad
 
 > [!CAUTION]
 > **`[ Subject to change after 2026-06-26]`** Serviced scenario is not supported for MLPerf Endpoints v0.7 
+
 > [!NOTE]
 > **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Standardized CoN scenario is under development by the working group.
 
@@ -179,9 +184,10 @@ Unqualified use of "MLPerf Endpoints" refers to results from the Standardized di
 ### 2.3 Serviced Division
 
 > [!CAUTION]
-> **`[ Subject to change after 2026-06-26]`** Serviced scenario  is not supported for MLPerf Endpoints v0.7 
+> **`[ Subject to change after 2026-06-26]`** Serviced division  is not supported for MLPerf Endpoints v0.7 
+
 > [!NOTE]
-> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Serviced scenario is under development by the working group.
+> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Serviced division is under development by the working group.
 
 
 #### 2.3.2 Result Naming
@@ -194,6 +200,7 @@ Results must use the qualified name "MLPerf Endpoints Serviced." Example: *"MLPe
 
 > [!CAUTION]
 > **`[ Subject to change after 2026-06-26]`** RDI scenario  is not supported for MLPerf Endpoints v0.7 
+
 > [!NOTE]
 > **[WIP]** — A comprehensive list of allowed techniques and optimizations for the RDI scenario is under development by the working group.
 
@@ -330,6 +337,7 @@ Per [§2.2.1](#221-general-rules), weight transformations are governed by the in
 
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-06-26]`**
+
 > [!NOTE]
 > **[Limited Use]** — Only DeepSeek R1 submissions are permitted to used speculative deocde, as per the [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence), and submitters must adhere to speculative decode rules and policies as of MLPerf Inference v6.0
 
@@ -356,6 +364,7 @@ For PTQ on drafter weights, see [§2.9.8 Q&A Q6](#298-qa-model-equivalence-clari
 
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-06-26]`**
+
 > [!NOTE]
 > **[Limited Use]** — KV Cache rules must conform to [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence) for MLPerf Endpoints v0.7 submissions. 
 
@@ -379,9 +388,6 @@ For PTQ on drafter weights, see [§2.9.8 Q&A Q6](#298-qa-model-equivalence-clari
 
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-06-26]`**
-> [!NOTE]
-> **[Limited Use]** — KV Cache rules must conform to [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence) for MLPerf Endpoints v0.7 submissions. 
-
 
 > [!NOTE]
 > **[WIP — accuracy tolerance values to be specified per benchmark, aligned with inference_rules.adoc accuracy targets]** and must comply with [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence) for MLPerf Endpoints v0.7 submissions. 
