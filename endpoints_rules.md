@@ -776,7 +776,6 @@ An Endpoints submission must follow this directory structure:
           point_<concurrency_level>/
             mlperf_endpoints_log_summary.json
             mlperf_endpoints_log_detail.json
-            system_desc.json
             accuracy/
               accuracy_result.json
               accuracy.txt
