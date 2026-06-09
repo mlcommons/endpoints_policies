@@ -711,9 +711,32 @@ Each measurement point must sustain the target concurrency for a minimum duratio
 
 ### 6.3 Warmup Period
 
-*(Example values — subject to ratification.)*
+*(Requirements below are subject to working group ratification.)*
 
-A warmup period of at least **60 seconds** at the target concurrency must precede the measurement period. Warmup events (before `TEST_STARTED`) are excluded from metric computation. The warmup ensures connection pools are populated, caches are warm, and the system is in steady state.
+A warmup period must precede every measurement period. Warmup events — all requests issued before `TEST_STARTED` — are excluded from metric computation. The purpose of warmup is to bring the system to steady state (populated connection pools, warm caches, calibrated scheduler) before any data contributing to reported metrics is collected.
+
+#### 6.3.1 Prohibited Warmup Data
+
+Warmup requests must not use any sample from the benchmark performance dataset. This prohibition covers direct use, subsets, truncations, or any query whose content was derived from performance dataset samples.
+
+The accuracy dataset and any other data source not drawn from the performance dataset are permitted for warmup.
+
+#### 6.3.2 Discard Policy
+
+All requests issued before `TEST_STARTED` are warmup requests and must not appear in any reported metric. Warmup request logs must be retained and available for reviewer inspection.
+
+#### 6.3.3 Documentation Requirements
+
+Beyond the constraints above, warmup is at the submitter's discretion. Because warmup state materially affects the measurement (KV cache population, JIT compilation, scheduler calibration), the full warmup procedure must be documented in sufficient detail for an independent team to reproduce it. Each submission must declare, in the measurement point metadata (see [§8.3](#83-measurement-point-yaml)):
+
+- Total warmup duration (seconds from the first warmup request to `TEST_STARTED`).
+- Total warmup requests issued and completed.
+- Warmup data source and content description (e.g., dataset name and split, synthetic generation method and parameters, or fixed prompt text).
+- Concurrency level used during warmup.
+- Any platform-specific initialization steps performed (e.g., CUDA graph capture, engine loading, JIT compilation triggers), and confirmation that initialization was complete before `TEST_STARTED`.
+
+> [!NOTE]
+> Reviewers may request warmup logs as part of a reproducibility objection. Incomplete or ambiguous warmup documentation is grounds for a Methodology objection under [Submission Rules §6.8](endpoints_submission_rules.md#68-types-of-objections).
 
 ### 6.4 Minimum Completed Queries
 
@@ -807,6 +830,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 - `region`: The region this point satisfies (`low_latency`, `low_throughput`, `med_throughput`, `high_throughput`, or `submitters_choice`).
 - `runtime_settings`: The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.).
 - `dataset`: Dataset name and any `n_samples_from_dataset` override (if applicable).
+- `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
 
 ### 8.4 Software Disclosure
 
@@ -842,6 +866,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Run duration** | Each point meets the minimum steady-state duration for its region (see [§6.2](#62-minimum-run-duration)). | Flag non-compliant points. |
 | **Minimum query count** | Each point meets the minimum completed queries for its region (see [§6.4](#64-minimum-completed-queries)). | Flag non-compliant points. |
 | **Streaming config** | `stream_all_chunks = true` for all performance runs. | Flag non-compliant points. |
+| **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
+| **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`. | Flag inconsistent points. |
 | **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, and software stack across all measurement points. | Flag inconsistencies. |
@@ -852,6 +878,7 @@ Human reviewers should focus on aspects that automation cannot easily verify:
 
 - Whether the pareto curve shape is physically plausible (throughput should generally increase with concurrency up to saturation, then plateau or decrease).
 - Whether metric distributions suggest artificial manipulation (e.g., suspiciously uniform TTFT values across very different concurrency levels).
+- Whether warmup requests drew on any sample from the performance dataset (prohibited under [§6.3.1](#631-prohibited-warmup-data)); reviewers may cross-check retained warmup logs against the performance dataset.
 - Whether the system description accurately reflects the hardware and software used.
 - Cross-submission consistency for the same hardware platform.
 - Division eligibility (especially Serviced division API compliance and availability status).
@@ -892,9 +919,9 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 ### \[RUN-REQ\] Run Requirements Ratification
 
-**Question:** What are the ratified values for minimum run duration, warmup period, minimum query count, and dataset subset rules?
+**Question:** What are the ratified values and rules for minimum run duration, minimum query count, dataset subset rules, and the warmup data and documentation requirements ([§6.3](#63-warmup-period))?
 
-**Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values. All values in that section are pending working group ratification based on empirical validation data.
+**Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values, and the [§6.3](#63-warmup-period) warmup model — submitter discretion plus mandatory disclosure, in place of a fixed warmup duration — is itself pending ratification. All constraints in that section are pending working group ratification based on empirical validation data.
 
 ### \[TOK-COUNT\] Coalesced-Output Tokenization and Reported Throughput
 
