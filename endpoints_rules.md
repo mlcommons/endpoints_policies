@@ -766,8 +766,7 @@ An Endpoints submission must follow this directory structure:
     <system_desc_id>.json
   src/
     <benchmark_model>/
-      <implementation_id>/
-        <endpoint interface code and configuration>
+      <endpoint interface code and configuration to reproduce the code>
   pareto/
     <system_desc_id>/
       <benchmark_model>/
@@ -777,10 +776,9 @@ An Endpoints submission must follow this directory structure:
           point_<concurrency_level>/
             mlperf_endpoints_log_summary.json
             mlperf_endpoints_log_detail.json
-            system_desc.json 
-        accuracy/
-          accuracy_result.json
-          accuracy.txt
+            accuracy/
+              accuracy_result.json
+              accuracy.txt
   documentation/
     calibration.adoc                        # if weight transformations applied
     <additional documentation>
