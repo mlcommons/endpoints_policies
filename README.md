@@ -1,4 +1,4 @@
-# MLPerf Endpoints Polciies
+# MLPerf Endpoints Policies
 
 Initial draft of Endpoints Rules and Policies for v0.7 submission on 2026-06-26
 
