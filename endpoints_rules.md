@@ -1,6 +1,6 @@
 # MLPerf® Endpoints Rules
 
-*MLPerf Endpoints Rules Task Force — Version 1.0 Draft — 2026-05-05*
+*MLPerf Endpoints Rules Task Force — Version v0.7 Draft — 2026-06-01*
 
 **Companion documents:**
 - Submission, review, and publication process: [endpoints_submission_rules.md](endpoints_submission_rules.md)
