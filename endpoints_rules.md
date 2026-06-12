@@ -794,14 +794,13 @@ An Endpoints submission must follow this directory structure:
     <system_desc_id>/
       <benchmark_model>/
         points/
-          point_<concurrency_level>.yaml    # one per measurement point
+          point_<concurrency_level>.yaml    # one per measurement point, should be generated from the results folder
         results/
           point_<concurrency_level>/
-            mlperf_endpoints_log_summary.json
-            mlperf_endpoints_log_detail.json
+            results_summary.json            # Contains throughput and latency distribution information
+            config.yaml                     # Client config
             accuracy/
-              accuracy_result.json
-              accuracy.txt
+              results.json                  # Contains accuracy number and truncated output sequences
   documentation/
     calibration.adoc                        # if weight transformations applied
     <additional documentation>
