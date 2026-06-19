@@ -716,7 +716,7 @@ Each measurement point must sustain the target concurrency for a minimum duratio
 
 *(Requirements below are subject to working group ratification.)*
 
-A 60s warmup period must precede every measurement period. Warmup events — all requests issued before `TEST_STARTED` — are excluded from metric computation. The purpose of warmup is to bring the system to steady state (populated connection pools, warm caches, calibrated scheduler) before any data contributing to reported metrics is collected.
+A warmup period may precede every measurement period. Warmup events — all requests issued before `TEST_STARTED` — are excluded from metric computation. The purpose of warmup is to bring the system to steady state (populated connection pools, warm caches, calibrated scheduler) before any data contributing to reported metrics is collected. The warmup period is optional but must not exceed 24 hours, per measurement point. 
 
 #### 6.3.1 Prohibited Warmup Data
 
