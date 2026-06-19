@@ -702,12 +702,15 @@ All measurement points must use the **ConcurrencyScheduler** load pattern in the
 
 Each measurement point must sustain the target concurrency for a minimum duration of steady-state measurement, excluding warmup. These values correspond to the `min_duration_ms` setting in `RuntimeSettings`.
 
+> [!WARNING]
+> For v0.7, we will use 10min min-duration for all scenarios - as listed in the submission guide. 
+
 | Concurrency Region | Minimum Duration (steady state) | Rationale |
 |---|---|---|
 | Low Latency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at low concurrency. |
-| Low Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
-| Medium Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
-| High Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
+| Low Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
+| Medium Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
+| High Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
 
 ### 6.3 Warmup Period
 
@@ -718,8 +721,12 @@ A warmup period must precede every measurement period. Warmup events — all req
 #### 6.3.1 Prohibited Warmup Data
 
 Warmup requests must not use any sample from the benchmark performance dataset. This prohibition covers direct use, subsets, truncations, or any query whose content was derived from performance dataset samples.
+If the inference client uses benchmark performance dataset, then *salting must be enabled*. 
 
 The accuracy dataset and any other data source not drawn from the performance dataset are permitted for warmup.
+
+> [!WARNING]
+> For v0.7, the inference client may use performance dataset during warmup. In such case - salting must be enabled.  The salting flag is not enabled by default — submitters must manually enable it in the client config and also disable KV cache reuse.
 
 #### 6.3.2 Discard Policy
 
