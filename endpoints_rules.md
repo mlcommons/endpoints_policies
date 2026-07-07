@@ -766,7 +766,7 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 *(Example constraints — subject to ratification.)*
 
 - Performance runs use `WithReplacementSampleOrder` (random sampling with replacement from the performance dataset).
-- Accuracy results must use `WithoutReplacementSampleOrder` (each sample exactly once). [Do we need this still?]: #
+- Accuracy results must use `WithoutReplacementSampleOrder` (each sample exactly once). 
 - For Low Latency region runs, a representative subset of the dataset may be used (configured via `n_samples_from_dataset`) to reduce run time, subject to pre-approval by the working group. The subset must be documented and identical across all submitters.
 - `stream_all_chunks` must be set to `true` for all performance runs to enable accurate per-token timing.
 
