@@ -797,6 +797,7 @@ An Endpoints submission must follow this directory structure:
   src/
     <benchmark_model>/
       <endpoint interface code and configuration to reproduce the code>
+      README.md # one per model
   pareto/
     <system_desc_id>/
       <benchmark_model>/
@@ -810,6 +811,7 @@ An Endpoints submission must follow this directory structure:
               results.json                  # Contains accuracy number and truncated output sequences
   documentation/
     calibration.adoc                        # if weight transformations applied
+    README.md
     <additional documentation>
 ```
 
