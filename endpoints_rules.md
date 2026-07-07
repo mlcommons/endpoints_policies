@@ -489,7 +489,7 @@ The following metrics are derived from primary measurements and used in publicat
 
 Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
 
-One accuracy validation run is required per submission (not per measurement point). The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
+One accuracy validation run is required per measurement point.
 
 ---
 
@@ -766,7 +766,7 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 *(Example constraints — subject to ratification.)*
 
 - Performance runs use `WithReplacementSampleOrder` (random sampling with replacement from the performance dataset).
-- Accuracy runs use `WithoutReplacementSampleOrder` (each sample exactly once).
+- Accuracy results must use `WithoutReplacementSampleOrder` (each sample exactly once). [Do we need this still?]: #
 - For Low Latency region runs, a representative subset of the dataset may be used (configured via `n_samples_from_dataset`) to reduce run time, subject to pre-approval by the working group. The subset must be documented and identical across all submitters.
 - `stream_all_chunks` must be set to `true` for all performance runs to enable accurate per-token timing.
 
@@ -774,7 +774,7 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 
 *(Example constraint — subject to ratification.)*
 
-Accuracy validation is required per submission (including per measurement point). The accuracy run verifies that the system meets the benchmark's quality target. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
+Accuracy validation is required  per measurement point. The accuracy run verifies that the system meets the benchmark's quality target. 
 
 ---
 
