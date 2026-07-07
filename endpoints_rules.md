@@ -873,7 +873,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`. | Flag inconsistent points. |
-| **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
+| **Accuracy** | Every accuracy run passes the benchmark quality target. | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, and software stack across all measurement points. | Flag inconsistencies. |
 
 ### 9.2 Manual Review Focus Areas
