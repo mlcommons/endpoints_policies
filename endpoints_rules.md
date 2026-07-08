@@ -792,14 +792,15 @@ An Endpoints submission must follow this directory structure:
 
 ```
 <submitting_organization>/
-  systems/
-    <system_desc_id>.json
-  src/
-    <benchmark_model>/
-      <endpoint interface code and configuration to reproduce the code>
-  pareto/
-    <system_desc_id>/
+   <system_desc_id>/
       <benchmark_model>/
+        systems/
+          <system_desc_id>.json
+        src/
+          <endpoint interface code and configuration to reproduce the code>
+        documentation/
+          calibration.adoc                        # if weight transformations applied
+          <additional documentation>, which is in the rules?
         points/
           point_<concurrency_level>.yaml    # one per measurement point, should be generated from the results folder
         results/
@@ -808,9 +809,6 @@ An Endpoints submission must follow this directory structure:
             config.yaml                     # Client config
             accuracy/
               results.json                  # Contains accuracy number and truncated output sequences
-  documentation/
-    calibration.adoc                        # if weight transformations applied
-    <additional documentation>
 ```
 
 ### 8.2 System Description (`system_desc_id.json`)
