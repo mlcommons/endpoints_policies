@@ -93,6 +93,7 @@ The submitter hosts both the client infrastructure and the endpoint server infra
 
 - The submitter provides and operates both client and server infrastructure.
 - The client must use the MLPerf Endpoints reference client (`inference_endpoint` from `github.com/mlcommons/endpoints`) without source-code modification, compiled from a commit accessible to the MLCommons review committee. Submitters MAY configure runtime behavior via the YAML configuration file the client accepts; everything that changes behavior MUST be expressible via that YAML. The client logs the commit SHA used for the run; review may additionally use a seeded RNG check (analogous to LoadGen's RNG-output check in MLPerf Inference) to detect undisclosed client modifications.
+  The seeded RNG check uses the **seed set** published by MLCommons for the submission's target cohort ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)); the client's request-issue / sample-order RNG and the per-query salt MUST each be seeded from the published seed set, and the seed set MUST be set through the YAML configuration.
 - Network latency between client and server is included in all timing measurements.
 - The submitter must document the network topology between client and server, including type of interconnect, number of hops, and measured baseline network latency.
 - On-prem submissions must be self-contained: all components required to replicate the result must be documented and provided.
@@ -452,6 +453,7 @@ A: Yes — they are inherited from upstream §Model Equivalence (see [§2.2.1 in
 
 **Q4: Is response or query caching allowed?**
 A: No. Returning a cached response verbatim to a request that matches a previous request is prohibited. Every request must go through the forward pass. KV-cache reuse (within or across queries) is a *serving optimization* governed by [§2.9.5](#295-kv-cache-rules), **not** response caching — the distinction is that KV-cache reuse still executes the forward pass on per-query tokens (which include a unique salt; see [§2.9.5.1](#2951-salting-mechanism)), whereas response caching skips compute entirely.
+The salt is itself part of the **seed set** published for the submission's target cohort ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)), so it rotates each cohort.
 
 **Q5: Is iteration coalescing — the server returning multiple generated tokens in a single network message — allowed?**
 A: *Open question.* See [Appendix A](#appendix-a-open-questions-and-working-group-items); the WG is discussing this in the context of Client-over-Network (CoN) scenarios. Until resolved, submitters must disclose any token-coalescing behavior and conservatively assume `stream_all_chunks = true` semantics. Token-count metrics use the reference tokenizer applied to the coalesced output (see [§2.8 Tokenizer Rules](#28-tokenizer-rules)).
@@ -895,6 +897,8 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 - `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
 - `shared_src`: Relative path from this point folder to the `src/<implementation_id>/` directory used for this run (e.g., `../../../../src/trtllm`).
 - `shared_docs`: Relative path to the `docs/` directory covering this run (e.g., `../../../../docs`). Point-specific notes (run anomalies, retry rationale) belong in this point's `point.yaml` or in `server_configs/README.md`; there is no per-point `docs/` directory.
+- `seed_set`: The seed set the submission is bound to, per [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). At first submission this is adopted from the four-cohort adoption window — the set MLCommons published for `target_cohort` or one of the three immediately preceding cohorts — and the submission then keeps that bound set for its full update window, even after newer sets are published. Records the cohort ID the set was published under and each seed value, so the run is reproducible and the seeded-RNG check can confirm the client used the published seeds unmodified. Must be identical across all measurement points in the submission.
+- `target_cohort`: The publication cohort the submission targets when it first binds to its seed set (e.g. `2026-09-C1`), which determines the seed sets available for adoption. Must be identical across all measurement points in the submission.
 
 ### 8.4 Software Disclosure
 
@@ -935,7 +939,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`. | Flag inconsistent points. |
 | **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
-| **Configuration consistency** | Same model, endpoint configuration, and software stack across all measurement points. | Flag inconsistencies. |
+| **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
+| **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |
 
 ### 9.2 Manual Review Focus Areas
 
@@ -987,6 +992,12 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 **Question:** What are the ratified values and rules for minimum run duration, minimum query count, dataset subset rules, and the warmup data and documentation requirements ([§6.3](#63-warmup-period))?
 
 **Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values, and the [§6.3](#63-warmup-period) warmup model — submitter discretion plus mandatory disclosure, in place of a fixed warmup duration — is itself pending ratification. All constraints in that section are pending working group ratification based on empirical validation data.
+
+### \[SEED-SENS\] Seed-Set Rotation and Cross-Cohort Comparability
+
+**Question:** What evidence threshold makes a seed objection ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)) actionable?
+
+**Context:** Runs are driven by a seed set that rotates every cohort and is available for adoption by new submissions for four cohorts; a submission keeps its bound set for its full update window even after the adoption window closes ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)). Within a seed set all submissions are directly comparable; across seed sets they are not. The design assumes seed-induced variance stays within the ±10% review tolerance ([Submission Rules §6.6 Reproducibility Expectations](endpoints_submission_rules.md#reproducibility-expectations)); a one-time seed-sensitivity study would confirm this. The study, the accepted variance bound, and the credibility threshold for upholding a seed objection are pending working-group ratification.
 
 ### \[TOK-COUNT\] Coalesced-Output Tokenization and Reported Throughput
 
