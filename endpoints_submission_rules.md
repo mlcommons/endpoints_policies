@@ -215,6 +215,25 @@ The figure below illustrates three representative scenarios for a submission mad
 
 **Scenario 3 — Provisional publication; objections carry into resolution:** The submitter opts in to provisional publication. Automated checks pass August 12; the "peer review pending" result becomes visible at the **2026-08-C1** cohort (August 19), running in parallel with peer review. An objection filed August 27 carries into the objection resolution window. The objector provides a validation schedule; resolution is confirmed September 9. Results are finalized in the **2026-09-C1** cohort (September 16), at which point the "peer review pending" tag is removed.
 
+### 4.6 Seed Rotation
+
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
+
+A **seed set** is the collection of seeds published by MLCommons that control the reference client's sources of run-to-run non-determinism for a cohort. These seeds drive the random number generators the client uses for benchmarking (request-issue / sample order, and the per-query salt). The seed set is an *extensible collection* — additional seeds may be introduced in future versions without changing this rule. This mirrors MLPerf Inference, where MLCommons rotates the LoadGen seeds (`qsl_rng_seed`, `sample_index_rng_seed`, `schedule_rng_seed`) every submission round.
+
+- **Publication and validity.** MLCommons publishes a new seed set for each publication cohort ([§4.2](#42-publication-cohorts-and-embargo)), keyed by cohort ID (`YYYY-MM-C0` / `YYYY-MM-C1`). Each published seed set is valid for **two cohorts** — the cohort it is published in and the following cohort. Consequently, at any cohort **two** seed sets are valid for submission: the set published in that cohort and the set carried over from the previous cohort.
+
+- **Which seed set to use.** A submission MUST use one valid seed set. The seed set used and the targeted cohort MUST be recorded in the submission ([`endpoints_rules.md` §8.3](endpoints_rules.md#83-measurement-point-yaml)) so a reviewer or auditor can reproduce the run and the seeded-RNG integrity check ([`endpoints_rules.md` §2.1.1](endpoints_rules.md#211-client-on-prem-cop)) can confirm the client used the published seeds without modification.
+
+- **Consistency within a submission.** Once a submission is made with a given seed set, every later update to that submission — including measurement points added under the rolling submission model ([§4.1](#41-rolling-submission-model)) — MUST use the same seed set, for as long as the submission remains open to updates. Because the seed set is bound at first submission, seed rotation never forces an in-flight run to be re-executed, and an embargo of up to 60 days ([§4.2](#42-publication-cohorts-and-embargo)) never invalidates a submission. Measurement points MUST NOT be added under a seed set that is no longer valid; extending such a submission requires a new submission under a currently valid seed set.
+
+- **Comparability.** All submissions bound to the same seed set are directly comparable. Comparison across submissions that used different seed sets is permitted, on the assumption that seed choice has a negligible effect on measured performance; the objection process below is the safeguard for the rare case where that assumption does not hold. The expected magnitude of seed-induced variance is a working-group item (see [`endpoints_rules.md` Appendix A `[SEED-SENS]`](endpoints_rules.md#appendix-a-open-questions-and-working-group-items)).
+
+- **Seed objections.** There is a small but non-negligible chance that a particular seed set materially affects performance. A submitter MAY file an objection to a published seed set within **7 calendar days** of its publication. The objection MUST identify the seed set (by cohort ID) and provide evidence that the seeds credibly cause a material performance difference (beyond the ±10% variability margin in [§6.6 Reproducibility Expectations](#reproducibility-expectations)).
+  - If MLCommons finds the objection credible, MLCommons will — at its discretion — either publish a replacement seed set or extend the previous cohort's seed set for the affected cohort, and notify participants of the change.
+  - The disposition of submissions already made with a seed set that is later discarded on objection is decided by MLCommons (the review committee) on a case-by-case basis, according to the magnitude of the measured bias — ranging from letting the results stand to requiring re-execution with the replacement seed set before publication.
+
 ---
 
 ## 5. Submission
