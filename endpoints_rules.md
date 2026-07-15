@@ -539,7 +539,7 @@ The concurrency space is divided into four regions.
 | Concurrency range | 1 to 32 (inclusive), fixed across all submissions. |
 | Required points | 1 |
 
-*Rationale:* Low-concurrency operation is critical for interactive applications (chatbots, coding assistants, real-time translation). Fixed boundaries ensure direct cross-submission comparability — every submission has at least one point in the 1–32 range.
+*Rationale:* Low-concurrency operation is critical for interactive applications (chatbots, coding assistants, real-time translation). Fixed boundaries ensure direct cross-submission comparability — every submission has at least one point in the 1–32 range. In addition, the low latency region has stipulated latency SLAs to be met by the system, and to demonstrate user experience can be reasonably satisfied.
 
 > [!NOTE]
 > Submitters are encouraged — but not required — to include a measurement at concurrency 1 (the single-user baseline) as their Low Latency point. Concurrency 1 represents the best-case per-user experience and is commonly cited in performance comparisons, but any concurrency level in the 1–32 range satisfies the region requirement.
