@@ -790,28 +790,33 @@ Publication status categories — **Available**, **Preview**, and **RDI** — in
 
 An Endpoints submission must follow this directory structure:
 
+
 ```
 <submitting_organization>/
-  systems/
-    <system_desc_id>.json
-  src/
-    <benchmark_model>/
-      <endpoint interface code and configuration to reproduce the code>
-  pareto/
-    <system_desc_id>/
-      <benchmark_model>/
-        points/
-          point_<concurrency_level>.yaml    # one per measurement point, should be generated from the results folder
-        results/
-          point_<concurrency_level>/
-            results_summary.json            # Contains throughput and latency distribution information
-            config.yaml                     # Client config
-            accuracy/
-              results.json                  # Contains accuracy number and truncated output sequences
-  documentation/
-    calibration.adoc                        # if weight transformations applied
-    <additional documentation>
+	<submission_id>/
+		  systems/
+		    <system_desc_id>.json
+		  src/
+		    <benchmark_model>/
+		      <endpoint interface code and configuration to reproduce the code>
+		      README.md
+		  pareto/
+		    <system_desc_id>/
+		      <benchmark_model>/
+		        points/
+		          point_<concurrency_level>.yaml    # one per measurement point, should be generated from the results folder
+		        results/
+		          point_<concurrency_level>/
+		            results_summary.json            # Contains throughput and latency distribution information
+		            config.yaml                     # Client config
+		            accuracy/
+		              results.json                  # Contains accuracy number and truncated output sequences
+		  documentation/
+		    calibration.adoc                        # if weight transformations applied
+		    README.md
+		    <additional documentation>
 ```
+
 
 ### 8.2 System Description (`system_desc_id.json`)
 
