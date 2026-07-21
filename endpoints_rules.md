@@ -351,6 +351,7 @@ Each benchmark has a **reference implementation** published in the MLPerf Endpoi
 - The **speculative-decoding configuration** if the benchmark designates a drafter (drafter ID, precision, algorithm, default per-point configuration). See [§2.9.4](#294-speculative-decoding).
 - The accuracy evaluation methodology and quality target.
 - The endpoint API interface.
+- **Fixed configuration:** Configuration parameters explicitly designated as fixed by the reference implementation MUST NOT be modified by submitters.
 
 An **alternative reference implementation** may be designated by the working group for a specific architecture or hardware class, subject to passing the same accuracy quality target as the primary reference implementation.
 
@@ -609,6 +610,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | `tps_per_user = 1000 / tpot_p90_ms`, where `tpot_p90_ms` is the P90 of valid per-response TPOT samples. Higher is better. |
+| Task TPS | `task_tps` | For agentic benchmarks, the arithmetic mean of the task-level output-token rates across completed tasks. For task `i`, `task_tps_i = task_output_tokens_i / task_inference_time_i_seconds`, where `task_output_tokens_i` is the sum of output tokens across all model responses for the task and `task_inference_time_i_seconds` is the elapsed time from issuance of the first model request through receipt of the final model response, excluding total tool execution time. In the current reference benchmark, tool execution time is represented by the hard-coded inter-turn delay. |
 | Time to First Token (P90) | `ttft_p90_ms` | 90th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning). |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
@@ -628,6 +630,7 @@ The following metrics are derived from primary measurements and used in publicat
 | Metric | Description |
 |---|---|
 | **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **Agentic Pareto curve (System TPS vs. Task TPS)** | The primary publication chart for agentic benchmarks. **Y-axis:** `system_tps`. **X-axis:** `task_tps`. Each point corresponds to a different concurrency level. Higher values are better on both axes. |
 | **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
 | **TTFT (P90) vs. Concurrency** | **Y-axis:** `ttft_p90_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P90 is the default and the only percentile plotted for v1.0; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
 | **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how per-user output rate degrades with load. |
@@ -644,7 +647,7 @@ One accuracy validation run is required per submission (not per measurement poin
 
 ### 5.1 What Is Measured
 
-Each measurement point on the pareto curve is a benchmark run at a specific concurrency level using the **ConcurrencyScheduler** load pattern in the MLPerf Endpoints reference client. The ConcurrencyScheduler maintains a fixed number of in-flight queries at all times: when a query completes, a new query is immediately issued to maintain the target concurrency.
+Each measurement point on the pareto curve is a benchmark run at a specific concurrency level using the **ConcurrencyScheduler** load pattern in the MLPerf Endpoints reference client. The ConcurrencyScheduler maintains the target concurrency: when a query completes, a new query is issued according to the benchmark-defined timing.
 
 ### 5.2 Pareto Curve Representation
 
