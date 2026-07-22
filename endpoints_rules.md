@@ -799,11 +799,12 @@ An Endpoints submission must follow this directory structure:
                 ├── r<N>/                       # PARETO POINT per concurrency level (r1, r32, r256, r4096, …)
                     │                           #   — fully self-contained: own server config, own accuracy run
                     |
-                    ├── docs/                   # POINT-SPECIFIC: run notes, anomalies, retry rationale          
+                    ├── docs/                   # POINT-SPECIFIC: run notes, anomalies, retry rationale
+                        └── README.md        
                     │
                     ├── src/                    # POINT-SPECIFIC endpoint interface code & config
                     │   └── <implementation_id>/    # e.g. trtllm/, vllm/, sglang/
-                    │       ├── README.md
+                    │       └── README.md
                     │
                     ├── point.yaml    
                     ├── results_summary.json   # §8.1 — aggregate metrics (QPS, TPS, TTFT, TPOT, latency %iles)
