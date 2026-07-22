@@ -64,7 +64,7 @@ These rules define the technical requirements for MLPerf Endpoints benchmark sub
 The submission, review, and publication *process* are defined separately in the companion [MLPerf Endpoints Submission Rules](endpoints_submission_rules.md) document.
 
 > [!NOTE]
-> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-19**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-19]`** are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones) for the full milestone table.
+> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-26**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-26]`** are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones) for the full milestone table.
 
 MLPerf Endpoints measures the performance of *inference endpoints* serving generative AI models. Unlike traditional MLPerf Inference benchmarks — which measure latency or throughput at a single operating point — MLPerf Endpoints characterizes the full performance *envelope* of a serving system as a Pareto curve across a range of concurrency levels.
 
@@ -133,7 +133,7 @@ The Standardized division is the primary benchmark division, requiring strict ad
 #### 2.2.1 General Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** This section ports the MLPerf Inference optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed entries below may be revised after v0.7 submitter feedback.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** This section ports the MLPerf Inference optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed entries below may be revised after v0.7 submitter feedback.
 
 **Inheritance.** Standardized division submissions inherit the model-equivalence and optimization rules of [MLPerf Inference §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). **This document is the source of truth and overrides upstream wherever the two conflict.** Where upstream uses a non-exhaustive list of allowed examples followed by a disallowed list, Endpoints uses a single **disallowed-only** formulation: anything not listed below and not in conflict with the [§2.9 Model Equivalence Rules](#29-model-equivalence-rules-standardized-division) is permitted. See [§2.9.8 Q&A](#298-qa-model-equivalence-clarifications) for clarifying examples.
 
@@ -310,7 +310,7 @@ Tokenizers can produce different token counts depending on how text is fed to th
 ### 2.9 Model Equivalence Rules (Standardized Division)
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas (most notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules) and drafter PTQ in [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas (most notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules) and drafter PTQ in [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
 
 These rules define what it means for a Standardized division submission to be "model equivalent" to the reference implementation. The accuracy quality target (§4.3) is the ultimate arbiter of model equivalence: a submission that passes the accuracy gate is considered equivalent regardless of internal implementation choices. The rules below define which implementation choices are permitted in reaching that accuracy gate.
 
@@ -346,7 +346,7 @@ The server-side processing of each incoming request — both input pre-processin
 #### 2.9.3 Model Weight Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`**
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
 
 All Standardized division submissions must begin from the **canonical model weights** specified in the benchmark definition (identified by Hugging Face model ID or a published checksum).
 
@@ -361,7 +361,7 @@ Per [§2.2.1](#221-general-rules), weight transformations are governed by the in
 #### 2.9.4 Speculative Decoding
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`**
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
 
 Speculative decoding is permitted for any benchmark whose definition designates a drafter (MTP head, EAGLE-style head, or analogous module). The drafter is treated as part of the canonical reference and is **frozen** in the training sense. The following transformations of the drafter are **disallowed**:
 
@@ -385,7 +385,7 @@ For PTQ on drafter weights, see [§2.9.8 Q&A Q6](#298-qa-model-equivalence-clari
 #### 2.9.5 KV Cache Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** This section **intentionally diverges from MLPerf Inference §KV-Cache**, which prohibits cross-query KV reuse. Endpoints targets agentic-style workloads where a shared system prompt across queries is the norm; prohibiting cross-query reuse would force submitters to artificially cripple production-style serving stacks. The salt mechanism in [§2.9.5.1](#2951-salting-mechanism) preserves measurement validity by ensuring caches cannot leak context beyond the system-prompt prefix.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** This section **intentionally diverges from MLPerf Inference §KV-Cache**, which prohibits cross-query KV reuse. Endpoints targets agentic-style workloads where a shared system prompt across queries is the norm; prohibiting cross-query reuse would force submitters to artificially cripple production-style serving stacks. The salt mechanism in [§2.9.5.1](#2951-salting-mechanism) preserves measurement validity by ensuring caches cannot leak context beyond the system-prompt prefix.
 
 Per [§2.2.1](#221-general-rules), KV-cache management is governed by the inherited MLPerf Inference rules with the Endpoints-specific cross-query-reuse delta described below. The following KV-cache techniques are **disallowed**:
 
@@ -439,7 +439,7 @@ The accuracy quality target and tolerance relative to the reference score are sp
 #### 2.9.8 Q&A: Model Equivalence Clarifications
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** Q&A entries are interpretive guidance. If a Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and the Q&A entry will be revised.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** Q&A entries are interpretive guidance. If a Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and the Q&A entry will be revised.
 
 **Q1: Is post-training quantization (PTQ) with the published calibration set allowed?**
 A: Yes. PTQ is the canonical example of an allowed weight transformation, inherited from upstream. PTQ-style methods (AWQ, GPTQ, bitsandbytes) and arbitrary numerical formats (INT8/INT4/FP8 and similar) are allowed provided they (a) use only the published calibration set, (b) are publicly described to a level where they could be reproduced, (c) pass the accuracy gate, and (d) are disclosed in the submission YAML.
@@ -497,7 +497,7 @@ Submitters may apply quantization, format conversion, or other weight transforma
 ### 4.1 Primary Metrics
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`** TTFT framing — see note below the table on percentile selection.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** TTFT framing — see note below the table on percentile selection.
 
 Each measurement point on the pareto curve captures the following metrics at a specific concurrency level:
 
@@ -514,7 +514,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 ### 4.2 Derived and Presentation Metrics
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-19]`**
+> **`[TENTATIVE — Subject to change after 2026-06-26]`**
 
 The following metrics are derived from primary measurements and used in publication charts. All charts use the percentile metric defined in [§4.1](#41-primary-metrics):
 
@@ -566,6 +566,9 @@ There is no requirement to space points evenly within or across regions. Submitt
 The 3 submitter's-choice points may be placed in any of the four regions, including regions that already have a required point. For example, a submitter could place all 3 additional points in the High Throughput region to demonstrate scaling behavior, or distribute them to show overall consistency.
 
 ### 5.4 Regions of Interest
+
+> [!CAUTION]
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** Regions of Interest (ROIs) are named for either latency or throughput, but in both cases they are constrained by concurrency. Please read the methodology carefully before proceeding.
 
 The concurrency space is divided into four regions.
 
@@ -748,9 +751,36 @@ Each measurement point must sustain the target concurrency for a minimum duratio
 
 ### 6.3 Warmup Period
 
-*(Example values — subject to ratification.)*
+*(Requirements below are subject to working group ratification.)*
 
-A warmup period of at least **60 seconds** at the target concurrency must precede the measurement period. Warmup events (before `TEST_STARTED`) are excluded from metric computation. The warmup ensures connection pools are populated, caches are warm, and the system is in steady state.
+A warmup period may precede every measurement period. Warmup events — all requests issued before `TEST_STARTED` — are excluded from metric computation. The purpose of warmup is to bring the system to steady state (populated connection pools, warm caches, calibrated scheduler) before any data contributing to reported metrics is collected. The warmup period is optional but must not exceed 24 hours, per measurement point.
+
+#### 6.3.1 Prohibited Warmup Data
+
+Warmup requests must not use any sample from the benchmark performance dataset. This prohibition covers direct use, subsets, truncations, or any query whose content was derived from performance dataset samples.
+If the inference client uses benchmark performance dataset, then *salting must be enabled*.
+
+The accuracy dataset and any other data source not drawn from the performance dataset are permitted for warmup.
+
+> [!WARNING]
+> For v0.7, the inference client may use performance dataset during warmup. In such case - salting must be enabled. The salting flag is not enabled by default — submitters must manually enable it in the client config and also disable KV cache reuse.
+
+#### 6.3.2 Discard Policy
+
+All requests issued before `TEST_STARTED` are warmup requests and must not appear in any reported metric. Warmup request logs must be retained and available for reviewer inspection.
+
+#### 6.3.3 Documentation Requirements
+
+Beyond the constraints above, warmup is at the submitter's discretion. Because warmup state materially affects the measurement (KV cache population, JIT compilation, scheduler calibration), the full warmup procedure must be documented in sufficient detail for an independent team to reproduce it. Each submission must declare, in the measurement point metadata (see [§8.3](#83-measurement-point-yaml)):
+
+- Total warmup duration (seconds from the first warmup request to `TEST_STARTED`).
+- Total warmup requests issued and completed.
+- Warmup data source and content description (e.g., dataset name and split, synthetic generation method and parameters, or fixed prompt text).
+- Concurrency level used during warmup.
+- Any platform-specific initialization steps performed (e.g., CUDA graph capture, engine loading, JIT compilation triggers), and confirmation that initialization was complete before `TEST_STARTED`.
+
+> [!NOTE]
+> Reviewers may request warmup logs as part of a reproducibility objection. Incomplete or ambiguous warmup documentation is grounds for a Methodology objection under [Submission Rules §6.8](endpoints_submission_rules.md#68-types-of-objections).
 
 ### 6.4 Minimum Completed Queries
 
@@ -803,21 +833,18 @@ An Endpoints submission must follow this directory structure:
     <system_desc_id>.json
   src/
     <benchmark_model>/
-      <implementation_id>/
-        <endpoint interface code and configuration>
+      <endpoint interface code and configuration to reproduce the code>
   pareto/
     <system_desc_id>/
       <benchmark_model>/
         points/
-          point_<concurrency_level>.yaml    # one per measurement point
+          point_<concurrency_level>.yaml    # one per measurement point, should be generated from the results folder
         results/
           point_<concurrency_level>/
-            mlperf_endpoints_log_summary.json
-            mlperf_endpoints_log_detail.json
-            system_desc.json 
-        accuracy/
-          accuracy_result.json
-          accuracy.txt
+            results_summary.json            # Contains throughput and latency distribution information
+            config.yaml                     # Client config
+            accuracy/
+              results.json                  # Contains accuracy number and truncated output sequences
   documentation/
     calibration.adoc                        # if weight transformations applied
     <additional documentation>
@@ -844,6 +871,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 - `region`: The region this point satisfies (`low_latency`, `low_throughput`, `med_throughput`, `high_throughput`, or `submitters_choice`).
 - `runtime_settings`: The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.).
 - `dataset`: Dataset name and any `n_samples_from_dataset` override (if applicable).
+- `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
 
 ### 8.4 Software Disclosure
 
@@ -879,6 +907,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Run duration** | Each point meets the minimum steady-state duration for its region (see [§6.2](#62-minimum-run-duration)). | Flag non-compliant points. |
 | **Minimum query count** | Each point meets the minimum completed queries for its region (see [§6.4](#64-minimum-completed-queries)). | Flag non-compliant points. |
 | **Streaming config** | `stream_all_chunks = true` for all performance runs. | Flag non-compliant points. |
+| **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
+| **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`. | Flag inconsistent points. |
 | **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, and software stack across all measurement points. | Flag inconsistencies. |
@@ -889,6 +919,7 @@ Human reviewers should focus on aspects that automation cannot easily verify:
 
 - Whether the pareto curve shape is physically plausible (throughput should generally increase with concurrency up to saturation, then plateau or decrease).
 - Whether metric distributions suggest artificial manipulation (e.g., suspiciously uniform TTFT values across very different concurrency levels).
+- Whether warmup requests drew on any sample from the performance dataset (prohibited under [§6.3.1](#631-prohibited-warmup-data)); reviewers may cross-check retained warmup logs against the performance dataset.
 - Whether the system description accurately reflects the hardware and software used.
 - Cross-submission consistency for the same hardware platform.
 - Division eligibility (especially Serviced division API compliance and availability status).
@@ -929,9 +960,9 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 ### \[RUN-REQ\] Run Requirements Ratification
 
-**Question:** What are the ratified values for minimum run duration, warmup period, minimum query count, and dataset subset rules?
+**Question:** What are the ratified values and rules for minimum run duration, minimum query count, dataset subset rules, and the warmup data and documentation requirements ([§6.3](#63-warmup-period))?
 
-**Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values. All values in that section are pending working group ratification based on empirical validation data.
+**Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values, and the [§6.3](#63-warmup-period) warmup model — submitter discretion plus mandatory disclosure, in place of a fixed warmup duration — is itself pending ratification. All constraints in that section are pending working group ratification based on empirical validation data.
 
 ### \[TOK-COUNT\] Coalesced-Output Tokenization and Reported Throughput
 
