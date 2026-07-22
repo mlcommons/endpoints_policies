@@ -807,7 +807,7 @@ An Endpoints submission must follow this directory structure:
                     │       └── README.md
                     │
                     ├── point.yaml    
-                    ├── results_summary.json   # §8.1 — aggregate metrics (QPS, TPS, TTFT, TPOT, latency %iles)
+                    ├── result_summary.json   # §8.1 — aggregate metrics (QPS, TPS, TTFT, TPOT, latency %iles)
                     ├── accuracy_results.json
                     ├── system_desc.json       # §8.2 — division, publication_status, max_supported_concurrency,
                     └── run_metadata.json  
