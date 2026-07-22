@@ -792,29 +792,24 @@ An Endpoints submission must follow this directory structure:
 
 
 ```
-<submitting_organization>/
-	<submission_id>/
-		  systems/
-		    <system_desc_id>.json
-		  src/
-		    <benchmark_model>/
-		      <endpoint interface code and configuration to reproduce the code>
-		      README.md
-		  pareto/
-		    <system_desc_id>/
-		      <benchmark_model>/
-		        points/
-		          point_<concurrency_level>.yaml    # one per measurement point, should be generated from the results folder
-		        results/
-		          point_<concurrency_level>/
-		            results_summary.json            # Contains throughput and latency distribution information
-		            config.yaml                     # Client config
-		            accuracy/
-		              results.json                  # Contains accuracy number and truncated output sequences
-		  documentation/
-		    calibration.adoc                        # if weight transformations applied
-		    README.md
-		    <additional documentation>
+ <submitting_organization>/                            
+  └── <submission-id>/
+      └── <system>/           # e.g. H200-SXM-141GBx8_TRT/, GB300-NVL72_GB300-288GB_aarch64x72_TRT/
+            └── <model>/                        # e.g. deepseek-r1/, gpt-oss-120b/
+                ├── r<N>/                       # PARETO POINT per concurrency level (r1, r32, r256, r4096, …)
+                    │                           #   — fully self-contained: own server config, own accuracy run
+                    |
+                    ├── docs/                   # POINT-SPECIFIC: run notes, anomalies, retry rationale          
+                    │
+                    ├── src/                    # POINT-SPECIFIC endpoint interface code & config
+                    │   └── <implementation_id>/    # e.g. trtllm/, vllm/, sglang/
+                    │       ├── README.md
+                    │
+                    ├── point.yaml    
+                    ├── results_summary.json   # §8.1 — aggregate metrics (QPS, TPS, TTFT, TPOT, latency %iles)
+                    ├── accuracy_results.json
+                    ├── system_desc.json       # §8.2 — division, publication_status, max_supported_concurrency,
+                    └── run_metadata.json  
 ```
 
 
