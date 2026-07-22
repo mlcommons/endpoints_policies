@@ -1,4 +1,4 @@
 # endpoints_policies
 
-Initial draft of Endpoints Rules and Policies - 2026
+MLPerf Endpoints v1.0 Rules and Policies - 2026
 
