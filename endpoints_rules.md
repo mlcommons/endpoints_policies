@@ -515,7 +515,7 @@ Each submission must include a minimum of **7 measurement points**, structured a
 |---|---|
 | 1 mandatory point | One point in the [Low Latency region](#low-latency-region) (concurrency 1–32). |
 | 3 mandatory points | One point in each of the three [Throughput regions](#throughput-regions) (Low Throughput, Medium Throughput, High Throughput). |
-| 3 submitter's-choice points | Any concurrency level in any of the four regions, at the submitter's discretion. |
+| 3 submitter's-choice points | Any concurrency level in any of the three "throughput" regions, at the submitter's discretion. |
 
 #### No Spacing Requirements
 
@@ -523,7 +523,7 @@ There is no requirement to space points evenly within or across regions. Submitt
 
 #### Submitter's-Choice Points
 
-The 3 submitter's-choice points may be placed in any of the four regions, including regions that already have a required point. For example, a submitter could place all 3 additional points in the High Throughput region to demonstrate scaling behavior, or distribute them to show overall consistency.
+The 3 submitter's-choice points may be placed in any of the three "throughput" regions, including regions that already have a required point. For example, a submitter could place all 3 additional points in the High Throughput region to demonstrate scaling behavior, or distribute them to show overall consistency.
 
 ### 5.4 Regions of Interest
 
@@ -549,33 +549,34 @@ The concurrency space is divided into four regions.
 
 #### Maximum Supported Concurrency
 
-Before the throughput regions can be defined, the submitter must declare a **Maximum Supported Concurrency** value `M`. This is the highest concurrency level at which the submitter chooses to benchmark their system.
+The throughput regions are defined based using the **minimum concurrency** value `m`(ideally corresponds to the best interactivity on the system) and a **Maximum Supported Concurrency** value `M` (this is the highest concurrency level at which the submitter chooses to benchmark their system).
 
 Rules:
 
-- `M` must be greater than 32 (otherwise no throughput regions can be defined).
+- `m` and `M` are directly derived from the submission.
+- `M >> m`.
 - There is no compliance test to force a particular value of `M`.
-- Submitters are incentivized to choose well: `M` defines the extent of their published pareto curve. Declaring too low a value leaves performance on the table; declaring too high a value may produce degraded per-user metrics at the high end.
-- The declared `M` defines the upper bound of the High Throughput region.
+- Submitters are incentivized to choose well: `M` defines the extent of their published pareto curve, while `m` should produce best case interactivity.
+- The value of `M` defines the upper bound of the High Throughput region.
 
 #### Throughput Regions <a id="throughput-regions"></a>
 
-Beyond the Low Latency region (concurrency > 32), the remaining concurrency space up to `M` is divided into **three equal regions in logarithmic space (base 2)**.
+Beyond the Low Latency region (concurrency > `m`), the remaining concurrency space up to `M` is divided into **three equal regions in logarithmic space (base 2)**.
 
 **Region Boundary Computation**
 
 Given a declared Maximum Supported Concurrency `M`, the log-space interval `I` is:
 
 ```
-I = log2(M - 32) / 3
+I = log2(M - m) / 3
 ```
 
 The three throughput regions are:
 
 | Region | Start | End |
 |---|---|---|
-| Low Throughput | 33 | `round(32 + 2^I)` |
-| Medium Throughput | `low_tput_end + 1` | `round(32 + 2^(2*I))` |
+| Low Throughput | `m+1` | `round(m + 2^I)` |
+| Medium Throughput | `low_tput_end + 1` | `round(1 + 2^(2*I))` |
 | High Throughput | `med_tput_end + 1` | `M` |
 
 All non-integer boundaries are rounded to the nearest integer using **round-half-to-even (banker's rounding)**, consistent with Python's built-in `round()` function used in the reference implementation.
@@ -591,13 +592,13 @@ This margin allows submitters to add points above their initial `M` during the p
 **Worked Examples**
 
 <details>
-<summary><strong>Example A — Large-Scale System (M = 8,192)</strong></summary>
+<summary><strong>Example A — Large-Scale System (m = 32; M = 8,192)</strong></summary>
 
 ```
 I = log2(8192 - 32) / 3 = log2(8160) / 3 = 12.994 / 3 = 4.331
 
 Region boundaries:
-  Low Latency:      concurrency    1 –   32  (fixed)
+  Low Latency:      concurrency    32
   Low Throughput:   concurrency   33 –   52  (round(32 + 2^4.331) = round(32 + 20.1) = 52)
   Med Throughput:   concurrency   53 –  437  (round(32 + 2^8.663) = round(32 + 405.2) = 437)
   High Throughput:  concurrency  438 – 8192
@@ -607,34 +608,34 @@ Minimum 7-point example: {16, 40, 200, 2000, 500, 1000, 4096}
 </details>
 
 <details>
-<summary><strong>Example B — Smaller System (M = 256)</strong></summary>
+<summary><strong>Example B — Smaller System (m=1; M = 256)</strong></summary>
 
 ```
-I = log2(256 - 32) / 3 = log2(224) / 3 = 7.807 / 3 = 2.602
+I = log2(256 - 1) / 3 = log2(255) / 3 = 7.993 / 3 = 2.664
 
 Region boundaries:
-  Low Latency:     concurrency  1 –  32  (fixed)
-  Low Throughput:  concurrency 33 –  38  (round(32 + 2^2.602) = round(32 + 6.1) = 38)
-  Med Throughput:  concurrency 39 –  69  (round(32 + 2^5.204) = round(32 + 36.9) = 69)
-  High Throughput: concurrency 70 – 256
+  Low Latency:     concurrency  1
+  Low Throughput:  concurrency 2 –  7  (round(1 + 2^2.664) = round(1 + 6.1) = 7)
+  Med Throughput:  concurrency 8 –  41  (round(1 + 2^5.328) = round(1 + 40.17) = 41)
+  High Throughput: concurrency 42 – 256
 
-Minimum 7-point example: {16, 36, 55, 150, 80, 110, 200}
+Minimum 7-point example: {1, 4, 16, 32, 64, 128, 256}
 ```
 </details>
 
 <details>
-<summary><strong>Example C — Mid-Range System (M = 1,024)</strong></summary>
+<summary><strong>Example C — Mid-Range System (m = 16, M = 1,024)</strong></summary>
 
 ```
-I = log2(1024 - 32) / 3 = log2(992) / 3 = 9.955 / 3 = 3.318
+I = log2(1024 - 16) / 3 = log2(1008) / 3 = 9.977 / 3 = 3.326
 
 Region boundaries:
-  Low Latency:     concurrency   1 –   32  (fixed)
-  Low Throughput:  concurrency  33 –   42  (round(32 + 2^3.318) = round(32 + 10.0) = 42)
-  Med Throughput:  concurrency  43 –  131  (round(32 + 2^6.636) = round(32 + 99.4) = 131)
-  High Throughput: concurrency 132 – 1024
+  Low Latency:     concurrency   16
+  Low Throughput:  concurrency  16 –   26  (round(16 + 2^3.326) = round(16 + 10.0) = 26)
+  Med Throughput:  concurrency  27 –  116  (round(16 + 2^6.652) = round(16 + 100.4) = 116)
+  High Throughput: concurrency 117 – 1024
 
-Minimum 7-point example: {16, 38, 88, 512, 256, 768, 1000}
+Minimum 7-point example: {16, 24, 64, 96, 128, 256, 1000}
 ```
 </details>
 
