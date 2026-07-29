@@ -295,11 +295,12 @@ Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf En
 
 Tokenizers can produce different token counts depending on how text is fed to them — the same output text tokenized as a single string versus tokenized as a sequence of streamed chunks can yield different counts, even with the same tokenizer. To ensure consistent and representative measurement across divisions:
 
-- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its canonical Hugging Face repository — produces the canonical token count for the system under measurement. All token-count metrics (`system_tps`, `tps_per_user`, etc.) are computed from the reference tokenizer applied to the coalesced output, not from any tokenizer used internally by the SUT.
+- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its canonical Hugging Face repository — produces the canonical token count for the system under measurement. Token-count metrics, including `system_tps`, are computed from the reference tokenizer applied to the coalesced output, not from any tokenizer used internally by the SUT.
 - **Token counts are obtained by applying the reference tokenizer once to the entire coalesced output** — the full response text reassembled from the submission, tokenized as a single string. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
   - *Fairness:* every submitter is scored against the same tokenizer applied the same way, independent of how their system batches, chunks, or streams during generation.
   - *Representativeness:* this measures the tokens the user perceives in the final response, rather than implementation artifacts of streamed token boundaries that can differ across submitters.
-- Token-count metrics (System TPS, TPS/User) are derived from these coalesced-output counts. TTFT remains a latency measurement (time to receipt of the first output token from the submission, per §5) and is not derived from coalesced counts.
+- `system_tps` is derived from these coalesced-output counts. TTFT remains a latency measurement (time to receipt of the first output token from the submission, per §5) and is not derived from coalesced counts.
+- For TPOT, the reference tokenizer is applied once to the output received after the first streamed chunk. This post-first-chunk token count is the denominator for that response's TPOT calculation.
 - Submitters using alternative tokenizers must demonstrate equivalence to — or report mapping factors against — the reference tokenizer applied to the coalesced output.
 
 > [!NOTE]
@@ -499,12 +500,15 @@ Submitters may apply quantization, format conversion, or other weight transforma
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-06-26]`** TTFT framing — see note below the table on percentile selection.
 
+> [!IMPORTANT]
+> **Versioning.** The P50 TPOT requirements in this section apply to MLPerf Endpoints v1.0 and later. v0.7 submissions retain their historical TPS/User definition (`system_tps / concurrency`) and are not recomputed or relabeled.
+
 Each measurement point on the pareto curve captures the following metrics at a specific concurrency level:
 
 | Metric | Symbol | Definition |
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
-| TPS per User | `tps_per_user` | Average output tokens per second experienced by a single user. `tps_per_user = system_tps / concurrency`. |
+| TPS per User (P50 TPOT) | `tps_per_user` | Typical per-user output rate, in tokens per second, derived as the reciprocal of P50 TPOT. `tps_per_user = 1000 / tpot_p50_ms`. Higher is better. |
 | Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time, in milliseconds, from query issuance to receipt of the first output token. |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
@@ -520,10 +524,10 @@ The following metrics are derived from primary measurements and used in publicat
 
 | Metric | Description |
 |---|---|
-| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and typical per-user interactivity. |
 | **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
 | **TTFT (P95) vs. Concurrency** | **Y-axis:** `ttft_p95_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P95 is the default and the only percentile plotted for v0.7; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
-| **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how per-user output rate degrades with load. |
+| **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how typical per-user output rate changes with load. |
 
 ### 4.3 Accuracy Metric
 
@@ -933,7 +937,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Streaming config** | `stream_all_chunks = true` for all performance runs. | Flag non-compliant points. |
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
-| **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`. | Flag inconsistent points. |
+| **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `performance/result_summary.json.tpot.percentiles["50.0"]` must contain a finite, strictly positive value from a non-empty TPOT distribution. The submission validator converts this nanosecond value to `tpot_p50_ms` and derives `tps_per_user = 1000 / tpot_p50_ms`. | Flag inconsistent points. |
 | **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, and software stack across all measurement points. | Flag inconsistencies. |
 
