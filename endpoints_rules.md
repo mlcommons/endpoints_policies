@@ -299,11 +299,22 @@ Tokenizers can produce different token counts depending on how text is fed to th
 - **Token counts are obtained by applying the reference tokenizer once to the entire coalesced output** — the full response text reassembled from the submission, tokenized as a single string. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
   - *Fairness:* every submitter is scored against the same tokenizer applied the same way, independent of how their system batches, chunks, or streams during generation.
   - *Representativeness:* this measures the tokens the user perceives in the final response, rather than implementation artifacts of streamed token boundaries that can differ across submitters.
+
+**Response categories and what is counted.** A model response can carry three kinds of content — user-visible **output**, **tool-call** content, and **reasoning** (thinking) traces. Serving frameworks strip the model's internal structural and special tokens (e.g., reasoning delimiters, tool-call framing) when they convert the raw generation into OpenAI chat-completion objects, and it is those completion objects — **text only** — that reach the client. The client extracts the text for each category, coalesces it in arrival order, and applies the reference tokenizer once at the end.
+
+| Content category | Counted? | How it is measured |
+|---|---|---|
+| Visible output | Yes | Text extracted from completion objects, coalesced, tokenized once at the end |
+| Tool-call content | Yes | Same as above |
+| Reasoning / thinking | Yes | Same as above |
+| Category delimiters / special tokens (e.g., start-of-reasoning) | No | Stripped by the serving framework; never tokenized |
+
+- Because frameworks differ in how they serialize and strip these categories, the coalesced text a client observes may not be byte-identical to the server's internal generation. The reference-tokenizer-on-coalesced-text rule accepts this: it does not reproduce any server's internal count, but it scores every submitter the same way and reflects what the user receives.
 - Token-count metrics (System TPS, TPS/User) are derived from these coalesced-output counts. TTFT remains a latency measurement (time to receipt of the first output token from the submission, per §5) and is not derived from coalesced counts.
-- Submitters using alternative tokenizers must demonstrate equivalence to — or report mapping factors against — the reference tokenizer applied to the coalesced output.
+- Submitters may use any tokenizer within their own serving stack; this choice does not affect scoring. The official token count is always the **client-side reference tokenizer applied to the coalesced text** — no equivalence demonstration or mapping factor is required from the submitter.
 
 > [!NOTE]
-> **[WIP]** — Edge-case handling (e.g., partial Unicode at chunk boundaries, special-token treatment, alternative-tokenizer equivalence criteria, and the definition of "coalesced output" for multi-turn or tool-use responses) is under development by the working group.
+> **[WIP]** — One edge case remains under working-group development: partial Unicode at chunk boundaries.
 
 ---
 
