@@ -790,29 +790,49 @@ Publication status categories — **Available**, **Preview**, and **RDI** — in
 
 An Endpoints submission must follow this directory structure:
 
-
 ```
- <submitting_organization>/                            
-  └── <submission-id>/
-      └── <system>/           # e.g. H200-SXM-141GBx8_TRT/, GB300-NVL72_GB300-288GB_aarch64x72_TRT/
-            └── <model>/                        # e.g. deepseek-r1/, gpt-oss-120b/
-                ├── r<N>/                       # PARETO POINT per concurrency level (r1, r32, r256, r4096, …)
-                    │                           #   — fully self-contained: own server config, own accuracy run
-                    |
-                    ├── docs/                   # POINT-SPECIFIC: run notes, anomalies, retry rationale
-                        └── README.md        
-                    │
-                    ├── src/                    # POINT-SPECIFIC endpoint interface code & config
-                    │   └── <implementation_id>/    # e.g. trtllm/, vllm/, sglang/
-                    │       └── README.md
-                    │
-                    ├── point.yaml    
-                    ├── result_summary.json   # §8.1 — aggregate metrics (QPS, TPS, TTFT, TPOT, latency %iles)
-                    ├── accuracy_results.json
-                    ├── system_desc.json       # §8.2 — division, publication_status, max_supported_concurrency,
-                    └── run_metadata.json  
+<submitting_organization>/
+  └── <submission_id>/
+      │
+      ├── src/                              # SHARED across the whole submission
+      │   └── <implementation_id>/          # e.g. trtllm/, vllm/, sglang/
+      │       ├── README.md                 # how to build/launch the SUT and reproduce a point
+      │       └── <endpoint interface code, infra/cluster setup, client harness>
+      │
+      ├── docs/                             # SHARED across the whole submission
+      │   ├── calibration.adoc              # if weight transformations applied (§3.3)
+      │   ├── software_disclosure.md        # §8.4
+      │   └── <additional documentation>
+      │
+      └── results/
+          └── <system>/                     # e.g. H200-SXM-141GBx8_TRT/
+              ├── system_desc_id.json       # §8.2 — one per system, not per point
+              └── <benchmark_model>/        # e.g. deepseek-r1/, gpt-oss-120b/
+                  └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
+                      ├── point.yaml              # §8.3 — includes shared_src / shared_docs pointers
+                      ├── result_summary.json     # aggregate metrics (QPS, TPS, TTFT, TPOT, %iles)
+                      ├── accuracy_results.json   # §6.6
+                      ├── run_metadata.json       # framework/parallelism/precision for this point
+                      └── server_configs/         # OPTIONAL, point-specific: backend configs tuned
+                                                  #   for THIS concurrency (batch size, max_seq_len,
+                                                  #   KV cache %, TP/EP/PP). Non-standard — layout is
+                                                  #   submitter-defined. May include its own README.md.
 ```
 
+The tree separates content that can be shared across the submission from content that is genuinely
+per-measurement-point:
+
+- **Shared content** (`src/`, `docs/`) is written once per submission. Infrastructure code (cluster
+  instantiation, endpoint setup, client harness) and documentation are not duplicated per Pareto
+  point. A submitter that needs different code or documentation for different systems or models adds
+  another `src/<implementation_id>/` or a subdirectory under `docs/` rather than duplicating the tree.
+- **Point-specific content** is only what varies with concurrency level: `point.yaml`, the result and
+  metadata JSON files, and the optional `server_configs/`. Adding, replacing, or withdrawing a Pareto
+  point must not require any change under `src/` or `docs/`.
+
+Each point declares which shared content it used via the `shared_src` and `shared_docs` pointers in
+its `point.yaml` (see [§8.3](#83-measurement-point-yaml)). A point whose pointers are missing or do
+not resolve to an existing directory is incomplete under [§9.1](#91-automated-checks).
 
 ### 8.2 System Description (`system_desc_id.json`)
 
@@ -836,6 +856,8 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 - `runtime_settings`: The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.).
 - `dataset`: Dataset name and any `n_samples_from_dataset` override (if applicable).
 - `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
+- `shared_src`: Relative path from this point folder to the `src/<implementation_id>/` directory used for this run (e.g., `../../../../src/trtllm`).
+- `shared_docs`: Relative path to the `docs/` directory covering this run (e.g., `../../../../docs`). Point-specific notes (run anomalies, retry rationale) belong in this point's `point.yaml` or in `server_configs/README.md`; there is no per-point `docs/` directory.
 
 ### 8.4 Software Disclosure
 
@@ -859,6 +881,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | Check | Validation | Failure Action |
 |---|---|---|
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
+| **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
 | **Point count** | ≥ 7 total measurement points. | Reject submission. |
 | **Low Latency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
 | **Low Throughput coverage** | ≥ 1 point in the Low Throughput region. | Reject submission. |
