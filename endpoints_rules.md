@@ -832,11 +832,11 @@ An Endpoints submission must follow this directory structure:
   systems/
     <system_desc_id>.json
   src/
-    <benchmark_model>/
+    <model_name>/
       <endpoint interface code and configuration to reproduce the code>
   pareto/
     <system_desc_id>/
-      <benchmark_model>/
+      <model_name>/
         points/
           point_<concurrency_level>.yaml    # one per measurement point, should be generated from the results folder
         results/
@@ -858,7 +858,7 @@ In addition to the standard fields defined in [General Submission Rules §5.7](h
 |---|---|
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
 | `publication_status` | `Available`, `Preview`, or `RDI`. |
-| `benchmark_model` | Benchmark model name (must match supported model list). |
+| `model_name` | Benchmark model name (must match supported model list). |
 | `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
 | `endpoint_url` | URL or description of the endpoint under test. |
 | `serving_framework` | Inference serving framework and version (e.g., `vLLM 0.4.0`). |
