@@ -889,7 +889,7 @@ For **Serviced** division submissions, disclose all software information availab
 
 Two identifiers are attached to every submission, and they serve different purposes.
 
-The **submission ID** is a UUID generated automatically by the submission pipeline — not a hash of the submission content. It is opaque, carries no meaning, and exists so the lifecycle tooling can track a bundle through upload, review, and amendment.
+The **submission ID** is generated automatically by the submission pipeline as a hash. It is opaque, carries no meaning, and exists so the lifecycle tooling can track a bundle through upload, review, and amendment.
 
 The **result ID** identifies a single published result and is human-readable. A result is one published Pareto curve: one system, one benchmark model, one dataset. It is constructed as:
 
