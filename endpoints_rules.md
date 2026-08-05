@@ -994,7 +994,7 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 Pre-computed region boundaries for common combinations of Minimum Concurrency ($C_{min}$) and Maximum Supported Concurrency ($C_{max}$) values using the reference algorithm.
 
-| Max Concurrency ($C_{max}$) | Low Latency Point ($C_{min}$) | Low Concurrency | Medium Concurrency | High Concurrency | 10% Margin |
+| Max Concurrency <br>($C_{max}$) | Min Concurrency <br>($C_{min}$) | Low Concurrency | Medium Concurrency | High Concurrency | 10% Margin |
 |---|---|---|---|---|---|
 | 64 | 2 | 3–6 | 7–18 | 19–64 | 65–71 |
 | 128 | 2 | 3–7 | 8–27 | 28–128 | 129–141 |
