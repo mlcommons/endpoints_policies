@@ -549,35 +549,35 @@ The concurrency space is divided into four regions.
 
 #### Maximum Supported Concurrency
 
-The throughput regions are defined based using the **minimum concurrency** value `m`(ideally corresponds to the best interactivity on the system) and a **Maximum Supported Concurrency** value `M` (this is the highest concurrency level at which the submitter chooses to benchmark their system).
+The throughput regions are defined using the **minimum concurrency** value $C_{min}$ (ideally corresponds to the best interactivity on the system) and a **Maximum Supported Concurrency** value $C_{max}$ (this is the highest concurrency level at which the submitter chooses to benchmark their system).
 
 Rules:
 
-- `m` and `M` are directly derived from the submission.
-- `M >> m`.
-- There is no compliance test to force a particular value of `M`.
-- Submitters are incentivized to choose well: `M` defines the extent of their published pareto curve, while `m` should produce best case interactivity.
-- The value of `M` defines the upper bound of the High Throughput region.
+- $C_{min}$ and $C_{max}$ are directly derived from the submission.
+- $C_{max}$ >> $C_{min}$.
+- There is no compliance test to force a particular value of $C_{max}$.
+- Submitters are incentivized to choose well: $C_{max}$ defines the extent of their published pareto curve, while $C_{min}$ should produce best case interactivity.
+- The value of $C_{max}$ defines the upper bound of the High Throughput region.
 
 #### Throughput Regions <a id="throughput-regions"></a>
 
-Beyond the Low Latency region (concurrency > `m`), the remaining concurrency space up to `M` is divided into **three equal regions in logarithmic space (base 2)**.
+Beyond the Low Latency region (concurrency > $C_{min}$), the remaining concurrency space up to $C_{max}$ is divided into **three equal regions in logarithmic space (base 2)**.
 
 **Region Boundary Computation**
 
-Given a declared Maximum Supported Concurrency `M`, the log-space interval `I` is:
+Given a declared Maximum Supported Concurrency $C_{max}$, the log-space interval `I` is:
 
 ```
-I = log2(M - m) / 3
+I = log2(C_max - C_min) / 3
 ```
 
 The three throughput regions are:
 
 | Region | Start | End |
 |---|---|---|
-| Low Throughput | `m+1` | `round(m + 2^I)` |
-| Medium Throughput | `low_tput_end + 1` | `round(1 + 2^(2*I))` |
-| High Throughput | `med_tput_end + 1` | `M` |
+| Low Throughput | $C_{min}+1$ | $round(C_{min} + 2^{I})$ |
+| Medium Throughput | `low_tput_end + 1` | $round(C_{min} + 2^{2I})$ |
+| High Throughput | `med_tput_end + 1` | $C_{max}$ |
 
 All non-integer boundaries are rounded to the nearest integer using **round-half-to-even (banker's rounding)**, consistent with Python's built-in `round()` function used in the reference implementation.
 
@@ -585,14 +585,14 @@ All non-integer boundaries are rounded to the nearest integer using **round-half
 
 **High Throughput Margin**
 
-The High Throughput region has a **10% margin** beyond `M`, extending the valid upper bound to `ceil(M * 1.10)`.
+The High Throughput region has a **10% margin** beyond $C_{max}$, extending the valid upper bound to $ceil(1.10 * C_{max})$.
 
-This margin allows submitters to add points above their initial `M` during the post-submission update window (see [Submission Rules §8.1](endpoints_submission_rules.md#81-pareto-updates)) without requiring a complete redefinition of region boundaries. The margin does not affect the required point distribution.
+This margin allows submitters to add points above their initial $C_{max}$ during the post-submission update window (see [Submission Rules §8.1](endpoints_submission_rules.md#81-pareto-updates)) without requiring a complete redefinition of region boundaries. The margin does not affect the required point distribution.
 
 **Worked Examples**
 
 <details>
-<summary><strong>Example A — Large-Scale System (m = 32; M = 8,192)</strong></summary>
+<summary><strong>Example A — Large-Scale System ($C_{min} = 32$; $C_{max} = 8,192$)</strong></summary>
 
 ```
 I = log2(8192 - 32) / 3 = log2(8160) / 3 = 12.994 / 3 = 4.331
@@ -603,20 +603,20 @@ Region boundaries:
   Med Throughput:   concurrency   53 –  437  (round(32 + 2^8.663) = round(32 + 405.2) = 437)
   High Throughput:  concurrency  438 – 8192
 
-Minimum 7-point example: {16, 40, 200, 2000, 500, 1000, 4096}
+Minimum 7-point example: {32, 40, 200, 500, 1000, 2000, 4096}
 ```
 </details>
 
 <details>
-<summary><strong>Example B — Smaller System (m=1; M = 256)</strong></summary>
+<summary><strong>Example B — Smaller System ($C_{min} = 1$; $C_{max} = 256$)</strong></summary>
 
 ```
-I = log2(256 - 1) / 3 = log2(255) / 3 = 7.993 / 3 = 2.664
+I = log2(256 - 1) / 3 = log2(255) / 3 = 7.994 / 3 = 2.665
 
 Region boundaries:
   Low Latency:     concurrency  1
-  Low Throughput:  concurrency 2 –  7  (round(1 + 2^2.664) = round(1 + 6.1) = 7)
-  Med Throughput:  concurrency 8 –  41  (round(1 + 2^5.328) = round(1 + 40.17) = 41)
+  Low Throughput:  concurrency 2 –  7  (round(1 + 2^2.665) = round(1 + 6.34) = 7)
+  Med Throughput:  concurrency 8 –  41  (round(1 + 2^5.33) = round(1 + 40.21) = 41)
   High Throughput: concurrency 42 – 256
 
 Minimum 7-point example: {1, 4, 16, 32, 64, 128, 256}
@@ -624,7 +624,7 @@ Minimum 7-point example: {1, 4, 16, 32, 64, 128, 256}
 </details>
 
 <details>
-<summary><strong>Example C — Mid-Range System (m = 16, M = 1,024)</strong></summary>
+<summary><strong>Example C — Mid-Range System ($C_{min} = 16$; $C_{max} = 1,024$)</strong></summary>
 
 ```
 I = log2(1024 - 16) / 3 = log2(1008) / 3 = 9.977 / 3 = 3.326
@@ -641,8 +641,8 @@ Minimum 7-point example: {16, 24, 64, 96, 128, 256, 1000}
 
 **Boundary Edge Cases**
 
-- **M ≤ 33:** All three throughput regions collapse to approximately one level each. Submitters with `M ≤ 33` must notify the working group and provide written justification. The working group will review and may request additional information before accepting the submission.
-- **M > 100,000:** The algorithm scales correctly. The Low Throughput region will be narrow while the High Throughput region spans most of the range, reflecting the log-scale nature of concurrency scaling.
+- **$C_{max}$ ≤ 33:** All three throughput regions collapse to approximately one level each. Submitters with $C_{max} ≤ 33$ must notify the working group and provide written justification. The working group will review and may request additional information before accepting the submission.
+- **$C_{max}$ > 100,000:** The algorithm scales correctly. The Low Concurreycy region will be narrow while the High Throughput region spans most of the range, reflecting the log-scale nature of concurrency scaling.
 - **Region boundary collisions:** If rounding causes two boundaries to be equal, the affected region has zero width and a single valid concurrency level at the boundary value. One point at that level satisfies the region's requirement.
 
 ### 5.5 Region Boundary Reference Algorithm
@@ -650,32 +650,33 @@ Minimum 7-point example: {16, 24, 64, 96, 128, 256, 1000}
 The following pseudocode defines the authoritative computation. Submitters must use the reference implementation in the MLCommons Endpoints repository to compute their boundaries and validate their submitted points.
 
 ```python
-def compute_regions(M: int) -> dict:
-    assert M > 32, "Maximum Supported Concurrency must be > 32"
+def compute_regions(C_max: int, C_min: int) -> dict:
+    assert 1 <= C_min <= 32, "Minimum concurrency must be between 1 and 32 (inclusive)"
+    assert C_max > 32, "Maximum Supported Concurrency must be > 32"
 
     # Low Latency region (fixed boundaries)
-    low_latency = {"start": 1, "end": 32}
+    low_latency = {"start": 1, "end": C_min}
 
     # Compute log-space interval
-    I = math.log2(M - 32) / 3
+    I = math.log2(C_max - C_min) / 3
 
-    # Throughput region boundaries (banker's rounding)
-    low_tput_end = round(32 + 2**I)
-    med_tput_end = round(32 + 2**(2 * I))
+    # Concurrency region boundaries (banker's rounding)
+    low_conc_end = round(C_min + 2**I)
+    med_conc_end = round(C_min + 2**(2 * I))
 
-    low_throughput  = {"start": 33,              "end": low_tput_end}
-    med_throughput  = {"start": low_tput_end+1,  "end": med_tput_end}
-    high_throughput = {"start": med_tput_end+1,  "end": M}
+    low_concurrency  = {"start": C_min + 1,              "end": low_conc_end}
+    med_concurrency  = {"start": low_conc_end+1,  "end": med_conc_end}
+    high_concurrency = {"start": med_conc_end+1,  "end": C_max}
 
-    # Extended High Throughput margin (10%)
-    margin_end = math.ceil(M * 1.10)
+    # Extended High Concurrency margin (10%)
+    margin_end = math.ceil(1.10 * C_max)
 
     return {
         "low_latency":      low_latency,
-        "low_throughput":   low_throughput,
-        "med_throughput":   med_throughput,
-        "high_throughput":  high_throughput,
-        "margin":           {"start": M+1, "end": margin_end},
+        "low_concurrency":   low_concurrency,
+        "med_concurrency":   med_concurrency,
+        "high_concurrency":  high_concurrency,
+        "margin":           {"start": C_max+1, "end": margin_end},
     }
 ```
 
@@ -709,9 +710,9 @@ Each measurement point must sustain the target concurrency for a minimum duratio
 | Concurrency Region | Minimum Duration (steady state) | Rationale |
 |---|---|---|
 | Low Latency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at low concurrency. |
-| Low Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
-| Medium Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
-| High Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
+| Low Concurrency | 600 seconds | Standard duration for statistical confidence at scale. |
+| Medium Concurrency | 600 seconds | Standard duration for statistical confidence at scale. |
+| High Concurrency | 600 seconds | Standard duration for statistical confidence at scale. |
 
 ### 6.3 Warmup Period
 
@@ -755,9 +756,9 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 | Concurrency Region | Minimum Completed Queries | Rationale |
 |---|---|---|
 | Low Latency (1–32) | One pass over the low-latency dataset | Lower count acceptable given longer run duration. |
-| Low Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs. |
-| Medium Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
-| High Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
+| Low Concurrency | One pass over the dataset | Consistent and comparable accuracy across all runs. |
+| Medium Concurrency | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
+| High Concurrency | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
 
 > [!NOTE]
 > These minimum query counts require statistical validation against required sample sizes for target confidence intervals. Values are subject to adjustment pending working group ratification.
@@ -823,7 +824,7 @@ In addition to the standard fields defined in [General Submission Rules §5.7](h
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
 | `publication_status` | `Available`, `Preview`, or `RDI`. |
 | `benchmark_model` | Benchmark model name (must match supported model list). |
-| `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
+| `max_supported_concurrency` | Declared Maximum Supported Concurrency $C_{max}$. |
 | `endpoint_url` | URL or description of the endpoint under test. |
 | `serving_framework` | Inference serving framework and version (e.g., `vLLM 0.4.0`). |
 
@@ -953,7 +954,7 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 Pre-computed region boundaries for common Maximum Supported Concurrency values using the reference algorithm (Low Latency fixed at 1–32).
 
-| Max Concurrency (M) | Low Latency | Low Throughput | Medium Throughput | High Throughput | 10% Margin |
+| Max Concurrency ($C_{max}$) | Low Latency | Low Throughput | Medium Throughput | High Throughput | 10% Margin |
 |---|---|---|---|---|---|
 | 64 | 1–32 | 33–35 | 36–42 | 43–64 | 65–71 |
 | 128 | 1–32 | 33–37 | 38–53 | 54–128 | 129–141 |
