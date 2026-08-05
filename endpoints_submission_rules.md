@@ -115,6 +115,7 @@ Responsibilities of the chair and co-chair include:
 - Calling review committee meetings when disputes escalate (see [§9 Dispute Resolution](#9-dispute-resolution)).
 - Certifying that submissions have completed the review process.
 - Recusing themselves from review of their own organization's submissions (if applicable).
+- Assigning peer reviews. (See 2.6)
 
 ### 2.3 Reviewer Obligations
 
@@ -131,6 +132,28 @@ Submitters or other review committee members may raise conflict of interest conc
 ### 2.5 Confidential and Not Precedent Setting
 
 *Inherits from [General Submission Rules §2.4](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#confidential-and-not-precedent-setting) without modification.*
+
+### 2.6 Peer review process 
+
+Ensuring all submissions are rigorously evaluated and adhere to the rules and policies of MLPerf is critical to maintaining the integrity of MLPerf.  Any member of the review committee is entitled to conduct peer review of a submission and ensure that the submission meets the requirements outlined in the MLPerf Endpoints policy documents. To ensure that every submission is reviewed by at least one member of the review committee, the review chairs will assign a reviewer to each new submission.  Subsequent updates to the pareto will also be evaluated by the same reviewer. 
+Failure to complete assigned peer reviews will result in the entity being removed from the review committee. They will be eligible to be a member of the review committee after they publish a new submission. 
+
+Peer reviewer assignment process:
+- The submission CLI will randomly select a reviewer from the review committee pool upon receiving the submission, and before the peer review period begins. 
+- Once a member has been assigned a review, they will not be selected until all other members of the review pool have completed at least one assigned peer review. Members can choose to opt-in to the selection pool after they complete their assignment.
+- Review chairs may choose to reassign the reviewer if they determine the assigned reviewer lacks the resources or experience to review the particular submission.
+- Review chairs may request a member to review more than one submission, depending on the member's availability. 
+
+As a part of the peer review process, reviews should consist of these components:
+
+- Evaluate whether the results are within expected/reasonable range for HW and SW used.
+- Instructions for reproducibility - these should be clear and easy to follow
+- Evaluate methodology
+- Content of json files in systems directory.
+- Open GitHub issues for any issues you find/or any questions you have.
+- If there are too many results, focus on subset you can handle. Prioritize results with high performance and those that compete against other submissions.
+- This is not an exclusive list. If you notice any other issues in the submission, please open an Github issue with it.
+- Reproducing results is not required, but inconsistencies may be pointed as defined by the #Reproducibility Expectations 
 
 ---
 
