@@ -792,10 +792,10 @@ An Endpoints submission must follow this directory structure:
 
 ```
 <submitting_organization>/
-  └── <submission_id>/
+  └── [submission_id]/                      # Provided by MLC. Each submission can only have 1 submission_id. 
       │
       ├── src/                              # SHARED across the whole submission
-      │   └── <implementation_id>/          # e.g. trtllm/, vllm/, sglang/
+      │   └── <implementation>/          # e.g. trtllm/, vllm/, sglang/
       │       ├── README.md                 # how to build/launch the SUT and reproduce a point
       │       └── <endpoint interface code, infra/cluster setup, client harness>
       │
@@ -807,7 +807,7 @@ An Endpoints submission must follow this directory structure:
       └── results/
           └── <system>/                     # e.g. H200-SXM-141GBx8_TRT/
               ├── system_desc_id.json       # §8.2 — one per system, not per point
-              └── <benchmark_model>/        # e.g. deepseek-r1/, gpt-oss-120b/
+              └── <benchmark_model>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
                   └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
                       ├── point.yaml              # §8.3 — includes shared_src / shared_docs pointers
                       ├── result_summary.json     # aggregate metrics (QPS, TPS, TTFT, TPOT, %iles)
