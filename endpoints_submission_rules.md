@@ -357,6 +357,18 @@ Penalties are cumulative and non-reversible — responding after a penalty thres
 
 **Early finalization.** Objections may be fully resolved during the peer review window. If all objections are resolved or retracted before the end of Week 3, the submission is eligible for **early finalization** — it does not need to wait for the close of the objection resolution window. The review chair certifies early finalization and the submission is queued for the next available cohort.
 
+#### Updating submissions during peer review
+
+After compliance checks pass for a submission, there are two supported kinds of changes for run and submission data:
+
+1. Adding or removing a run from a submission.
+2. Updating run and submission metadata.
+
+For (1), submitters must use the submission CLI to add and remove a run using the commands listed in the submission guide. These will re-run the submission checker, and confirm that the complete submission works as intended.
+
+For (2), submitters are encouraged to use the GitHub Web UI for making changes. Any and all changes are synced up with the database, and should shortly be viewable in the visualizer.
+
+
 ### 6.4 Objection Resolution (Weeks 4–6)
 
 From Week 4 through Week 6, all filed objections carried over from the peer review window must be resolved. All objections must reach resolution; escalation to dispute resolution is reserved for cases where the parties cannot agree on the facts or interpretation.
