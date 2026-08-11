@@ -817,13 +817,9 @@ An Endpoints submission must follow this directory structure:
 
 Endpoints submissions must include the following metadata:
 
-<!-- TODO: `division` and `max_supported_concurrency` are kept here for now, but the data dictionary tags both under `point_config.yml` rather than `system_desc.json`. `benchmark_model` does not appear in either data dictionary tab at all. Review placement before merging. -->
-
 | Field | Description |
 |---|---|
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
-| `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
-| `benchmark_model` | Benchmark model name (must match supported model list). |
 | `system_name` | Submitter selected string to describe the system under test (SUT). |
 | `system_availability_status` | `Available` , `Preview`, or `RDI` (not available for purchase soon) at submission time. |
 | `system_category` | `Datacenter` or `Edge`. |
