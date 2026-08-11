@@ -825,12 +825,12 @@ Endpoints submissions must include the following metadata:
 | `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
 | `benchmark_model` | Benchmark model name (must match supported model list). |
 | `system_name` | Submitter selected string to describe the system under test (SUT). |
-| `system_availability_status` | Is the SUT "Available" (components can be purchased by 3P), "Preview" (components available to purchase soon), or "RDI" (not available for purchase soon) at submission time. Defined by MLPerf Submission rules and impacts comparability of results. |
-| `system_category` | Specifies if the submission/SUT is for Datacenter or Edge. |
-| `system_size` | Submitter supplied field that describes the scale of the system numerically and enumerates the processors or accelerators responsible for the majority of the AI computation (e.g., CPUs in a CPU-only system, accelerators in a system that is predominantly using the accelerators) and different node types. Valid form should be something like "72 accelerators + 144 accelerators" for a system comprising two types of nodes with 72 accelerators in the first node type and 144 accelerators in the second node type. |
-| `system_node_ensemble_count` | How many unique combinations of Hardware and Software are part of the SUT. For example, a SUT comprising a first node type for pre-fill and a second node type for decode would have the value 2. Each unique combination should have a full Hardware and Software description. |
-| `system_node_ensemble_total` | Total number of nodes in the SUT, equal to the sum of all number_of_nodes. E.g., if system_node_ensemble_count=2, number_of_nodes=16 for SystemNodeID=1 and number_of_nodes=32 for SystemNodeID=2 then system_node_ensemble_total = 48 = 32+16. |
-| `system_node_ensemble_id` | Identifies a unique node type within the SUT. For example, a disaggregated system with dedicated pre-fill and decode nodes, each type of node would have an id and then be described with an associated set of records (e.g., accelerator_model_name for each type of node). |
+| `system_availability_status` | `Available` , `Preview`, or `RDI` (not available for purchase soon) at submission time. |
+| `system_category` | `Datacenter` or `Edge`. |
+| `system_size` | Number of accelerators per node type, e.g. "72 accelerators + 144 accelerators" for a system comprising two types of nodes with 72 accelerators in the first node type and 144 accelerators in the second node type. |
+| `system_node_ensemble_count` | How many unique combinations of Hardware and Software are part of the SUT. |
+| `system_node_ensemble_total` | Total number of nodes in the SUT, equal to the sum of all number_of_nodes.|
+| `system_node_ensemble_id` | Identifies a unique node type within the SUT. |
 | `number_of_nodes` | How many nodes of type system_node_id are in the SUT. |
 | `host_processor_model_name` | Model name of the host processor. |
 | `host_processors_per_node` | # of host processors per node. |
@@ -883,7 +883,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `dataset` | Dataset name and any `n_samples_from_dataset` override (if applicable). |
 | `warmup` | The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`). |
 | `division` | `Standardized`, `Serviced`, or `RDI`. <!-- TODO: also listed in §8.2 pending placement review --> |
-| `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. <!-- TODO: also listed in §8.2 pending placement review --> |
+| `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
 | `model_id` | ID # of a model, that corresponds to a display name. |
 | `model_name` | Display name of model, should be consistent across all external usages. |
 | `model_precision` | Lowest precision numerical format used for the weights of the model. For example, if a model comprises FP16 and FP8, then model_precision is FP8. |
@@ -892,8 +892,6 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `model_notes` | Submitter software notes to supplement other information, freeform field. |
 | `dataset_id` | ID # of a dataset, that corresponds to a display name. |
 | `dataset_name` | Display name of dataset, should be consistent across all external usages. |
-| `input_token_average` | Average number of input tokens for queries in the performance dataset. Static value for models using standard datasets, that is completely determined by the dataset. New datasets would require this data. |
-| `output_token_average` | Average number of output tokens for queries in the performance dataset. Static value for models using standard datasets, that is completely determined by the dataset. New datasets would require this data. |
 | `dataset_type` | Is the dataset used for "Accuracy", "Performance", or "Accuracy + Performance". |
 | `dataset_link` | Link to data used for submission e.g., via GitHub. |
 
