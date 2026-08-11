@@ -815,26 +815,87 @@ An Endpoints submission must follow this directory structure:
 
 ### 8.2 System Description (`system_desc_id.json`)
 
-In addition to the standard fields defined in [General Submission Rules §5.7](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#system_desc_id-json-metadata), Endpoints submissions must include:
+Endpoints submissions must include the following metadata:
+
+<!-- TODO: `division` and `max_supported_concurrency` are kept here for now, but the data dictionary tags both under `point_config.yml` rather than `system_desc.json`. `benchmark_model` does not appear in either data dictionary tab at all. Review placement before merging. -->
 
 | Field | Description |
 |---|---|
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
-| `publication_status` | `Available`, `Preview`, or `RDI`. |
-| `benchmark_model` | Benchmark model name (must match supported model list). |
 | `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
+| `benchmark_model` | Benchmark model name (must match supported model list). |
+| `system_name` | Submitter selected string to describe the system under test (SUT). |
+| `system_availability_status` | Is the SUT "Available" (components can be purchased by 3P), "Preview" (components available to purchase soon), or "RDI" (not available for purchase soon) at submission time. Defined by MLPerf Submission rules and impacts comparability of results. |
+| `system_category` | Specifies if the submission/SUT is for Datacenter or Edge. |
+| `system_size` | Submitter supplied field that describes the scale of the system numerically and enumerates the processors or accelerators responsible for the majority of the AI computation (e.g., CPUs in a CPU-only system, accelerators in a system that is predominantly using the accelerators) and different node types. Valid form should be something like "72 accelerators + 144 accelerators" for a system comprising two types of nodes with 72 accelerators in the first node type and 144 accelerators in the second node type. |
+| `system_node_ensemble_count` | How many unique combinations of Hardware and Software are part of the SUT. For example, a SUT comprising a first node type for pre-fill and a second node type for decode would have the value 2. Each unique combination should have a full Hardware and Software description. |
+| `system_node_ensemble_total` | Total number of nodes in the SUT, equal to the sum of all number_of_nodes. E.g., if system_node_ensemble_count=2, number_of_nodes=16 for SystemNodeID=1 and number_of_nodes=32 for SystemNodeID=2 then system_node_ensemble_total = 48 = 32+16. |
+| `system_node_ensemble_id` | Identifies a unique node type within the SUT. For example, a disaggregated system with dedicated pre-fill and decode nodes, each type of node would have an id and then be described with an associated set of records (e.g., accelerator_model_name for each type of node). |
+| `number_of_nodes` | How many nodes of type system_node_id are in the SUT. |
+| `host_processor_model_name` | Model name of the host processor. |
+| `host_processors_per_node` | # of host processors per node. |
+| `host_processor_core_count` | # of CPU cores in each processor. Optional, but at least one of host_processor_core_count and host_processor_cpu_count must be present. |
+| `host_processor_vcpu_count` | # of vCPUs in each processor. Optional, but at least one of host_processor_core_count and host_processor_cpu_count must be present. |
+| `accelerator_model_name` | Model name of the accelerator. |
+| `accelerators_per_node` | # of accelerators per node. |
+| `accelerator_host_interconnect` | Describes the interconnect link between the accelerator and the host processors. |
+| `accelerator_interconnect` | Describes the interconnect link between accelerators, when multiple accelerators are present as indicated by accelerators_per_node > 1. |
+| `accelerator_memory_capacity` | Memory capacity per accelerator. |
+| `accelerator_memory_type` | Type of memory for the accelerator. |
+| `host_memory_capacity` | Total memory capacity for all host processors. Not per-processor. |
+| `host_memory_configuration` | Memory configuration for the host processors, e.g., how many DIMMs, what kind of memory (DDR5, LPDDR4, etc.), and speed. |
+| `host_network_card_count` | Describes the # and type of networking cards and associated speeds. |
+| `host_networking` | Describes the networking protocol, e.g., Infiniband, Ethernet. |
+| `host_storage_capacity` | Total storage capacity for the node. |
+| `host_storage_type` | Description of the type of storage in the node. Should indicate if SSD or HDD. |
+| `other_hardware` | Describes any other performance relevant hardware in the node, freeform field. |
+| `cooling` | Describes if the node uses any liquid cooling, only air-cooling, or only passive cooling. |
+| `hw_notes` | Submitter hardware notes to supplement other information, freeform field. |
+| `serving_framework` | Serving Framework used for submission, e.g., SGLang, vLLM, etc. |
+| `inference_backend` | Inference backend used for submission, e.g., vendor stack components. |
+| `driver` | Driver and version number for any accelerators. |
+| `container_link` | Link to container for submission. |
 | `endpoint_url` | URL or description of the endpoint under test. |
-| `serving_framework` | Inference serving framework and version (e.g., `vLLM 0.4.0`). |
+| `operating_system` | OS used for the node. |
+| `filesystem` | Filesystem used for the node. |
+| `other_software_stack` | Describes any other performance relevant software in the node, freeform field. |
+| `sw_notes` | Submitter software notes to supplement other information, freeform field. |
+| `node_config` | Describes the configuration of nodes or processors in the SUT (as described by system_size) for this run. Should be provided by submitter and contain sufficient detail to enable reproducing the submission (e.g., describing configuration of inference server for all nodes). |
+| `config_summary` | Describes the configuration options for the SUT for this run — a concatenation of `disaggregated`, `tensor_parallel`, `pipeline_parallel`, `expert_parallel`, `data_parallel` (where these fields are > 1) and `config_summary_notes`. Should be provided by submitter and contain sufficient detail to enable reproducing the submission. |
+| `disaggregated` | Indicates whether the system is disaggregated (disaggregated > 1). If disaggregated <!-- TODO: definition is truncated in the source data dictionary, verify full text with the data dictionary owner. --> |
+| `expert_parallel` | Expert parallel partitioning of the model for the run. Only applies to Mixture-of-Expert models. EP=N means that the experts are split into N separate groups that reside on different processors/accelerators, and tokens are routed to the appropriate group. EP=1 means no partitioning. |
+| `tensor_parallel` | Parallel partitioning of the model weight matrices for the run. TP=N means the weight matrices are split N ways and each partition contains 1/N of the weights of each layer and computes 1/N of the layer. Generally the number of attention heads in the model must be divisible by N. TP=1 means no partitioning. |
+| `pipeline_parallel` | Sequential partitioning of the layers of the model into a pipeline for the run. PP=N means the layers of the model are split sequentially into a pipeline with N stages, each stage contains 1/N of the layers of the model. Each processor/accelerator contains one stage and a single inference must pass through all stages of the pipeline. PP=1 means no partitioning. |
+| `data_parallel` | Data parallel replication of the model for the run. DP=N means the model is replicated N times, and requests are distributed across the N replicas. DP=1 means no replication. |
+| `batch` | Maximum batch size. |
+| `config_summary_notes` | Free form field from the submitter to contain information not captured by other fields that concatenate into config_summary. |
+| `link_config` | Link to full configuration logs for the run (e.g., in GitHub). |
 
 ### 8.3 Measurement Point YAML
 
 Each measurement point must be accompanied by a YAML configuration file specifying:
 
-- `concurrency`: The target concurrency level.
-- `region`: The region this point satisfies (`low_latency`, `low_throughput`, `med_throughput`, `high_throughput`, or `submitters_choice`).
-- `runtime_settings`: The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.).
-- `dataset`: Dataset name and any `n_samples_from_dataset` override (if applicable).
-- `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
+| Field | Description |
+|---|---|
+| `concurrency` | The target concurrency level. |
+| `region` | The region this point satisfies (`low_latency`, `low_throughput`, `med_throughput`, `high_throughput`, or `submitters_choice`). |
+| `runtime_settings` | The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.). |
+| `dataset` | Dataset name and any `n_samples_from_dataset` override (if applicable). |
+| `warmup` | The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`). |
+| `division` | `Standardized`, `Serviced`, or `RDI`. <!-- TODO: also listed in §8.2 pending placement review --> |
+| `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. <!-- TODO: also listed in §8.2 pending placement review --> |
+| `model_id` | ID # of a model, that corresponds to a display name. |
+| `model_name` | Display name of model, should be consistent across all external usages. |
+| `model_precision` | Lowest precision numerical format used for the weights of the model. For example, if a model comprises FP16 and FP8, then model_precision is FP8. |
+| `link_to_model` | Link to model submitted e.g., via GitHub. |
+| `link_to_model_transformation` | Link to calibration/quantization/retraining write-up. |
+| `model_notes` | Submitter software notes to supplement other information, freeform field. |
+| `dataset_id` | ID # of a dataset, that corresponds to a display name. |
+| `dataset_name` | Display name of dataset, should be consistent across all external usages. |
+| `input_token_average` | Average number of input tokens for queries in the performance dataset. Static value for models using standard datasets, that is completely determined by the dataset. New datasets would require this data. |
+| `output_token_average` | Average number of output tokens for queries in the performance dataset. Static value for models using standard datasets, that is completely determined by the dataset. New datasets would require this data. |
+| `dataset_type` | Is the dataset used for "Accuracy", "Performance", or "Accuracy + Performance". |
+| `dataset_link` | Link to data used for submission e.g., via GitHub. |
 
 ### 8.4 Software Disclosure
 
