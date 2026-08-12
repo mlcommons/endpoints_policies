@@ -130,6 +130,18 @@ For clarity: being a competitor is not a conflict of interest. The peer review m
 
 Submitters or other review committee members may raise conflict of interest concerns about a reviewer at any time during the review process. The review chair will evaluate the concern and determine whether recusal is warranted.
 
+#### Neutral Members
+
+Several processes in these rules are staffed by **neutral members**: the dispute resolution panel ([§9.2](#92-escalation-path)), the objection review panel ([§8.5](#85-issues-discovered-after-publication)), and audit-nomination screening ([§10.1](#101-audit-nomination-on-reproducibility-grounds)).
+
+A neutral member is a person with **minimal conflict of interest in the matter at hand**, assessed against the criteria above: no direct financial interest in its outcome, no employment or equivalent relationship with either party, and no involvement in preparing or reviewing the submission in question. Consistent with the paragraph above, ordinary competitive relationships and CSP/OEM/ODM partnerships do **not** disqualify a person from serving as a neutral member.
+
+Neutral members **need not be members of the review committee**, and need not belong to the MLPerf Endpoints working group. Where the committee cannot supply enough conflict-free members — because the parties to a dispute between them account for much of the committee, or because the subject matter is narrow — the review chair may appoint neutrals from outside it.
+
+Neutral members **should** have practical experience with AI benchmarking and with MLPerf in particular: familiarity with submission and review practice, with the divisions and publication status categories, and with the measurement methodology. This is a preference rather than a requirement. Where the two cannot both be satisfied, freedom from conflict takes precedence over subject-matter experience.
+
+The review chair records the basis on which each neutral member was selected, in the submission's issue thread or in the dispute record. Either party may raise a conflict of interest concern about a proposed neutral member, which the chair evaluates as above.
+
 ### 2.5 Confidential and Not Precedent Setting
 
 *Inherits from [General Submission Rules §2.4](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#confidential-and-not-precedent-setting) without modification.*
@@ -438,14 +450,32 @@ Supersession does **not** apply to availability, division-rule, or model-equival
 
 #### Reproducibility Expectations
 
-Perfect reproducibility of results cannot be reasonably expected and must not be used to block publication unless the deviation is egregious. Due to natural variability in silicon, machine configuration, setup, power delivery, cooling, and thermal state, **a performance variability of up to 10% is expected and allowed** during the review period. Large-scale submissions (hundreds of accelerators) may exhibit even higher variance and should be assessed with proportionally greater tolerance.
+Perfect reproducibility of results cannot be reasonably expected and must not be used to block publication unless the deviation is egregious. Due to natural variability in silicon, machine configuration, setup, power delivery, cooling, and thermal state, some run-to-run variation is expected.
 
-The only exception is same-system reproducibility: when re-running on the **exact same system** (e.g., during an audit), results must be **within 5%** of the original submission.
+**Throughput metrics.** The margins below apply to `system_tps`, and to `tps_per_user` derived from it ([Endpoints Rules §4.1](endpoints_rules.md#41-primary-metrics)):
+
+- **Up to 10%** variability is expected and allowed when an independent party re-runs the benchmark during the review period. Large-scale submissions (hundreds of accelerators) may exhibit higher variance and should be assessed with proportionally greater tolerance.
+- **Within 5%** when re-running on the **exact same system** — for example during an audit.
+
+**Latency metrics.** These margins do **not** apply to `ttft_p95_ms`, or to any other latency percentile. A fixed percentage band is not a sound test for a percentile statistic:
+
+- A percentile is a substantially noisier estimator than a mean, and its sampling error depends on the number of completed queries at the measurement point.
+- TTFT distributions are right-skewed and heavy-tailed, so a band that is generous for a mean can be punishing for a tail statistic.
+- The absolute scale spans orders of magnitude across the pareto — tens of milliseconds in the Low Latency region, seconds at high concurrency — so a single relative band is simultaneously too tight at one end and too loose at the other.
+- For Client-over-Network submissions, measured TTFT includes public Internet latency that the submitter does not control, and whose run-to-run variation may exceed any submitter-attributable difference.
+
+**Interim rule.** Until the working group ratifies a method, a reproducibility objection may not rest on latency metrics alone. Latency evidence may be offered in support of an objection whose primary basis is throughput or accuracy, and a reviewer may raise an unexplained latency discrepancy as a *Suspect or Incomprehensible Results* objection ([§6.8](#68-types-of-objections)).
 
 **Accuracy must always pass** — the accuracy quality target is a hard gate with no variability allowance, both during automated compliance and throughout the review period.
 
 > [!NOTE]
-> **[WG Decision Required]** — The 10% performance variability margin and the 5% same-system threshold are current proposals and must be ratified by the working group before they can be enforced. The working group should consider whether different margins apply to different metric types (e.g., TTFT vs. system TPS) and whether large-scale submission thresholds need separate treatment.
+> **[WG Decision Required]** — The 10% and 5% throughput margins are current proposals and require ratification before they can be enforced.
+>
+> **A method for latency metrics has yet to be developed.** The per-metric **histogram** the reference client writes with each run is the natural input: it carries the whole distribution rather than a single percentile, and needs no new instrumentation. Three prerequisites must be settled before it can support cross-run comparison — bin edges specified by the reference client and identical across every run and measurement point (log-spaced, given the range latency spans across the pareto); per-bin counts retained so that the sample size is recoverable; and coverage restricted to steady state, excluding warmup per [Endpoints Rules §6.3.2](endpoints_rules.md#632-discard-policy). Given those, candidate tests include agreement across several quantiles rather than one, a distributional distance over the binned counts (Wasserstein, or a chi-square over bins), and bootstrap confidence intervals resampled from the histogram. The histogram's own resolution supplies a principled noise floor: a difference smaller than one bin width at the quantile under test is not actionable. Separating the network component for CoN submissions remains desirable, and [Endpoints Rules §2.1.1](endpoints_rules.md#211-client-on-prem-cop) already requires a measured baseline for CoP.
+>
+> **Artifact prerequisite.** [Endpoints Rules §8.1](endpoints_rules.md#81-directory-structure) does not currently require the histogram to be retained: the per-point artifacts are `result_summary.json` with aggregate metrics and percentiles. Any method resting on the histogram requires it to be added as a required artifact, with its binning fixed in the data dictionary referenced by [§5.7](#57-logging-requirements).
+>
+> The working group should also decide whether large-scale submissions warrant a distinct throughput threshold.
 
 ### 6.7 Filing Objections
 
@@ -465,7 +495,7 @@ Objections filed during peer review must be categorized as one of the following 
 |---|---|---|
 | **Compliance Failure** | Submission does not meet stated rules (point count, region coverage, run duration, load pattern, etc.). | High — may require withdrawal. |
 | **Methodology** | Disagreement with how the benchmark was configured or executed (e.g., dataset handling, warmup procedure). | High. |
-| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)). Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window (through the end of Week 3) and are not eligible as late objections; after finalization, a reproducibility concern is pursued by nominating the submission for audit under [§10.1](#101-audit-nomination-on-reproducibility-grounds). | High — but must exceed the allowed variability margin to be actionable. |
+| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin for the metric in question (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)); the throughput margins do not apply to latency metrics, and an objection may not rest on latency alone until a method is ratified. Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window (through the end of Week 3) and are not eligible as late objections; after finalization, a reproducibility concern is pursued by nominating the submission for audit under [§10.1](#101-audit-nomination-on-reproducibility-grounds). | High — but must exceed the allowed variability margin to be actionable. |
 | **Validity of Results** | Specific metric values appear incorrect, inconsistent, or incompatible with known hardware capabilities. | High. |
 | **Division Rules** | Submission placed in wrong division, or system does not meet division requirements (availability, API compliance, etc.). The review committee may allow the submitting organization to reclassify to the correct division rather than withdraw. | Medium. |
 | **Availability** | System claimed as Available or Preview does not meet the availability requirements at the stated date. The review committee may allow the submitting organization to reclassify (e.g., from Available to Preview or RDI) rather than withdraw. | Medium. |
@@ -622,13 +652,14 @@ The Available software stack requirement (§7.2.3) is waived for software compon
 
 #### 7.3.3 Performance Continuity Requirement
 
-When a Preview submission transitions to Available, the re-submitted result must achieve equal or better performance compared to the Preview result. A degradation of up to **5%** is accepted to account for variance inherent to endpoints workloads — the high-interactivity region of the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit higher run-to-run variance than traditional batch inference.
+When a Preview submission transitions to Available, the re-submitted result must achieve equal or better performance compared to the Preview result.
+
+**Throughput metrics.** For `system_tps` and `tps_per_user`, a degradation of up to **5%** is accepted, to account for variance inherent to endpoints workloads — the high-interactivity region of the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit higher run-to-run variance than traditional batch inference. The tolerance applies to each such metric independently.
+
+**Latency metrics.** The 5% tolerance does **not** apply to `ttft_p95_ms` or to any other latency percentile, for the reasons set out in [§6.6 Reproducibility Expectations](#reproducibility-expectations): a fixed percentage band is not a sound test for a percentile statistic. Until the working group ratifies a comparison method for latency, a Preview-to-Available transition is not blocked on latency alone. A material and unexplained latency regression is instead raised as an objection during the re-submission's own review window, subject to the same interim rule.
 
 > [!NOTE]
-> **[WG Approval Required]** — The 5% Preview-to-Available margin is a proposal pending working group ratification. Until approved, treat this as provisional and flag any results that pass only under the 5% (vs. 2%) threshold.
-> Approved by TaskForce 
-
-The tolerance applies to each reported metric independently.
+> **[WG Decision Required]** — The 5% throughput margin has been approved by the Task Force. The latency comparison method is open, and is shared with [§6.6](#reproducibility-expectations); until it is settled, this section is enforceable on throughput metrics only.
 
 #### 7.3.4 Declaration Requirements
 
@@ -795,7 +826,7 @@ Any use of published results in connection with the MLPerf trademark must follow
 
 This section is limited to allegations of **direct fraud or misrepresentation** — a submission that knowingly reports results it did not achieve, materially misstates the system under test, or conceals a material fact from reviewers. Post-publication concerns that do not allege fraud are handled as late objections ([§6.6](#66-late-objections-post-week-6)) or audit nominations ([§10.1](#101-audit-nomination-on-reproducibility-grounds)), subject to the standing and time-window limits of [§6.6](#scope-and-standing-for-late-concerns). This section carries no time limit and is not subject to supersession by a later submission.
 
-Any MLCommons member may raise a fraud or misrepresentation allegation via email to any MLCommons WG chair. An objection review panel (minimally the review chair plus two neutral committee members) will screen the allegation. If rejected at this stage, the chair will respond to the objector with the reasoning.
+Any MLCommons member may raise a fraud or misrepresentation allegation via email to any MLCommons WG chair. An objection review panel — minimally the review chair plus two **neutral members** ([§2.4](#24-conflict-of-interest)) — will screen the allegation. If rejected at this stage, the chair will respond to the objector with the reasoning.
 
 Otherwise, the chair will designate an investigator with no conflict of interest to produce a brief report confidential to the committee, which will include a response from the submitter of the disputed result.
 
@@ -827,7 +858,7 @@ The dispute resolution process handles:
 
 **Status of the submission during a dispute.** A submission with an escalated objection **does not finalize** until the dispute concludes. Results already published provisionally remain visible and keep the "peer review pending" tag; results under confidential review remain unpublished. Where an escalated objection is confined to identifiable measurement points, the chair may certify the remainder of the submission for finalization and hold only the disputed points — provided the submission still satisfies the minimum point and region-coverage requirements without them.
 
-**Panel.** The chair convenes a panel consisting of the objecting party, the submitter, and at least two neutral committee members. The parties present evidence; only the neutral members deliberate and recommend. Where the committee cannot supply two members free of conflict, the chair may appoint neutrals from outside the review committee.
+**Panel.** The chair convenes a panel consisting of the objecting party, the submitter, and at least two **neutral members** as defined in [§2.4](#24-conflict-of-interest). The parties present evidence; only the neutral members deliberate and recommend.
 
 **Timeline.** Business days are counted as in [§6.3](#63-peer-review-weeks-13), with the same local-holiday rule.
 
@@ -885,7 +916,7 @@ Nominations are subject to the standing, time-window, and supersession limits of
 - Demonstrate that the deviation exceeds the margins of [§6.6 Reproducibility Expectations](#reproducibility-expectations): 10% in general, or 5% when re-running on the exact same system. A failure to meet the accuracy quality target requires no margin showing, as accuracy is a hard gate.
 - Reference the applicable rule or section.
 
-Nominations go to the review chair, who screens them together with at least two neutral committee members — the same panel composition as [§8.5](#85-issues-discovered-after-publication). If the nomination is accepted, the submission enters the audit queue subject to the audit capacity in force for that quarter. The chair notifies the submitter and the nominating member of the decision, with reasoning where a nomination is declined.
+Nominations go to the review chair, who screens them together with at least two **neutral members** ([§2.4](#24-conflict-of-interest)) — the same panel composition as [§8.5](#85-issues-discovered-after-publication). If the nomination is accepted, the submission enters the audit queue subject to the audit capacity in force for that quarter. The chair notifies the submitter and the nominating member of the decision, with reasoning where a nomination is declined.
 
 Where an audit substantiates the concern, remedies follow [§9.3](#93-remedies) and [§8.5](#85-issues-discovered-after-publication): correction and re-submission of the affected points, reclassification to a different division or publication status, withdrawal of specific results or the entire submission, or a formal finding of non-compliance.
 
