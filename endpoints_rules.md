@@ -843,7 +843,7 @@ Endpoints submissions must include the following metadata:
 | `host_network_card_count` | Describes the # and type of networking cards and associated speeds. |
 | `host_networking` | Describes the networking protocol, e.g., Infiniband, Ethernet. |
 | `host_storage_capacity` | Total storage capacity for the node. |
-| `host_storage_type` | Description of the type of storage in the node. Should indicate if SSD or HDD. |
+| `host_storage_type` | Description of the type of storage in the node. |
 | `other_hardware` | Describes any other performance relevant hardware in the node, freeform field. |
 | `cooling` | Describes if the node uses any liquid cooling, only air-cooling, or only passive cooling. |
 | `hw_notes` | Submitter hardware notes to supplement other information, freeform field. |
