@@ -568,7 +568,7 @@ The 3 submitter's-choice points may be placed in any of the three "concurrency" 
 ### 5.4 Regions of Interest
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** Regions of Interest (ROIs) are named for either latency or concurrency, and in both cases they are constrained by concurrency. Please read the methodology carefully before proceeding.
+> Regions of Interest (ROIs) are named for either latency or concurrency, and in both cases they are constrained by concurrency. Please read the methodology carefully before proceeding.
 
 The concurrency space is divided into four regions.
 
@@ -585,7 +585,7 @@ The concurrency space is divided into four regions.
 > Submitters are encouraged — but not required — to include a measurement at concurrency 1 (the single-user baseline) as their Low Latency point. Concurrency 1 represents the best-case per-user experience and is commonly cited in performance comparisons, but any concurrency level in the 1–32 range satisfies the region requirement.
 
 > [!WARNING]
-> **[Subject to WG Review]** — The bounds of the Ultra Low Concurrency region (currently 1–32) are not final and may be adjusted by the working group in a future revision of these rules.
+> The bounds of the Ultra Low Concurrency region (currently 1–32) are final for Endpoints v1.0, but they may be adjusted by the working group in a future version of these rules.
 
 #### Maximum Supported Concurrency
 
