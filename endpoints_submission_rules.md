@@ -378,7 +378,7 @@ An objection is considered resolved when:
 - The objecting party retracts the objection, or
 - The objecting party does not respond within 3 business days of the submitter's resolution response.
 
-Unresolved objections at the end of Week 6 are escalated to the dispute resolution process (see [§9](#9-dispute-resolution)).
+Unresolved objections at the end of Week 6 are escalated to the dispute resolution process. Escalation is **automatic**: the review chair certifies which objections remain open and refers them, without requiring a motion from either party. A submission with an escalated objection does not finalize until the dispute concludes. The process and its deadlines are set out in [§9.2](#92-escalation-path).
 
 Once all objections are resolved or retracted, the "peer review pending" tag is removed and the submission's results are finalized.
 
@@ -389,6 +389,7 @@ Once all objections are resolved or retracted, the "peer review pending" tag is 
 | Automated Compliance | Week 0 (up to 1 week; may complete in as little as 1 day) | Automated checks run. Pass → advances to peer review immediately. Fail by end of Week 0 → **rejected**; submitter may resubmit. Results remain confidential by default; provisional publication if submitter opted in (subject to embargo). |
 | Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 cohort at 3 biz days, +2 cohorts at 6, withdrawn at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
 | Objection Resolution | Weeks 4–6 | Open objections must be resolved; same non-response penalty schedule applies; objector has 2 business days to explain insufficiency or provide validation schedule (silence = objection retracted after 3 days); chairs may call meeting if objection is 12+ biz days old or entering Week 5; submission finalized or escalated to dispute resolution. |
+| Dispute Resolution | From end of Week 6, ~5 weeks | Escalation is automatic for objections still open at Week 6; the submission does not finalize. Chair certifies and names a panel within 2 business days; written statements within 10; panel convenes within 15; recommendation +5; binding decision +5. One investigation extension. 8-week backstop, after which the chair decides on the record. Appeal within 14 days. |
 | Late Objections ⚠️ | Post Week 6 | Availability, validity, model-equivalence, and division-rule objections only, via the dispute resolution process. Reproducibility is not eligible. **[WIP — pending WG approval]** |
 
 ### 6.6 Late Objections (Post Week 6)
@@ -822,12 +823,29 @@ The dispute resolution process handles:
 
 ### 9.2 Escalation Path
 
-When an objection is escalated:
+**Trigger.** At the close of Week 6 the review chair certifies which objections remain open and escalates them. Escalation is automatic — neither party needs to request it, and no motion is required. Objections resolved or retracted during Weeks 1–6 do not reopen.
 
-1. The review chair convenes a dispute resolution panel consisting of the objecting party, the submitter, and at least two neutral committee members.
-2. The objecting party and the submitter present their evidence and arguments.
-3. The neutral members issue a recommendation: uphold objection, dismiss objection, or request additional investigation.
-4. The review chair makes a binding decision based on the recommendation.
+**Status of the submission during a dispute.** A submission with an escalated objection **does not finalize** until the dispute concludes. Results already published provisionally remain visible and keep the "peer review pending" tag; results under confidential review remain unpublished. Where an escalated objection is confined to identifiable measurement points, the chair may certify the remainder of the submission for finalization and hold only the disputed points — provided the submission still satisfies the minimum point and region-coverage requirements without them.
+
+**Panel.** The chair convenes a panel consisting of the objecting party, the submitter, and at least two neutral committee members. The parties present evidence; only the neutral members deliberate and recommend. Where the committee cannot supply two members free of conflict, the chair may appoint neutrals from outside the review committee.
+
+**Timeline.** Business days are counted as in [§6.3](#63-peer-review-weeks-13), with the same local-holiday rule.
+
+| Step | Deadline |
+|---|---|
+| Chair certifies the open objections, notifies both parties and the committee, and names the panel | Within **2 business days** of the close of Week 6 |
+| Each party files a written statement of position with supporting evidence | Within **10 business days** of notification |
+| Panel convenes — as a meeting or an asynchronous review, at the chair's discretion | Within **15 business days** of notification |
+| Neutral members issue a recommendation: uphold, dismiss, or investigate further | Within **5 business days** of the panel convening |
+| Chair issues a binding decision | Within **5 business days** of the recommendation |
+
+Where the recommendation is to investigate further, the chair appoints an investigator with no conflict of interest, and the remaining deadlines restart from delivery of the investigator's report. An investigation may extend the process **once only**.
+
+**Non-participation.** If the submitter does not file a written statement by its deadline, the non-response penalties of [§6.3](#63-peer-review-weeks-13) continue to accrue, and at 10 business days past the deadline the submission is withdrawn. If the objecting party does not file, the objection lapses and is treated as retracted; where it was the only escalated objection, the submission proceeds to finalization.
+
+**Backstop.** If the process has not concluded within **8 weeks** of escalation, the chair decides on the record then available. A dispute may not remain open indefinitely, and a party's failure to produce evidence is not grounds for extension beyond the single investigation extension above.
+
+**After the decision.** Remedies are applied per [§9.3](#93-remedies). A submission that survives the dispute finalizes and is published in the next cohort for which it clears the alignment window of [§4.3](#43-submission-to-publication-alignment); one that does not is reclassified or withdrawn as the remedy directs. The late-concern window of [§6.6](#scope-and-standing-for-late-concerns) runs from that finalization, so time spent in dispute does not consume it.
 
 ### 9.3 Remedies
 
@@ -845,7 +863,7 @@ Either party may appeal the review chair's decision to the Head of MLPerf within
 ### 9.5 Status
 
 > [!TIP]
-> **[TBD]** — The full dispute resolution procedure, including quorum requirements, voting rules, confidentiality provisions, and timeline constraints, will be specified in a separate document by the Rules Task Force.
+> **[WG Approval Required]** — The panel composition, deadlines, non-participation consequences, and 8-week backstop in [§9.2](#92-escalation-path) are a current proposal and require ratification before they can be enforced. Still unspecified and deferred to the Rules Task Force: the **quorum and voting rule** among neutral members where a panel has more than two (the current text assumes a recommendation carries with a simple majority, with the chair deciding on a tie), **confidentiality provisions** covering the written statements and the investigator's report, and whether a **standing roster** of pre-cleared neutral members should be maintained so that panels can be convened inside the 2-business-day window.
 
 ---
 
