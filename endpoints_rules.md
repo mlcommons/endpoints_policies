@@ -322,6 +322,7 @@ These rules define what it means for a Standardized division submission to be "m
 Each benchmark has a **reference implementation** published in the MLPerf Endpoints reference repository. The reference implementation defines:
 
 - The canonical model weights and the reference tokenizer (the tokenizer published with the model on Hugging Face).
+- The **canonical attention pattern**, including any architecture-native sparsity configuration — block size, token-selection rule, local/global window structure, and any learned or heuristic selection module — where the canonical architecture specifies sparse attention. See [§2.9.8 Q3](#298-qa-model-equivalence-clarifications).
 - The required input and output format.
 - The **dataset** used for performance and accuracy runs (Hugging Face dataset ID or download URL, plus the canonical split and any preprocessing recipe).
 - The **reference chat template** (Hugging Face chat-template string or the equivalent message-formatting spec). Submissions MUST use the reference chat template; alternative templates that produce different tokenized output are not permitted.
@@ -448,7 +449,9 @@ A: Yes. PTQ is the canonical example of an allowed weight transformation, inheri
 A: Yes. Replacing a dense operation with a sparse operation that produces asymptotically equivalent results is allowed — inherited verbatim from upstream §Model Equivalence. What is disallowed is *pruning*: discarding non-zero weight elements in a way that *alters* the computation.
 
 **Q3: Are mathematically-equivalent attention implementations (Sage Attention, Flash-Attention variants, fused-softmax kernels, Triton rewrites) allowed?**
-A: Yes — they are inherited from upstream §Model Equivalence (see [§2.2.1 inheritance clause](#221-general-rules)). Implementations that compute the same output as the canonical attention are permitted. Implementations that *alter* the attention pattern — converting full attention to sparse attention, adding sink tokens not present in the canonical architecture, swapping in a different attention mask, or otherwise changing the pattern the canonical model uses — are not.
+A: Yes — they are inherited from upstream §Model Equivalence (see [§2.2.1 inheritance clause](#221-general-rules)). Implementations that compute the same output as the canonical attention are permitted. Implementations that *alter* the attention pattern — adding sink tokens not present in the canonical architecture, swapping in a different attention mask, imposing sparsity on a canonically dense attention layer, or otherwise changing the pattern the canonical model uses — are not.
+
+**The reference point is the canonical model's own attention pattern, not dense attention.** Several current-generation architectures — for example DeepSeek V4's native sparse attention — specify sparse attention in the reference architecture itself. Where the canonical model's attention is sparse by definition, implementing that sparsity is *required* for equivalence rather than being a disallowed transformation; the rule prohibits *changing* the canonical pattern, not sparsity as such. Submitters must implement the pattern the reference implementation defines, including its sparsity configuration ([§2.9.1](#291-reference-implementation)). Substituting a different sparse pattern, or tuning sparsity parameters away from the reference values to trade accuracy for speed, is a disallowed alteration even where the canonical model is itself sparse. The converse also holds: imposing sparsity on a model whose canonical attention is dense remains disallowed.
 
 **Q4: Is response or query caching allowed?**
 A: No. Returning a cached response verbatim to a request that matches a previous request is prohibited. Every request must go through the forward pass. KV-cache reuse (within or across queries) is a *serving optimization* governed by [§2.9.5](#295-kv-cache-rules), **not** response caching — the distinction is that KV-cache reuse still executes the forward pass on per-query tokens (which include a unique salt; see [§2.9.5.1](#2951-salting-mechanism)), whereas response caching skips compute entirely.
@@ -467,6 +470,24 @@ A: See [§2.9.5 KV Cache Rules](#295-kv-cache-rules) and [§2.9.5.1 Salting Mech
 
 **Q9: How does the salt mechanism apply to clients that pre-tokenize prompts before sending to the SUT?**
 A: The operative rule ([§2.9.5.1](#2951-salting-mechanism)) is about the *token stream the SUT sees*, not about a particular client-side text-field implementation. A client that pre-tokenizes (e.g., SGLang-style adapters that send `input_tokens` rather than text) must ensure the *token stream* it sends to the SUT contains the unique per-query salt between the system-prompt tokens and the user-context tokens. Two clean ways to do this: (a) apply the salt to the text and then re-tokenize the result before sending, or (b) reserve a salt-marker token ID (or short sequence) and emit it inline. Applying the salt only to a `prompt` text field while sending the original `input_tokens` will *not* prevent KV reuse — the SUT never sees the text — and is non-compliant. The reference implementation in `mlcommons/endpoints` follows path (a); see the warning logged by `Dataset._apply_salt` in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the contract.
+
+**Q10: Are skip-softmax and other softmax-elision optimizations allowed?**
+A: The test is whether the elision changes the tokens the canonical model emits, not whether a softmax is computed.
+
+**Permitted** — these are output-equivalent and require no rule exception:
+
+- **Skipping the vocabulary softmax under greedy decoding.** Softmax is monotonic, so `argmax(softmax(logits)) == argmax(logits)`. For benchmarks whose reference sampling configuration is greedy (temperature = 0, per [§2.9.6](#296-post-processing-equivalence)), taking argmax over raw logits and skipping the normalization entirely is exactly equivalent and is permitted.
+- **Fused, streaming, and online softmax in attention** (FlashAttention-style running max/sum, fused softmax kernels, log-sum-exp rearrangement, max-subtraction for numerical stability) — already covered by Q3 as mathematically equivalent implementations.
+- **Skipping softmax in speculative-decoding verification** where the target's sampling configuration is greedy, since acceptance reduces to comparing argmax. The token-for-token identity requirement of [§2.9.4](#294-speculative-decoding) still applies.
+
+**Not permitted:**
+
+- Skipping, truncating, or approximating softmax terms by threshold, top-k, or block pruning of attention scores. These alter the attention pattern (Q3) or the output distribution, regardless of how small the discarded mass is.
+- Replacing softmax with a different normalization not in the canonical architecture (e.g. linear or ReLU attention).
+- Eliding the vocabulary softmax where the benchmark's reference sampling configuration is stochastic (temperature > 0, top-p, top-k), since the sampled distribution depends on the normalized probabilities.
+- Eliding softmax where the response returns token logprobs or probabilities, unless those values are computed exactly as the reference would.
+
+Bit-exact identity is not required for the permitted cases — ordinary floating-point reassociation is expected, and the accuracy gate ([§2.9.7](#297-accuracy-gate)) arbitrates. Softmax-elision optimizations that affect the sampling path MUST be disclosed in the submission YAML.
 
 ---
 
