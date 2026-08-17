@@ -867,6 +867,68 @@ Endpoints submissions must include the following metadata:
 | `config_summary_notes` | Free form field from the submitter to contain information not captured by other fields that concatenate into config_summary. |
 | `link_config` | Link to full configuration logs for the run (e.g., in GitHub). |
 
+#### 8.2.1 Template Structure
+
+```json
+{
+  "division": "",
+  "system_name": "",
+  "system_availability_status": "",
+  "system_category": "",
+  "system_size": "",
+  "system_node_ensemble_count": "",
+  "system_node_ensemble_total": "",
+  "serving_framework": "",
+  "node_types": [
+    {
+      "system_node_ensemble_id": "",
+      "number_of_nodes": "",
+      "host_processor_model_name": "",
+      "host_processors_per_node": "",
+      "host_processor_core_count": "",
+      "host_processor_vcpu_count": "",
+      "host_memory_capacity": "",
+      "host_memory_configuration": "",
+      "accelerator_info": [
+        {
+          "accelerator_model_name": "",
+          "accelerators_per_node": "",
+          "accelerator_memory_capacity": "",
+          "accelerator_memory_type": "",
+          "accelerator_interconnect": "",
+          "accelerator_host_interconnect": ""
+        }
+      ],
+      "host_network_card_count": "",
+      "host_networking": "",
+      "host_storage_capacity": "",
+      "host_storage_type": "",
+      "other_hardware": "",
+      "hw_notes": "",
+      "cooling": "",
+      "inference_backend": "",
+      "driver": "",
+      "operating_system": "",
+      "filesystem": "",
+      "container_link": "",
+      "other_software_stack": "",
+      "sw_notes": ""
+    }
+  ],
+  "endpoint_url": "",
+  "node_config": "",
+  "config_summary": "",
+  "disaggregated": "",
+  "expert_parallel": "",
+  "tensor_parallel": "",
+  "pipeline_parallel": "",
+  "data_parallel": "",
+  "batch": "",
+  "config_summary_notes": "",
+  "link_config": ""
+}
+```
+
 ### 8.3 Measurement Point YAML
 
 Each measurement point must be accompanied by a YAML configuration file specifying:
