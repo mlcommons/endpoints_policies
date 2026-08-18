@@ -828,11 +828,11 @@ Endpoints submissions must include the following metadata:
 | `system_node_ensemble_count` | How many unique combinations of Hardware and Software are part of the SUT. |
 | `system_node_ensemble_total` | Total number of nodes in the SUT, equal to the sum of all number_of_nodes.|
 | `system_node_ensemble_id` | Identifies a unique node type within the SUT. |
-| `number_of_nodes` | How many nodes of type system_node_id are in the SUT. |
+| `number_of_nodes` | How many nodes of type system_node_ensemble_id are in the SUT. |
 | `host_processor_model_name` | Model name of the host processor. |
 | `host_processors_per_node` | # of host processors per node. |
 | `host_processor_core_count` | # of CPU cores in each processor. Optional, but at least one of host_processor_core_count and host_processor_cpu_count must be present. |
-| `host_processor_vcpu_count` | # of vCPUs in each processor. Optional, but at least one of host_processor_core_count and host_processor_cpu_count must be present. |
+| `host_processor_vcpu_count` | # of vCPUs in each processor. Optional, but at least one of host_processor_core_count and host_processor_vcpu_count must be present. |
 | `accelerator_model_name` | Model name of the accelerator. |
 | `accelerators_per_node` | # of accelerators per node. |
 | `accelerator_host_interconnect` | Describes the interconnect link between the accelerator and the host processors. |
