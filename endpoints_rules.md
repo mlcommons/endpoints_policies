@@ -869,6 +869,8 @@ Endpoints submissions must include the following metadata:
 
 #### 8.2.1 Template Structure
 
+`systems/<system_desc_id>.json` contains the fields defined in the table above. `node_types` and `accelerator_info` carry no data of their own — they exist to group the per-node and per-accelerator fields.
+
 ```json
 {
   "division": "",
@@ -876,23 +878,24 @@ Endpoints submissions must include the following metadata:
   "system_availability_status": "",
   "system_category": "",
   "system_size": "",
-  "system_node_ensemble_count": "",
-  "system_node_ensemble_total": "",
+  "system_node_ensemble_count": 0,
+  "system_node_ensemble_total": 0,
+  "endpoint_url": "",
   "serving_framework": "",
   "node_types": [
     {
-      "system_node_ensemble_id": "",
-      "number_of_nodes": "",
+      "system_node_ensemble_id": 0,
+      "number_of_nodes": 0,
       "host_processor_model_name": "",
-      "host_processors_per_node": "",
-      "host_processor_core_count": "",
-      "host_processor_vcpu_count": "",
+      "host_processors_per_node": 0,
+      "host_processor_core_count": 0,
+      "host_processor_vcpu_count": 0,
       "host_memory_capacity": "",
       "host_memory_configuration": "",
       "accelerator_info": [
         {
           "accelerator_model_name": "",
-          "accelerators_per_node": "",
+          "accelerators_per_node": 0,
           "accelerator_memory_capacity": "",
           "accelerator_memory_type": "",
           "accelerator_interconnect": "",
@@ -904,8 +907,8 @@ Endpoints submissions must include the following metadata:
       "host_storage_capacity": "",
       "host_storage_type": "",
       "other_hardware": "",
-      "hw_notes": "",
       "cooling": "",
+      "hw_notes": "",
       "inference_backend": "",
       "driver": "",
       "operating_system": "",
@@ -915,15 +918,14 @@ Endpoints submissions must include the following metadata:
       "sw_notes": ""
     }
   ],
-  "endpoint_url": "",
   "node_config": "",
+  "disaggregated": 0,
+  "expert_parallel": 0,
+  "tensor_parallel": 0,
+  "pipeline_parallel": 0,
+  "data_parallel": 0,
+  "batch": 0,
   "config_summary": "",
-  "disaggregated": "",
-  "expert_parallel": "",
-  "tensor_parallel": "",
-  "pipeline_parallel": "",
-  "data_parallel": "",
-  "batch": "",
   "config_summary_notes": "",
   "link_config": ""
 }
