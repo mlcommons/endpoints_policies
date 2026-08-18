@@ -821,6 +821,7 @@ Endpoints submissions must include the following metadata:
 |---|---|
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
 | `system_name` | Submitter selected string to describe the system under test (SUT). |
+| `shortened_system_name` |  Shortened `system_name` that's at most 20 characters. |
 | `system_availability_status` | `Available` , `Preview`, or `RDI` (not available for purchase soon) at submission time. |
 | `system_category` | `Datacenter` or `Edge`. |
 | `system_size` | Number of accelerators per node type, e.g. "72 accelerators + 144 accelerators" for a system comprising two types of nodes with 72 accelerators in the first node type and 144 accelerators in the second node type. |
@@ -880,13 +881,11 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `warmup` | The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`). |
 | `division` | `Standardized`, `Serviced`, or `RDI`. <!-- TODO: also listed in §8.2 pending placement review --> |
 | `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
-| `model_id` | ID # of a model, that corresponds to a display name. |
 | `model_name` | Display name of model, should be consistent across all external usages. |
 | `model_precision` | Lowest precision numerical format used for the weights of the model. For example, if a model comprises FP16 and FP8, then model_precision is FP8. |
 | `link_to_model` | Link to model submitted e.g., via GitHub. |
 | `link_to_model_transformation` | Link to calibration/quantization/retraining write-up. |
 | `model_notes` | Submitter software notes to supplement other information, freeform field. |
-| `dataset_id` | ID # of a dataset, that corresponds to a display name. |
 | `dataset_name` | Display name of dataset, should be consistent across all external usages. |
 | `dataset_type` | Is the dataset used for "Accuracy", "Performance", or "Accuracy + Performance". |
 | `dataset_link` | Link to data used for submission e.g., via GitHub. |
