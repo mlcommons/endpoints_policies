@@ -529,14 +529,14 @@ Each submission must include a minimum of **7 measurement points**, structured a
 
 #### Accuracy Coverage at Mandatory Operating Regions
 
-Accuracy validation is required at **all mandatory operating regions**. For the current online Pareto structure, exactly four submitted points are accuracy-bearing:
+Accuracy validation is required at **all mandatory operating regions**. For the current online Pareto structure, exactly four submitted points require accuracy runs:
 
 1. One point in the Low Latency region.
 2. One point in the Low Throughput region.
 3. One point in the Medium Throughput region.
 4. One point in the High Throughput region.
 
-When multiple points are submitted in a region, the point satisfying that region's mandatory placement must be identified in the point metadata. Submitter's-choice points are not accuracy-bearing unless a benchmark definition explicitly requires them.
+When multiple points are submitted in a region, the point satisfying that region's mandatory placement must be identified by its existing `region` metadata. Submitter's-choice points do not require accuracy runs unless a benchmark definition explicitly requires them.
 
 Accuracy coverage is **4 mandatory + 1 mandatory if submitted**: the four online mandatory-region results are always required, and an Offline accuracy result is required whenever an Offline result is submitted. Offline is optional and is not counted among the seven online Pareto points.
 
@@ -831,7 +831,7 @@ An Endpoints submission must follow this directory structure:
           point_<concurrency_level>/
             results_summary.json            # Contains throughput and latency distribution information
             config.yaml                     # Client config
-            accuracy/                       # required for each mandatory-region point
+            accuracy/
               results.json                  # Contains accuracy number and truncated output sequences
   documentation/
     calibration.adoc                        # if weight transformations applied
@@ -860,7 +860,6 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 - `runtime_settings`: The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.).
 - `dataset`: Dataset name and any `n_samples_from_dataset` override (if applicable).
 - `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
-- `accuracy_bearing`: Whether this point is the designated mandatory point for its operating region and therefore requires an accuracy run. Exactly one point in each of the four mandatory online regions must be marked `true`. Submitter's-choice points are `false` unless the benchmark definition explicitly requires additional accuracy coverage. If an Offline result is submitted, its configuration is also accuracy-bearing; its metadata format remains TBD pending ratification.
 
 ### 8.4 Software Disclosure
 
