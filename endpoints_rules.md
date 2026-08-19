@@ -894,13 +894,14 @@ The **submission ID** is generated automatically by the submission pipeline as a
 The **result ID** identifies a single published result and is human-readable. A result is one published Pareto curve: one system, one benchmark model, one dataset. It is constructed as:
 
 ```
-<major-version>.<minor-version>.<model_id>.<dataset_id>.<entry-number>
+<major-version>.<minor-version>.<cohort-id>.<model_id>.<dataset_id>.<entry-number>
 ```
 
 | Component | Description |
 |---|---|
 | `major-version` | Major version of the MLPerf Endpoints rules under which the result was submitted (e.g., `1` for v1.0). |
 | `minor-version` | Minor version of the same (e.g., `0` for v1.0). |
+| `cohort-number` | Cohort ID for this submission (e.g., `XXXX-YY-C0`)
 | `model_id` | Benchmark model identifier from the round's supported model list ([§3.2](#32-supported-models)). Must match `benchmark_model` in `system_desc_id.json` ([§8.2](#82-system-description-system_desc_idjson)). |
 | `dataset_id` | Identifier of the dataset used for the performance and accuracy runs, as named in the benchmark definition ([§3.1](#31-benchmark-definition)) and recorded in each point's `dataset` field ([§8.3](#83-measurement-point-yaml)). |
 | `entry-number` | Sequence number assigned at publication, unique within the preceding four components. |
