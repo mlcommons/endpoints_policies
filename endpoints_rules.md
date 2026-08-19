@@ -894,7 +894,7 @@ The **submission ID** is generated automatically by the submission pipeline as a
 The **result ID** identifies a single published result and is human-readable. A result is one published Pareto curve: one system, one benchmark model, one dataset. It is constructed as:
 
 ```
-<major-version>.<minor-version>.<cohort-id>.<model_id>.<dataset_id>.<entry-number>
+<major-version>.<minor-version>.<cohort-number>.<model_id>.<dataset_id>.<entry-number>
 ```
 
 | Component | Description |
