@@ -1,6 +1,6 @@
 # MLPerf® Endpoints Rules
 
-*MLPerf Endpoints Rules Task Force — Version v0.7 Draft — 2026-06-01*
+*MLPerf Endpoints Rules Task Force — Version 1.0 Draft — 2026-05-05*
 
 **Companion documents:**
 - Submission, review, and publication process: [endpoints_submission_rules.md](endpoints_submission_rules.md)
@@ -99,10 +99,6 @@ The submitter hosts both the client infrastructure and the endpoint server infra
 
 #### 2.1.2 Client over Network (CoN)
 
-
-> [!CAUTION]
-> **`[ Subject to change after 2026-06-26]`** CoN scenario is not supported for MLPerf Endpoints v0.7 
-
 MLCommons is responsible for the client infrastructure, which interrogates the System Under Test via an endpoint accessed over the public Internet.
 
 - MLCommons operates the client infrastructure at a designated location.
@@ -168,12 +164,16 @@ The Standardized division is the primary benchmark division, requiring strict ad
 
 #### 2.2.2 Client over Network (CoN) — Additional Rules
 
-> [!CAUTION]
-> **`[ Subject to change after 2026-06-26]`** Serviced scenario is not supported for MLPerf Endpoints v0.7 
+When submitting to the Standardized division via the CoN scenario, the following additional rules apply:
+
+- CoN submitters may choose to submit to CoP instead, but must follow all CoN compliance rules when doing so.
+- Servers must not modify incoming or outgoing request/response streams outside the provided MLPerf Endpoints reference API specification.
+- The reference client performs all request pre-processing (e.g., tokenization, packing, precision conversion) and all response post-processing (e.g., detokenization, ArgMax, reduction). The SUT executes the model and the reference's serving path only; it does not transform request/response payloads beyond what the reference API specifies.
+- Server must not deliberately delay token dispatch to manipulate TTFT or TPS/User metrics.
+- Server must not cache responses or requests across queries.
 
 > [!NOTE]
 > **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Standardized CoN scenario is under development by the working group.
-
 
 #### 2.2.3 Result Naming
 
@@ -183,12 +183,28 @@ Unqualified use of "MLPerf Endpoints" refers to results from the Standardized di
 
 ### 2.3 Serviced Division
 
-> [!CAUTION]
-> **`[ Subject to change after 2026-06-26]`** Serviced division  is not supported for MLPerf Endpoints v0.7 
+The Serviced division benchmarks publicly available, generally accessible inference-as-a-service endpoints. This is a new division unique to MLPerf Endpoints, designed to benchmark commercial Gen AI API offerings.
 
-> [!NOTE]
-> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Serviced division is under development by the working group.
+**Transparency:** Greybox — the endpoint behavior must be reproducible and auditable, but full internal implementation details need not be disclosed. The API interface, model identity, and pricing must be public.
 
+**Available Scenarios:** Client over Network (CoN) only.
+
+#### 2.3.1 Rules
+
+- The endpoint must be a publicly available, generally accessible commercial service. "Generally accessible" means any customer meeting standard terms of service can obtain access.
+- Performance must be reproducible: the endpoint must deliver consistent results when benchmarked at different times within a reasonable window.
+- Audit and accuracy tests are required to verify the endpoint produces correct outputs.
+- The submitter must disclose: the model name and version as advertised by the service, the API endpoint URL, the pricing model and rates at time of submission, and any rate limits or quotas that apply.
+- Serviced submissions may augment the base reference model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms. Any such augmentations must be disclosed.
+- Response caching across queries is not allowed.
+
+**Optimization transparency:**
+
+| Category | Requirement |
+|---|---|
+| Precision | Required |
+| Speculative decode, fusion, changes | Disclosure required (no source code required) |
+| Model quantization | Optional |
 
 #### 2.3.2 Result Naming
 
@@ -198,12 +214,21 @@ Results must use the qualified name "MLPerf Endpoints Serviced." Example: *"MLPe
 
 ### 2.4 RDI (Research, Development, and Internal) Division
 
-> [!CAUTION]
-> **`[ Subject to change after 2026-06-26]`** RDI scenario  is not supported for MLPerf Endpoints v0.7 
+The RDI division provides a category for experimental, pre-release, or internal systems that do not meet Standardized or Serviced requirements. It replaces the traditional "Open" division.
 
-> [!NOTE]
-> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the RDI scenario is under development by the working group.
+**Transparency:** Blackbox — no audit or compliance tests required. Internal implementation details need not be disclosed.
 
+**Available Scenarios:** Client on Prem (CoP) or Client over Network (CoN). Server may be self-hosted, hybrid, or cloud-hosted. CoP and CoN are not reported as separate sub-divisions.
+
+#### 2.4.1 Rules
+
+- Must use the standard MLPerf Endpoints performance and accuracy datasets.
+- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT P50/P95) using the same measurement methodology.
+- Must use the same base reference model. RDI submissions may augment the model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms.
+- No audit or compliance tests required. No code visibility requirement.
+- Submitters must report achieved accuracy on the accuracy dataset.
+
+For RDI publication status and the cooling-off period for RDI hardware transitioning to Available or Preview, see [Submission Rules §7.4](endpoints_submission_rules.md#74-rdi-research-development-or-internal).
 
 #### 2.4.2 Result Naming
 
@@ -285,7 +310,7 @@ Tokenizers can produce different token counts depending on how text is fed to th
 ### 2.9 Model Equivalence Rules (Standardized Division)
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas. Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas (most notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules) and drafter PTQ in [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
 
 These rules define what it means for a Standardized division submission to be "model equivalent" to the reference implementation. The accuracy quality target (§4.3) is the ultimate arbiter of model equivalence: a submission that passes the accuracy gate is considered equivalent regardless of internal implementation choices. The rules below define which implementation choices are permitted in reaching that accuracy gate.
 
@@ -338,9 +363,6 @@ Per [§2.2.1](#221-general-rules), weight transformations are governed by the in
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-06-26]`**
 
-> [!NOTE]
-> **[Limited Use]** — Only DeepSeek R1 submissions are permitted to used speculative deocde, as per the [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence), and submitters must adhere to speculative decode rules and policies as of MLPerf Inference v6.0
-
 Speculative decoding is permitted for any benchmark whose definition designates a drafter (MTP head, EAGLE-style head, or analogous module). The drafter is treated as part of the canonical reference and is **frozen** in the training sense. The following transformations of the drafter are **disallowed**:
 
 - **Fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update** to the drafter.
@@ -353,19 +375,47 @@ The following are **also disallowed** at run time:
 - **Approximate speculative-decoding methods that alter the output distribution.** The verification step MUST NOT introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Outputs MUST be token-for-token identical to what the target model would generate without speculation.
 - **Approximating, skipping, or replacing the verification step**, including replacing the target with a secondary drafter for verification. The target model in the verification step MUST be the canonical model with the permitted transformations of [§2.9.3](#293-model-weight-rules) applied.
 
+**Disclosure and run-time requirements:**
+
+- The drafter identity (name, version, source URL), precision, algorithm, and per-point configuration MUST be declared in the submission YAML.
+- All measurement points on a submission's pareto curve for a given benchmark MUST use the same drafter (same head, same algorithm). Different **configurations** of the same drafter (e.g., varying `speculative-num-steps` or `speculative-eagle-topk`) are permitted across pareto points, including disabling speculation entirely at some points. The drafter itself is fixed across the curve. The configuration values used at each point MUST be declared in the submission YAML, and any dynamic variation within a single point's run MUST be reported as a distribution.
+
+For PTQ on drafter weights, see [§2.9.8 Q&A Q6](#298-qa-model-equivalence-clarifications).
 
 #### 2.9.5 KV Cache Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`**
+> **`[TENTATIVE — Subject to change after 2026-06-26]`** This section **intentionally diverges from MLPerf Inference §KV-Cache**, which prohibits cross-query KV reuse. Endpoints targets agentic-style workloads where a shared system prompt across queries is the norm; prohibiting cross-query reuse would force submitters to artificially cripple production-style serving stacks. The salt mechanism in [§2.9.5.1](#2951-salting-mechanism) preserves measurement validity by ensuring caches cannot leak context beyond the system-prompt prefix.
+
+Per [§2.2.1](#221-general-rules), KV-cache management is governed by the inherited MLPerf Inference rules with the Endpoints-specific cross-query-reuse delta described below. The following KV-cache techniques are **disallowed**:
+
+- **Response caching that bypasses the forward pass.** Returning a cached response verbatim to a request that matches a previous request is not permitted. Every request must execute the forward pass. (Cross-query KV-cache reuse — covered by the Endpoints delta below — is *not* response caching: it still executes the forward pass on a salt-uniquified per-query token stream.)
+- **KV-cache compression methods that are not in the reference implementation and that have not been disclosed in the submission.** Compression methods that are part of the reference or a designated alternative implementation are permitted by default; submission-specific compression methods are subject to Methodology objections during peer review even after disclosure.
+
+**Endpoints-specific delta — cross-query KV reuse:** Sharing KV cache state across independent requests — including prefix / prompt caching of the shared system prompt — is permitted as a serving optimization, with no requirement of bit-for-bit output identity vs. an un-cached run and no requirement of cross-user partitioning. The performance dataset injects a per-query salt between the shared system prompt and the per-query user context (see [§2.9.5.1](#2951-salting-mechanism)). The salt guarantees that the only prefix two queries can share is the system prompt itself; any KV state derived from the user context cannot be reused across queries with different contexts.
+
+**Disclosure requirements:**
+
+- If the KV cache is stored at reduced precision (e.g., INT8, INT4, FP8 KV), the precision and quantization method MUST be disclosed in the submission YAML.
+- Any KV-cache compression method that is not part of the reference implementation MUST be disclosed in the submission YAML.
+- Paged / virtual KV cache implementations (e.g., vLLM's PagedAttention) are inherited as permitted under the upstream "Different in-memory representations" allowance and do not require separate disclosure beyond what is already captured in the serving-framework / software-stack disclosure.
+
+##### 2.9.5.1 Salting Mechanism
+
+The performance benchmark workload prepends a unique, deterministic-but-pseudorandom **salt** to each per-query user prompt at request-construction time. The salt:
+
+- **MUST** carry at least 64 bits of entropy per query.
+- **MUST** be generated from a seeded pseudo-random sequence (e.g., `random.Random(seed)`) where the seed is declared in the run configuration. This makes the salt sequence reproducible across runs with the same seed while still preventing cross-query KV reuse beyond the system prompt.
+- **MUST** be inserted *between* the system prompt and the user-context portion of the prompt, so the system prompt remains a shared prefix across queries (and is therefore cacheable as the legitimate optimization this section permits) while the user-context portion becomes per-query-unique.
+- **MUST** be generated at request-construction time, **not** stored in the dataset on disk, so that repeated runs of the same dataset always produce a per-query-unique salt sequence regardless of how many times the dataset is replayed. (Storing salt in the dataset would lose uniqueness across replays — see [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the reference rationale.)
+- **SHOULD** use the reference implementation in `mlcommons/endpoints` (`Dataset.with_salt(random.Random(seed))`, introduced in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305)).
+
+How a submitter's client achieves the per-query uniqueness above (e.g., for clients that pre-tokenize prompts) is an **implementation detail** addressed in [§2.9.8 Q&A Q9](#298-qa-model-equivalence-clarifications). The operative requirement is that the token stream actually seen by the SUT contains a unique per-query salt between the system prompt and the user context — not the *means* by which the client constructs that stream.
+
+**Accuracy runs use the un-salted reference dataset** to ensure model output matches the canonical implementation exactly. Submissions are not required to disable cross-query KV reuse in their serving stack for accuracy runs; the accuracy dataset simply omits the salt prefix, and the serving stack reuses KV as it would in production. This split (salted performance dataset, un-salted accuracy dataset) is the operational mechanism that allows blanket cross-query KV reuse without compromising the accuracy gate's role as a model-output check.
 
 > [!NOTE]
-> **[Limited Use]** — KV Cache rules must conform to [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence) for MLPerf Endpoints v0.7 submissions. 
-
-- **KV cache quantization.** The KV cache may be stored at reduced precision (e.g., INT8, INT4, FP8 KV). This must be disclosed and does not require working group pre-approval, provided the submission passes the accuracy gate.
-- **Paged / virtual KV cache.** Paged attention and virtual KV cache implementations (e.g., vLLM's PagedAttention) are permitted.
-- **KV cache compression.** Structured KV cache compression methods (e.g., H2O, SnapKV, sliding-window eviction) are permitted if they are part of the reference implementation or a designated alternative implementation. Compression methods not in the reference must be disclosed and are subject to Methodology objections during peer review.
-- **Response caching.** Returning a cached response verbatim to a request that matches a previous request is **not permitted**. Every request must go through the forward pass.
+> **Backward compatibility note.** This rule intentionally diverges from MLPerf Inference's KV-cache FAQ, which states KV state "does not apply across queries". Endpoints submissions are not portable to standard MLPerf Inference without disabling cross-query KV reuse; conversely, MLPerf Inference submissions that already prohibit cross-query reuse are trivially compliant with this section. Submitters should treat the two rule sets as **not** mutually compatible for code paths that rely on this delta.
 
 #### 2.9.6 Post-Processing Equivalence
 
@@ -379,12 +429,8 @@ The following are **also disallowed** at run time:
 
 #### 2.9.7 Accuracy Gate
 
-> [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`**
-
 > [!NOTE]
-> **[WIP — accuracy tolerance values to be specified per benchmark, aligned with inference_rules.adoc accuracy targets]** and must comply with [MLPerf Inference Rules](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence) for MLPerf Endpoints v0.7 submissions. 
-
+> **[WIP — accuracy tolerance values to be specified per benchmark, aligned with inference_rules.adoc accuracy targets]**
 
 A Standardized division submission passes model equivalence if and only if it meets the **accuracy quality target** defined for the benchmark, evaluated using the reference evaluation methodology on the accuracy dataset. Passing the accuracy gate is necessary and sufficient for model equivalence.
 
@@ -411,13 +457,13 @@ A: No. Returning a cached response verbatim to a request that matches a previous
 A: *Open question.* See [Appendix A](#appendix-a-open-questions-and-working-group-items); the WG is discussing this in the context of Client-over-Network (CoN) scenarios. Until resolved, submitters must disclose any token-coalescing behavior and conservatively assume `stream_all_chunks = true` semantics. Token-count metrics use the reference tokenizer applied to the coalesced output (see [§2.8 Tokenizer Rules](#28-tokenizer-rules)).
 
 **Q6: Is PTQ allowed on the speculative-decoding drafter?**
-A: N/A
+A: Yes. The drafter weights MAY be post-training quantized using the same rules as the canonical model ([§2.9.3 Model Weight Rules](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, must be disclosed, must pass the accuracy gate. The drafter remains *frozen* in every other training-side sense ([§2.9.4](#294-speculative-decoding)) — no fine-tuning, no RLHF, no continued pre-training, no swap for a custom-trained model.
 
 **Q7: Can I use a different serving framework than the reference (vLLM vs. TensorRT-LLM vs. SGLang)?**
 A: Yes. Arbitrary frameworks and runtimes are inherited from upstream, provided the framework conforms to the rest of the rules (model equivalence, no benchmark detection, no input-based optimization, etc.). The framework must satisfy the **Available** definition ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
 
 **Q8: How does cross-request KV cache sharing interact with the salt mechanism?**
-A: N/A
+A: See [§2.9.5 KV Cache Rules](#295-kv-cache-rules) and [§2.9.5.1 Salting Mechanism](#2951-salting-mechanism). Cross-request KV sharing is **blanket allowed** in Endpoints (this is the primary delta vs. upstream MLPerf Inference). The performance dataset injects a per-query salt between the shared system prompt and the per-query user context, so the only prefix two queries can share is the system prompt itself. Accuracy runs use the un-salted dataset.
 
 **Q9: How does the salt mechanism apply to clients that pre-tokenize prompts before sending to the SUT?**
 A: The operative rule ([§2.9.5.1](#2951-salting-mechanism)) is about the *token stream the SUT sees*, not about a particular client-side text-field implementation. A client that pre-tokenizes (e.g., SGLang-style adapters that send `input_tokens` rather than text) must ensure the *token stream* it sends to the SUT contains the unique per-query salt between the system-prompt tokens and the user-context tokens. Two clean ways to do this: (a) apply the salt to the text and then re-tokenize the result before sending, or (b) reserve a salt-marker token ID (or short sequence) and emit it inline. Applying the salt only to a `prompt` text field while sending the original `input_tokens` will *not* prevent KV reuse — the SUT never sees the text — and is non-compliant. The reference implementation in `mlcommons/endpoints` follows path (a); see the warning logged by `Dataset._apply_salt` in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the contract.
@@ -431,12 +477,6 @@ A: The operative rule ([§2.9.5.1](#2951-salting-mechanism)) is about the *token
 A benchmark in MLPerf Endpoints is defined by a specific model, task, and quality target. Each benchmark has a reference implementation that defines the correct endpoint interface, input/output format, and accuracy evaluation method.
 
 ### 3.2 Supported Models
-
-> [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`**
-> [!NOTE]
-> **[MLPerf v0.7 Submission Models]** — Only three models are supported for the inital v0.7 submission - DeepSeek R1, GPT-OSS 120B, and Llama3 8B. 
-> Submissions to each benchmarks must use the same datasets and meet accuracy targets as set for MLPerf Inference v6.0
 
 The set of supported benchmark models is defined per submission round and maintained in the MLPerf Endpoints reference repository. The full per-model specification — canonical weights, dataset, chat template, server parameters, accuracy target, and (if applicable) drafter configuration — is given by the [reference implementation](#291-reference-implementation). Each supported model is identified by:
 
@@ -702,31 +742,28 @@ All measurement points must use the **ConcurrencyScheduler** load pattern in the
 
 Each measurement point must sustain the target concurrency for a minimum duration of steady-state measurement, excluding warmup. These values correspond to the `min_duration_ms` setting in `RuntimeSettings`.
 
-> [!WARNING]
-> For v0.7, we will use 10min min-duration for all scenarios - as listed in the submission guide. 
-
 | Concurrency Region | Minimum Duration (steady state) | Rationale |
 |---|---|---|
 | Low Latency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at low concurrency. |
-| Low Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
-| Medium Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
-| High Throughput | 600 seconds | Standard duration for statistical confidence at scale. |
+| Low Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
+| Medium Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
+| High Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
 
 ### 6.3 Warmup Period
 
 *(Requirements below are subject to working group ratification.)*
 
-A warmup period may precede every measurement period. Warmup events — all requests issued before `TEST_STARTED` — are excluded from metric computation. The purpose of warmup is to bring the system to steady state (populated connection pools, warm caches, calibrated scheduler) before any data contributing to reported metrics is collected. The warmup period is optional but must not exceed 24 hours, per measurement point. 
+A warmup period may precede every measurement period. Warmup events — all requests issued before `TEST_STARTED` — are excluded from metric computation. The purpose of warmup is to bring the system to steady state (populated connection pools, warm caches, calibrated scheduler) before any data contributing to reported metrics is collected. The warmup period is optional but must not exceed 24 hours, per measurement point.
 
 #### 6.3.1 Prohibited Warmup Data
 
 Warmup requests must not use any sample from the benchmark performance dataset. This prohibition covers direct use, subsets, truncations, or any query whose content was derived from performance dataset samples.
-If the inference client uses benchmark performance dataset, then *salting must be enabled*. 
+If the inference client uses benchmark performance dataset, then *salting must be enabled*.
 
 The accuracy dataset and any other data source not drawn from the performance dataset are permitted for warmup.
 
 > [!WARNING]
-> For v0.7, the inference client may use performance dataset during warmup. In such case - salting must be enabled.  The salting flag is not enabled by default — submitters must manually enable it in the client config and also disable KV cache reuse.
+> For v0.7, the inference client may use performance dataset during warmup. In such case - salting must be enabled. The salting flag is not enabled by default — submitters must manually enable it in the client config and also disable KV cache reuse.
 
 #### 6.3.2 Discard Policy
 
@@ -792,26 +829,47 @@ An Endpoints submission must follow this directory structure:
 
 ```
 <submitting_organization>/
-  systems/
-    <system_desc_id>.json
-  src/
-    <benchmark_model>/
-      <endpoint interface code and configuration to reproduce the code>
-  pareto/
-    <system_desc_id>/
-      <benchmark_model>/
-        points/
-          point_<concurrency_level>.yaml    # one per measurement point, should be generated from the results folder
-        results/
-          point_<concurrency_level>/
-            results_summary.json            # Contains throughput and latency distribution information
-            config.yaml                     # Client config
-            accuracy/
-              results.json                  # Contains accuracy number and truncated output sequences
-  documentation/
-    calibration.adoc                        # if weight transformations applied
-    <additional documentation>
+  └── [submission_id]/                      # Provided by MLC. Each submission can only have 1 submission_id. 
+      │
+      ├── src/                              # SHARED across the whole submission
+      │   └── <implementation>/          # e.g. trtllm/, vllm/, sglang/
+      │       ├── README.md                 # how to build/launch the SUT and reproduce a point
+      │       └── <endpoint interface code, infra/cluster setup, client harness>
+      │
+      ├── docs/                             # SHARED across the whole submission
+      │   ├── calibration.adoc              # if weight transformations applied (§3.3)
+      │   ├── software_disclosure.md        # §8.4
+      │   └── <additional documentation>
+      │
+      └── results/
+          └── <system>/                     # e.g. H200-SXM-141GBx8_TRT/
+              ├── system_desc_id.json       # §8.2 — one per system, not per point
+              └── <benchmark_model>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
+                  └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
+                      ├── point.yaml              # §8.3 — includes shared_src / shared_docs pointers
+                      ├── result_summary.json     # aggregate metrics (QPS, TPS, TTFT, TPOT, %iles)
+                      ├── accuracy_results.json   # §6.6
+                      ├── run_metadata.json       # framework/parallelism/precision for this point
+                      └── server_configs/         # OPTIONAL, point-specific: backend configs tuned
+                                                  #   for THIS concurrency (batch size, max_seq_len,
+                                                  #   KV cache %, TP/EP/PP). Non-standard — layout is
+                                                  #   submitter-defined. May include its own README.md.
 ```
+
+The tree separates content that can be shared across the submission from content that is genuinely
+per-measurement-point:
+
+- **Shared content** (`src/`, `docs/`) is written once per submission. Infrastructure code (cluster
+  instantiation, endpoint setup, client harness) and documentation are not duplicated per Pareto
+  point. A submitter that needs different code or documentation for different systems or models adds
+  another `src/<implementation_id>/` or a subdirectory under `docs/` rather than duplicating the tree.
+- **Point-specific content** is only what varies with concurrency level: `point.yaml`, the result and
+  metadata JSON files, and the optional `server_configs/`. Adding, replacing, or withdrawing a Pareto
+  point must not require any change under `src/` or `docs/`.
+
+Each point declares which shared content it used via the `shared_src` and `shared_docs` pointers in
+its `point.yaml` (see [§8.3](#83-measurement-point-yaml)). A point whose pointers are missing or do
+not resolve to an existing directory is incomplete under [§9.1](#91-automated-checks).
 
 ### 8.2 System Description (`system_desc_id.json`)
 
@@ -911,6 +969,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | Check | Validation | Failure Action |
 |---|---|---|
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
+| **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
 | **Point count** | ≥ 7 total measurement points. | Reject submission. |
 | **Low Latency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
 | **Low Throughput coverage** | ≥ 1 point in the Low Throughput region. | Reject submission. |
