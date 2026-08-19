@@ -264,7 +264,7 @@ A submission must contain the following:
 - Metadata for the system under test (`system_desc_id.json`).
 - Pareto curve YAML configuration files (one per measurement point).
 - Run result artifacts for each measurement point (log files, metric summaries).
-- Accuracy validation run artifacts.
+- Accuracy validation artifacts for the designated point in every mandatory online region, plus an Offline accuracy artifact if an Offline result is submitted (`4 mandatory + 1 mandatory if submitted`).
 - Code that implements the benchmark endpoint interface.
 - Metadata describing the system-implementation combination tested.
 
@@ -302,7 +302,7 @@ Automated compliance checks are executed immediately after submission. The check
 - All required submission materials are present (YAML configurations, result artifacts, system descriptions).
 - The pareto curve satisfies minimum point count and region coverage requirements (minimum 7 points structured as 1 + 3 + 3; maximum 32 points total).
 - Run durations, minimum query counts, load patterns, and streaming configuration meet requirements.
-- Accuracy validation results are included and pass the quality target.
+- Accuracy validation results are included for every mandatory region and pass the benchmark-designated `per_point` or `mean_of_n` evaluation method and corresponding quality target.
 - Metric consistency (e.g., `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`).
 - Configuration consistency across measurement points (same model, same endpoint, same software stack).
 
@@ -407,7 +407,7 @@ Perfect reproducibility of results cannot be reasonably expected and must not be
 
 The only exception is same-system reproducibility: when re-running on the **exact same system** (e.g., during an audit), results must be **within 5%** of the original submission.
 
-**Accuracy must always pass** — the accuracy quality target is a hard gate with no variability allowance, both during automated compliance and throughout the review period.
+**Accuracy must always pass** — all required mandatory-region accuracy results must be present. For `per_point`, every required result must pass independently. For `mean_of_n`, the mean of all required results must pass; individual results do not independently gate the submission unless the benchmark definition specifies a per-point floor. Accuracy remains a hard gate with no variability allowance, both during automated compliance and throughout the review period.
 
 > [!NOTE]
 > **[WG Decision Required]** — The 10% performance variability margin and the 5% same-system threshold are current proposals and must be ratified by the working group before they can be enforced. The working group should consider whether different margins apply to different metric types (e.g., TTFT vs. system TPS) and whether large-scale submission thresholds need separate treatment.
@@ -430,7 +430,7 @@ Objections filed during peer review must be categorized as one of the following 
 |---|---|---|
 | **Compliance Failure** | Submission does not meet stated rules (point count, region coverage, run duration, load pattern, etc.). | High — may require withdrawal. |
 | **Methodology** | Disagreement with how the benchmark was configured or executed (e.g., dataset handling, warmup procedure). | High. |
-| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)). Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window — they are not eligible as late objections after week 7. | High — but must exceed the allowed variability margin to be actionable. |
+| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)). Minor deviations within the expected range are not grounds for blocking publication. A missing or invalid mandatory-region accuracy run or failure of the benchmark-defined accuracy gate is always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window — they are not eligible as late objections after week 7. | High — but must exceed the allowed variability margin to be actionable. |
 | **Validity of Results** | Specific metric values appear incorrect, inconsistent, or incompatible with known hardware capabilities. | High. |
 | **Division Rules** | Submission placed in wrong division, or system does not meet division requirements (availability, API compliance, etc.). The review committee may allow the submitting organization to reclassify to the correct division rather than withdraw. | Medium. |
 | **Availability** | System claimed as Available or Preview does not meet the availability requirements at the stated date. The review committee may allow the submitting organization to reclassify (e.g., from Available to Preview or RDI) rather than withdraw. | Medium. |
@@ -702,7 +702,8 @@ Submitters may add additional measurement points to their pareto curve during a 
 
 Rules for post-submission updates:
 
-- New points must follow the same measurement methodology, run duration, and accuracy requirements as the initial submission.
+- New points must follow the same measurement methodology and run-duration requirements as the initial submission. A new submitter's-choice point does not require an accuracy run unless the benchmark definition explicitly requires additional coverage.
+- If an amendment replaces the designated mandatory point in a region, the replacement point must include a complete accuracy run and the submission's accuracy evaluation must be updated using the benchmark-defined method.
 - New points may be at any concurrency level within the defined regions, including the 10% High Throughput margin zone.
 - If a newly submitted point is at the same concurrency level as an existing point, the new result supersedes the old one and becomes the active displayed result. The previous result is not discarded — it is retained in the historical record (see [Versioning and Historical Record](#versioning-and-historical-record) below).
 - The submitter must provide updated YAML configurations and result artifacts for each new point.
