@@ -487,19 +487,9 @@ The following metrics are derived from primary measurements and used in publicat
 
 ### 4.3 Accuracy Metric
 
-Each benchmark defines a quality target expressed on the benchmark's accuracy metric (for example, ROUGE score, exact match, or perplexity). The benchmark definition must designate one of the following accuracy evaluation methods. A submitter may not choose or change the method for an individual submission.
+Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
 
-**Per-point (`per_point`).** Every required accuracy result is evaluated independently against the benchmark's per-point quality target. Every required result must pass.
-
-**Mean-of-N (`mean_of_n`).** The arithmetic mean of all required accuracy results is evaluated against the benchmark's mean-of-N quality target:
-
-```text
-mean_accuracy = (s_1 + s_2 + ... + s_N) / N
-```
-
-Here, `s_i` is the accuracy score from required result `i`, and `N` is the number of required accuracy results under [§5.3](#53-minimum-submission-requirements): `N = 4` when Offline is not submitted and `N = 5` when Offline is submitted. Every required result must be included; submitters may not omit results or select a preferred subset. Individual results must be reported but do not independently gate the submission unless the benchmark definition specifies a per-point floor.
-
-The benchmark definition specifies the selected method, metric, comparison direction, quality target, and any per-point floor. A quality target for `mean_of_n` must be calibrated using the same value of `N` and the same required-point coverage as the submitted result. Benchmark-specific details—including which benchmarks use `mean_of_n`, their thresholds, and any multi-dataset result combiner—belong in the benchmark definition rather than this policy.
+Accuracy may be evaluated either per point, where each required accuracy result is checked against the quality target, or using mean-of-N, where the required accuracy results are averaged and the mean is checked against the quality target. The evaluation method is specified in the benchmark definition. For mean-of-N, `N` is four for the mandatory regions, plus one if Offline results are submitted.
 
 ---
 
@@ -527,18 +517,7 @@ Each submission must include a minimum of **7 measurement points**, structured a
 | 3 mandatory points | One point in each of the three [Throughput regions](#throughput-regions) (Low Throughput, Medium Throughput, High Throughput). |
 | 3 submitter's-choice points | Any concurrency level in any of the four regions, at the submitter's discretion. |
 
-#### Accuracy Coverage at Mandatory Operating Regions
-
-Accuracy validation is required at **all mandatory operating regions**. For the current online Pareto structure, exactly four submitted points require accuracy runs:
-
-1. One point in the Low Latency region.
-2. One point in the Low Throughput region.
-3. One point in the Medium Throughput region.
-4. One point in the High Throughput region.
-
-When multiple points are submitted in a region, the point satisfying that region's mandatory placement must be identified by its existing `region` metadata. Submitter's-choice points do not require accuracy runs unless a benchmark definition explicitly requires them.
-
-Accuracy coverage is **4 mandatory + 1 mandatory if submitted**: the four online mandatory-region results are always required, and an Offline accuracy result is required whenever an Offline result is submitted. Offline is optional and is not counted among the seven online Pareto points.
+Accuracy results are required at the four mandatory points: one Low Latency point and one point in each of the Low Throughput, Medium Throughput, and High Throughput regions. One additional Offline accuracy result is required if Offline results are submitted. Accuracy results are not required for the three submitter's-choice points unless specified by the benchmark definition.
 
 #### No Spacing Requirements
 
@@ -789,17 +768,15 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 *(Example constraints — subject to ratification.)*
 
 - Performance runs use `WithReplacementSampleOrder` (random sampling with replacement from the performance dataset).
-- Accuracy runs use `WithoutReplacementSampleOrder` (each sample exactly once). Every required accuracy run must evaluate the complete accuracy dataset; the dataset must not be divided or partitioned across mandatory regions.
-- For Low Latency region **performance** runs, a representative subset of the performance dataset may be used (configured via `n_samples_from_dataset`) to reduce run time, subject to pre-approval by the working group. The subset must be documented and identical across all submitters. This exception does not apply to accuracy runs.
+- Accuracy runs use `WithoutReplacementSampleOrder` (each sample exactly once).
+- For Low Latency region runs, a representative subset of the dataset may be used (configured via `n_samples_from_dataset`) to reduce run time, subject to pre-approval by the working group. The subset must be documented and identical across all submitters.
 - `stream_all_chunks` must be set to `true` for all performance runs to enable accurate per-token timing.
 
 ### 6.6 Accuracy Requirement
 
-Each submission must include one complete accuracy run at the point designated for each mandatory online region in [§5.3](#53-minimum-submission-requirements): Low Latency, Low Throughput, Medium Throughput, and High Throughput. This produces four required online accuracy results. Submitter's-choice points do not require accuracy runs unless the benchmark definition states otherwise.
+*(Example constraint — subject to ratification.)*
 
-If a submission includes an Offline result, it must also include one complete Offline accuracy run. Accuracy coverage is therefore **4 mandatory + 1 mandatory if submitted**, referred to as **4 + 1**. Offline itself remains optional.
-
-The same model weights, software stack, endpoint implementation, and SUT serving configuration used for a mandatory performance point must be used for its corresponding accuracy run. All required results must be evaluated using the benchmark-designated `per_point` or `mean_of_n` method in [§4.3](#43-accuracy-metric).
+Accuracy validation is required at the four mandatory points defined in [§5.3](#53-minimum-submission-requirements). If Offline results are submitted, one additional Offline accuracy result is required. The accuracy runs verify that the system meets the benchmark's quality target. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the corresponding accuracy runs. Results are evaluated using the per-point or mean-of-N method specified by the benchmark definition.
 
 ---
 
@@ -898,10 +875,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`. | Flag inconsistent points. |
-| **Accuracy run coverage** | One valid, complete accuracy run is present at the designated point in each of the four mandatory online regions. If an Offline result is submitted, one valid, complete Offline accuracy run is also present (`4 mandatory + 1 mandatory if submitted`). | Reject submission. |
-| **Accuracy dataset completeness** | Every required run evaluated the complete accuracy dataset using `WithoutReplacementSampleOrder`; the dataset was not partitioned across regions. | Reject submission. |
-| **Accuracy evaluation method** | The submission uses the `per_point` or `mean_of_n` method designated by the benchmark definition. | Reject submission. |
-| **Accuracy gate** | For `per_point`, every required result passes the per-point quality target. For `mean_of_n`, the arithmetic mean includes all required results and passes the mean-of-N quality target calibrated for the same `N` and point coverage. | Reject submission. |
+| **Accuracy** | Accuracy results are present for the four mandatory points and, if Offline results are submitted, one additional Offline result. The results pass the per-point or mean-of-N quality target specified by the benchmark definition. | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, and software stack across all measurement points. | Flag inconsistencies. |
 
 ### 9.2 Manual Review Focus Areas
