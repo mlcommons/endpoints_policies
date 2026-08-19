@@ -589,11 +589,11 @@ The concurrency space is divided into four regions.
 
 #### Maximum Supported Concurrency
 
-The concurrency regions are defined using the **minimum concurrency** value $C_{min}$ (ideally corresponds to the best interactivity on the system) and a **Maximum Supported Concurrency** value $C_{max}$ (this is the highest concurrency level at which the submitter chooses to benchmark their system).
+The concurrency regions are defined using the **minimum concurrency** value $C_{min}$ (ideally corresponds to the best interactivity on the system) and a **maximum supported concurrency** value $C_{max}$ (this is the highest concurrency level at which the submitter chooses to benchmark their system).
 
 Rules:
 
-- $C_{min}$ and $C_{max}$ are directly derived from the submission.
+- $C_{min}$ is derived from the submission points, and $C_{max}$ defines the upper bound of the High Throughput region.
 - $C_{max}$ >> $C_{min}$.
 - There is no compliance test to force a particular value of $C_{max}$.
 - Submitters are incentivized to choose well: $C_{max}$ defines the extent of their published pareto curve, while $C_{min}$ should produce best case interactivity.
