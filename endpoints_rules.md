@@ -517,7 +517,7 @@ Each submission must include a minimum of **7 measurement points**, structured a
 | 3 mandatory points | One point in each of the three [Throughput regions](#throughput-regions) (Low Throughput, Medium Throughput, High Throughput). |
 | 3 submitter's-choice points | Any concurrency level in any of the four regions, at the submitter's discretion. |
 
-Accuracy results are required at the four mandatory points: one Low Latency point and one point in each of the Low Throughput, Medium Throughput, and High Throughput regions. One additional Offline accuracy result is required if Offline results are submitted. Accuracy results are not required for the three submitter's-choice points unless specified by the benchmark definition.
+Accuracy results are required at the four mandatory points: one Low Latency point and one point in each of the Low Throughput, Medium Throughput, and High Throughput regions. One additional Offline accuracy result is required if Offline results are submitted.
 
 #### No Spacing Requirements
 
