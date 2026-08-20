@@ -422,6 +422,71 @@ A: N/A
 **Q9: How does the salt mechanism apply to clients that pre-tokenize prompts before sending to the SUT?**
 A: The operative rule ([§2.9.5.1](#2951-salting-mechanism)) is about the *token stream the SUT sees*, not about a particular client-side text-field implementation. A client that pre-tokenizes (e.g., SGLang-style adapters that send `input_tokens` rather than text) must ensure the *token stream* it sends to the SUT contains the unique per-query salt between the system-prompt tokens and the user-context tokens. Two clean ways to do this: (a) apply the salt to the text and then re-tokenize the result before sending, or (b) reserve a salt-marker token ID (or short sequence) and emit it inline. Applying the salt only to a `prompt` text field while sending the original `input_tokens` will *not* prevent KV reuse — the SUT never sees the text — and is non-compliant. The reference implementation in `mlcommons/endpoints` follows path (a); see the warning logged by `Dataset._apply_salt` in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the contract.
 
+### 2.10 Audit Process
+
+For audit process guidelines see MLPerf Audit Guidelines [TBD].
+
+To ensure compliance and accuracy, audits are conducted on a regular cadence using a combination of random and targeted selections.
+
+#### 2.10.1 Audit Quota
+* **Annual Cadence:** 8 audits per year.
+* **Quarterly Breakdown:** 2 audits per quarter, divided as:
+  * 1 randomly selected audit.
+  * 1 outlier audit selected by vote.
+
+#### 2.10.2 Outlier Selection (By Vote)
+* **Nomination Window:** There is a 2-week window immediately following publication to nominate audit candidates.
+* * During the review process, a github issue shall be opened where submitters can nominate systems for audit. Each nomination shall contain a reason, such as new HW or SW, unusual or interesting features, performance outside of expectations, etc. 
+
+* **Selection:** Review committee chairs evaluate the nominations and compile a list of systems at the end of the review period. Any systems with new accelerators may be added to the list by the chairs if not nominated. The review committee will select a submission for audit by ranked choice voting using a simple majority. An option "No Selected Audit This Round" may be added if requested by a majority of the review committee. In case there is no simple majority, the review committee may randomly select one audit candidate from the pool of nominations.
+  
+* **Hardware Holding Period:**
+  * **Nominated Submissions:** If a submission is nominated, the submitter is committed to provide the hardware to the auditor. If it is not selected at the end of the quarter, the hardware can be released.
+  * **Selected Submissions:** If a submission is selected for the audit at the end of the quarter, the submitting member must provide the hardware until the audit is fully completed.
+
+
+#### 2.10.3 Random Audit Selection
+* **Timing:** The audit selection process begins after the withdrawal deadline.
+* **Rules for Random Audit Exclusion:**
+* A submission is not a candidate for the randomly chosen audit if the system is equivalent to a system audited in the previous round. For the purposes of this rule, equivalent systems have the same CPU, NIC, accelerator, and accelerator count, with the same configuration of those components as per the system configuration JSON. For The review committee may determine that additional systems are equivalent to those audited in a previous round and exempt them from random audit. As a guidance for this exemption, if an accelerator is audited in one of the previous rounds, then the systems using the same accelerator can be excluded from random audit, if the aggregate system performance and the performance per accelerator are not more than 10% from those submitted during last audit time. For systems with power metrics, in addition to the performance, power efficiency must also be within 10% from the last audit time to be eligible for an exclusion from random audit. If any new result like a new model, an additional non-inferred scenario measurement or a new power measurement is submitted from the last audit time, then the exclusion is not applicable unless the review committee decides otherwise.
+* **Selection Mechanism:** 
+  * A round is randomly selected with a probability of 1/6 (e.g., rolling a 6-sided die).
+  * Once a round is chosen, a submission is selected using a uniform probability of selection.
+* **Hardware Holding Period:**
+  * The holding period begins immediately after random selection occurs (post-withdrawal deadline) and ends when the audit is officially completed.
+
+#### 2.10.4 Audit Compliance and Resolution Rules
+
+An audit is expected to be completed within a 60 day period. Audits failing to meet this timeline can be requested to be invalidated by the auditee. The final decision to accept such a request will be taken by the Working Group.
+
+If a submitter chosen for an audit finds it unfair, they can appeal to the MLCommons Executive Director to ensure fairness.
+
+
+
+An auditor shall be chosen by the review committee who has no conflict of interest with the submitter. The process of auditor selection will take no more than 28 days from selection of the submitter.
+
+The burden is on the submitter to provide sufficient materials to demonstrate that the submission is compliant with the rules. Any such materials, including software, documentation, testing results and machine access will be provided to the auditor under NDA.
+
+The submitter shall provide two days of hardware access, at a time mutually agreed with the auditor. The first day will be used to run a pre-agreed list of tests, and to verify other system parameters if needed. The second day will allow the auditor to run additional tests based on outcome of the first day.
+
+The auditor shall write a report describing the work that was performed, a list of unresolved issues, and a recommendation on whether the submission is compliant.
+
+The submitter will provide the auditor an NDA within seven days of the auditor’s selection. The auditor and submitter will negotiate and execute the NDA within 14 days of the auditor’s selection.
+
+The auditor will submit their report to the submitter no more than thirty days after executing all relevant NDAs. The submitter will make any necessary redactions due to NDAs and forward the finalized report to the review committee within seven days. The auditor will confirm the accuracy of the forwarded report.
+
+Submissions that fail the audit at a material level will be moved to open or removed, by review committee decision. If a submission failed an audit that was delayed past publication, then any published material concerning the invalidated result is subject to the MLCommons rules for Violation Determination, Remedies and Penalties for remedial action.
+
+MLCommons shall retain a library of past audit reports and send copies to MLCommons members, auditors, and potential auditors by request. Audit reports will not be further distributed without permission from the audited submitter.
+
+
+#### 2.10.5  TODO: Avoiding  streaks of round selection (Needs Resolution)
+> *How to correctly prevent streaks is currently TBD.*
+> * **Proposed (but flawed) solution:** If no round is selected in the first 5 rounds in a quarter, the 6th round automatically gets selected. 
+> * **Caveat:** If an audit is selected in the first round, submitters would know that they would not be selected for an audit for the next 5 rounds. 
+> * **Open Question:** Should we just let probability dictate the audit selection without trying to actively break streaks?
+
+
 ---
 
 ## 3. Benchmarks and Models
