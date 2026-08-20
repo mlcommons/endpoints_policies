@@ -645,7 +645,7 @@ Each benchmark defines a quality target expressed as a minimum acceptable score 
 Accuracy and performance runs MUST use the same endpoint configuration, model weights, and software stack.
 
 - **Single-turn:** Every performance point MUST meet the quality threshold. Its accuracy run MUST use matching concurrency on the same instance, immediately after the performance run.
-- **Multi-turn:** The arithmetic mean of accuracy scores across submitted points MUST meet the quality threshold; individual points need not. Accuracy concurrency may differ, and runs may use separate instances and need not be consecutive.
+- **Multi-turn:** The arithmetic mean of accuracy scores across submitted points MUST meet the quality threshold; individual points need not. Accuracy concurrency may differ, and runs may use separate instances and need not be consecutive because multi-turn accuracy runs are time- and resource-intensive.
 
 ---
 
