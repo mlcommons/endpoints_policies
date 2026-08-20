@@ -644,8 +644,8 @@ Each benchmark defines a quality target expressed as a minimum acceptable score 
 
 Accuracy and performance runs MUST use the same endpoint configuration, model weights, and software stack.
 
-- **Single-turn:** Every performance point MUST meet the quality threshold. Its accuracy run MUST use matching concurrency on the same instance, immediately after the performance run.
-- **Multi-turn:** The arithmetic mean of accuracy scores across submitted points MUST meet the quality threshold; individual points need not. Accuracy concurrency may differ, and runs may use separate instances and need not be consecutive because multi-turn accuracy runs are time- and resource-intensive.
+- **Single-turn (per-point):** Every required accuracy result MUST meet the quality threshold. Its accuracy run MUST use matching concurrency on the same instance, immediately after the corresponding performance run.
+- **Multi-turn (mean-of-N):** The arithmetic mean of the required accuracy results MUST meet the quality threshold; individual results need not. `N` is four for the mandatory points, plus one if Offline results are submitted. Accuracy concurrency may differ, and runs may use separate instances and need not be consecutive because multi-turn accuracy runs are time- and resource-intensive.
 
 ---
 
@@ -672,6 +672,8 @@ Each submission must include a minimum of **7 measurement points**, structured a
 | 1 mandatory point | One low-latency point in the [Ultra Low Concurrency region](#low-latency-region) (concurrency 1–32). |
 | 3 mandatory points | One point in each of the three [Concurrency regions](#concurrency-regions) (Low Concurrency, Medium Concurrency, High Concurrency). |
 | 3 submitter's-choice points | Any concurrency level in any of the three "concurrency" regions, at the submitter's discretion. |
+
+Accuracy results are required at the four mandatory points: one Low Latency point and one point in each of the Low Throughput, Medium Throughput, and High Throughput regions. One additional Offline accuracy result is required if Offline results are submitted.
 
 #### No Spacing Requirements
 
@@ -931,7 +933,7 @@ At each measurement point, the total number of samples issued MUST be a positive
 
 *(Example constraint — subject to ratification.)*
 
-Accuracy validation MUST follow the single-turn or multi-turn requirements in [§4.3](#43-accuracy-metric).
+Accuracy validation is required at the four mandatory points defined in [§5.3](#53-minimum-submission-requirements). If Offline results are submitted, one additional Offline accuracy result is required. The accuracy runs verify that the system meets the benchmark's quality target and MUST follow the applicable single-turn or multi-turn requirements in [§4.3](#43-accuracy-metric).
 
 ---
 
@@ -1197,7 +1199,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | The valid per-response TPOT distribution must be non-empty with a finite, strictly positive P90; the normalized P90 value in milliseconds is `tpot_p90_ms` and `tps_per_user = 1000 / tpot_p90_ms`. For agentic points, `e2e_interactivity` must be derivable from its §4 definition. The authoritative result schema defines TPOT serialization and units. | Flag inconsistent points. |
-| **Accuracy** | Accuracy satisfies the applicable single-turn or multi-turn gate in §4.3. | Reject submission. |
+| **Accuracy** | Accuracy results are present for the four mandatory points and, if Offline results are submitted, one additional Offline result. The results satisfy the applicable single-turn or multi-turn gate in §4.3. | Reject submission. |
 | **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |
 
