@@ -528,7 +528,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
 > [!CAUTION]
-> **TTFT anti-manipulation and logging.** The deterministic `len(s) > 0` trigger is susceptible to manipulation: an implementation could emit `"\n"`, whitespace, a control character, punctuation, or other meaningless leading content solely to stop the TTFT clock. For Standardized and Serviced submissions, the reference client MUST retain, for every query, the timestamp, response category, and exact text fragment that triggered TTFT, encoded so whitespace and control characters remain inspectable. This evidence MUST be recorded in the measurement point's `events.jsonl` using the reference client's event schema and be available to reviewers. RDI submissions are exempt from this evidence-retention and compliance requirement. Emitting content solely to reduce reported TTFT, rather than as a genuine part of the model response, is prohibited and invalidates the affected measurement point.
+> **TTFT anti-manipulation and logging.** The deterministic `len(s) > 0` trigger is susceptible to manipulation: an implementation could emit `"\n"`, whitespace, a control character, punctuation, or other meaningless leading content solely to stop the TTFT clock. For Standardized and Serviced submissions, the reference client MUST retain, for every query, the timestamp, response category, and exact text fragment that triggered TTFT, encoded so whitespace and control characters remain inspectable. This evidence MUST be recorded in the measurement point's `events.jsonl` using the reference client's event schema. The `events.jsonl` file is **not** part of the submission package: the submission instead carries its SHA-256 hash (`events_sha256` in the point's YAML, [§8.3](#83-measurement-point-yaml)), and the submitter MUST retain `events.jsonl` and produce it on reviewer or auditor request, at which point its hash MUST match the submitted value. RDI submissions are exempt from this evidence-retention and compliance requirement. Emitting content solely to reduce reported TTFT, rather than as a genuine part of the model response, is prohibited and invalidates the affected measurement point.
 
 > [!NOTE]
 > **TTFT percentiles under discussion.** The WG has agreed to use **P95** for the publication plot and as the primary TTFT metric in v0.7. Additional TTFT percentiles (e.g., P50, P99) are under discussion and may be added as a **secondary metrics** table in a later version. Until then, only `ttft_p95_ms` is required to be reported per measurement point; submitters MAY voluntarily report additional percentiles in their submission YAML, but they will not appear on the publication chart for v0.7.
@@ -869,8 +869,8 @@ An Endpoints submission must follow this directory structure:
               └── <benchmark_model>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
                   └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
                       ├── point.yaml              # §8.3 — includes shared_src / shared_docs pointers
+                      │                           #   and events_sha256 (hash of the retained events.jsonl)
                       ├── result_summary.json     # aggregate metrics (QPS, TPS, TTFT, TPOT, ISL, %iles)
-                      ├── events.jsonl            # per-query reference-client event log and TTFT evidence
                       ├── accuracy_results.json   # §6.6
                       ├── run_metadata.json       # framework/parallelism/precision for this point
                       └── server_configs/         # OPTIONAL, point-specific: backend configs tuned
@@ -886,9 +886,11 @@ per-measurement-point:
   instantiation, endpoint setup, client harness) and documentation are not duplicated per Pareto
   point. A submitter that needs different code or documentation for different systems or models adds
   another `src/<implementation_id>/` or a subdirectory under `docs/` rather than duplicating the tree.
-- **Point-specific content** is only what varies with concurrency level: `point.yaml`, `events.jsonl`,
-  the result and metadata JSON files, and the optional `server_configs/`. Adding, replacing, or withdrawing a Pareto
-  point must not require any change under `src/` or `docs/`.
+- **Point-specific content** is only what varies with concurrency level: `point.yaml` (which carries the
+  `events_sha256` hash of the point's retained `events.jsonl`), the result and metadata JSON files, and the
+  optional `server_configs/`. The `events.jsonl` file itself is retained by the submitter and produced on request
+  rather than shipped in the package (see [§8.3](#83-measurement-point-yaml)). Adding, replacing, or withdrawing a
+  Pareto point must not require any change under `src/` or `docs/`.
 
 Each point declares which shared content it used via the `shared_src` and `shared_docs` pointers in
 its `point.yaml` (see [§8.3](#83-measurement-point-yaml)). A point whose pointers are missing or do
@@ -918,6 +920,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 - `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
 - `shared_src`: Relative path from this point folder to the `src/<implementation_id>/` directory used for this run (e.g., `../../../../src/trtllm`).
 - `shared_docs`: Relative path to the `docs/` directory covering this run (e.g., `../../../../docs`). Point-specific notes (run anomalies, retry rationale) belong in this point's `point.yaml` or in `server_configs/README.md`; there is no per-point `docs/` directory.
+- `events_sha256`: The SHA-256 hash (lowercase hex) of this point's `events.jsonl` — the per-query reference-client event log and TTFT evidence. The `events.jsonl` file itself is **not** included in the submission package; the submitter retains it and produces it on reviewer or auditor request, at which point its SHA-256 MUST match this value. See [§8.1](#81-directory-structure) and the TTFT anti-manipulation requirement in [§4.1](#41-primary-metrics).
 
 ### 8.4 Software Disclosure
 
@@ -957,10 +960,14 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`. | Flag inconsistent points. |
-| **Response-field integrity** | Each response fragment in `events.jsonl` is assigned to exactly one assistant-response field; content is not duplicated across fields or padded to inflate token counts. | Reject non-compliant points. |
-| **TTFT trigger evidence (Standardized and Serviced only)** | `events.jsonl` contains, for every query, the timestamp, response category, and exact encoded text fragment that triggered TTFT using the reference-client event schema. RDI submissions are exempt. | Reject Standardized or Serviced points with missing evidence; flag suspicious leading content for manual review. |
+| **Events-log hash present** | Each point's `point.yaml` declares a well-formed `events_sha256` (SHA-256, lowercase hex). The `events.jsonl` file is retained by the submitter and not shipped in the package. | Reject points with a missing or malformed `events_sha256`. |
+| **Response-field integrity** | Verified against the `events.jsonl` produced on reviewer or auditor request, which MUST match the point's `events_sha256`: each response fragment is assigned to exactly one assistant-response field; content is not duplicated across fields or padded to inflate token counts. | Reject non-compliant points. |
+| **TTFT trigger evidence (Standardized and Serviced only)** | Verified against the `events.jsonl` produced on request (matching the point's `events_sha256`): for every query it contains the timestamp, response category, and exact encoded text fragment that triggered TTFT using the reference-client event schema. RDI submissions are exempt. | Reject Standardized or Serviced points with missing evidence; flag suspicious leading content for manual review. |
 | **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, and software stack across all measurement points. | Flag inconsistencies. |
+
+> [!NOTE]
+> **`events.jsonl` is verified by hash, not shipped.** The automated gate at submission is **Events-log hash present**; the raw per-query log is not part of the package. The **Response-field integrity** and **TTFT trigger evidence** checks are evaluated during peer review or audit, when the submitter produces `events.jsonl` on request — its SHA-256 MUST match the point's `events_sha256`, binding the produced file to the measured run. Failure to produce a matching `events.jsonl` on request is treated as a failed check with the action listed above.
 
 ### 9.2 Manual Review Focus Areas
 
