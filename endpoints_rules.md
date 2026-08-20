@@ -1194,7 +1194,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Concurrency in range** | Each point's concurrency falls within a valid region (including the 10% High Concurrency margin), computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm). | Flag out-of-range points. |
 | **Load pattern** | All points used the benchmark-defined fixed-concurrency load pattern. | Reject non-conforming points. |
 | **Run duration** | Each point meets the minimum steady-state duration for its region (see [§6.2](#62-minimum-run-duration)). | Flag non-compliant points. |
-| **Minimum query count** | Each point meets §6.4, including the dataset-size multiple. | Flag non-compliant points. |
+| **Minimum query count** | Each point meets the minimum completed queries for its region (see [§6.4](#64-minimum-completed-queries)). | Flag non-compliant points. |
 | **Streaming config** | `stream_all_chunks = true` for all performance runs. | Flag non-compliant points. |
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
