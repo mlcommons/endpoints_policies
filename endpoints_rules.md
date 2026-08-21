@@ -435,7 +435,7 @@ To ensure compliance and accuracy, audits are conducted on a regular cadence usi
   * 1 outlier audit selected by vote.
 
 #### 2.10.2 Outlier Selection (By Vote)
-* **Nomination Window:** There is a 2-week window immediately following publication to nominate audit candidates.
+* **Nomination Window:** There is a 4-week window immediately following publication to nominate audit candidates.
 * * During the review process, a github issue shall be opened where submitters can nominate systems for audit. Each nomination shall contain a reason, such as new HW or SW, unusual or interesting features, performance outside of expectations, etc. 
 
 * **Selection:** Review committee chairs evaluate the nominations and compile a list of systems at the end of the review period. Any systems with new accelerators may be added to the list by the chairs if not nominated. The review committee will select a submission for audit by ranked choice voting using a simple majority. An option "No Selected Audit This Round" may be added if requested by a majority of the review committee. In case there is no simple majority, the review committee may randomly select one audit candidate from the pool of nominations.
