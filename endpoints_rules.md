@@ -924,6 +924,7 @@ Endpoints submissions must include the following metadata:
 | `batch` | Maximum batch size. |
 | `config_summary_notes` | Free form field from the submitter to contain information not captured by other fields that concatenate into config_summary. |
 | `link_config` | Link to full configuration logs for the run (e.g., in GitHub). |
+| `tps_utilization` | reported_system_tps / (max of all reported_system_tps for all runs) |
 
 ### 8.3 Measurement Point YAML
 
