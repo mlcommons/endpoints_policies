@@ -451,9 +451,13 @@ To ensure compliance and accuracy, audits are conducted on a regular cadence usi
 * A submission is not a candidate for the randomly chosen audit if the system is equivalent to a system audited in the previous round. For the purposes of this rule, equivalent systems have the same CPU, NIC, accelerator, and accelerator count, with the same configuration of those components as per the system configuration JSON. For The review committee may determine that additional systems are equivalent to those audited in a previous round and exempt them from random audit. As a guidance for this exemption, if an accelerator is audited in one of the previous rounds, then the systems using the same accelerator can be excluded from random audit, if the aggregate system performance and the performance per accelerator are not more than 10% from those submitted during last audit time. For systems with power metrics, in addition to the performance, power efficiency must also be within 10% from the last audit time to be eligible for an exclusion from random audit. If any new result like a new model, an additional non-inferred scenario measurement or a new power measurement is submitted from the last audit time, then the exclusion is not applicable unless the review committee decides otherwise.
 * **Selection Mechanism:** 
   * A round is randomly selected with a probability of 1/6 (e.g., rolling a 6-sided die).
-  * Once a round is chosen, a submission is selected from the corresponding cohort consisting of submissions in this round using a uniform probability of selection.
-  * TODO: Avoiding  streaks of round selection (Needs Resolution)
-  * Reroll-on-repeat: If consecutive round is selected, a six sided die will be rolled again.
+  * Once a round is chosen, a submission is selected from the corresponding cohort (the set of submissions from in that round) using a uniform probability of selection.
+  * **Proposal: Avoiding  streaks of round selection (Needs WG Approval)**
+    * Reroll-on-repeat: If consecutive round is selected, a six sided die will be rolled again.
+      * For a streak of length 2, a 6-sided die would be rolled twice and the result of the second die roll will be accepted.
+      * For a streak of length 3, a 6-sided die would be rolled thrice and the result of the third die roll will be accepted.
+      * At this point, there is budget for only one more random audit in the annual budget. The audit committee will make decision on how to proceed.
+      * A streak is reset annually.
 
 
 * **Hardware Holding Period:**
