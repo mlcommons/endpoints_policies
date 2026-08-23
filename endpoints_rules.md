@@ -451,7 +451,11 @@ To ensure compliance and accuracy, audits are conducted on a regular cadence usi
 * A submission is not a candidate for the randomly chosen audit if the system is equivalent to a system audited in the previous round. For the purposes of this rule, equivalent systems have the same CPU, NIC, accelerator, and accelerator count, with the same configuration of those components as per the system configuration JSON. For The review committee may determine that additional systems are equivalent to those audited in a previous round and exempt them from random audit. As a guidance for this exemption, if an accelerator is audited in one of the previous rounds, then the systems using the same accelerator can be excluded from random audit, if the aggregate system performance and the performance per accelerator are not more than 10% from those submitted during last audit time. For systems with power metrics, in addition to the performance, power efficiency must also be within 10% from the last audit time to be eligible for an exclusion from random audit. If any new result like a new model, an additional non-inferred scenario measurement or a new power measurement is submitted from the last audit time, then the exclusion is not applicable unless the review committee decides otherwise.
 * **Selection Mechanism:** 
   * A round is randomly selected with a probability of 1/6 (e.g., rolling a 6-sided die).
-  * Once a round is chosen, a submission is selected using a uniform probability of selection.
+  * Once a round is chosen, a submission is selected from the corresponding cohort consisting of submissions in this round using a uniform probability of selection.
+  * TODO: Avoiding  streaks of round selection (Needs Resolution)
+  * Reroll-on-repeat: If consecutive round is selected, a six sided die will be rolled again.
+
+
 * **Hardware Holding Period:**
   * The holding period begins immediately after random selection occurs (post-withdrawal deadline) and ends when the audit is officially completed.
 
@@ -479,12 +483,6 @@ Submissions that fail the audit at a material level will be moved to open or rem
 
 MLCommons shall retain a library of past audit reports and send copies to MLCommons members, auditors, and potential auditors by request. Audit reports will not be further distributed without permission from the audited submitter.
 
-
-#### 2.10.5  TODO: Avoiding  streaks of round selection (Needs Resolution)
-> *How to correctly prevent streaks is currently TBD.*
-> * **Proposed (but flawed) solution:** If no round is selected in the first 5 rounds in a quarter, the 6th round automatically gets selected. 
-> * **Caveat:** If an audit is selected in the first round, submitters would know that they would not be selected for an audit for the next 5 rounds. 
-> * **Open Question:** Should we just let probability dictate the audit selection without trying to actively break streaks?
 
 
 ---
