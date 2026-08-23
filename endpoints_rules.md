@@ -454,10 +454,10 @@ To ensure compliance and accuracy, audits are conducted on a regular cadence usi
   * Once a round is chosen, a submission is selected from the corresponding cohort (the set of submissions from in that round) using a uniform probability of selection.
   * **Proposal: Avoiding  streaks of round selection (Needs WG Approval)**
     * Reroll-on-repeat: If consecutive round is selected, a six sided die will be rolled again.
-      * For a streak of length 2, a 6-sided die would be rolled twice and the result of the second die roll will be accepted.
-      * For a streak of length 3, a 6-sided die would be rolled thrice and the result of the third die roll will be accepted.
-      * At this point, there is budget for only one more random audit in the annual budget. The audit committee will make decision on how to proceed.
-      * A streak is reset annually.
+      * For a selection streak of length 2, a 6-sided die would be rolled twice and the result of the second die roll will be accepted.
+      * For a selection streak of length 3, a 6-sided die would be rolled thrice and the result of the third die roll will be accepted.
+      * After a selection streak of length 3, there is budget for only one more random audit in the annual budget. The audit committee will make decision on how to proceed.
+      * A non-selection streak has higher probability. After a non-selection streak of length 3, the audit committee will decide based on the available annual budget and the time left in the current year. The audit committee has the final authority on all the audit decisions.
 
 
 * **Hardware Holding Period:**
