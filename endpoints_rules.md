@@ -363,7 +363,7 @@ An **alternative reference implementation** may be designated by the working gro
 The server-side processing of each incoming request — both input pre-processing and output post-processing — must be functionally equivalent to the reference implementation:
 
 - **Tokenization:** Must produce the same token IDs as the reference tokenizer for the same input text. Submitters using an alternative tokenizer implementation must demonstrate token-for-token equivalence on the accuracy dataset.
-- **Chat template / prompt formatting:** The system prompt, user turn formatting, special tokens (BOS, EOS, role markers), and chat-template flags must match the benchmark specification. Modifications that change the effective input to the model are not permitted.
+- **Chat template / prompt formatting:** The system prompt, user turn formatting, special tokens (BOS, EOS, role markers), and chat-template flags (for example, `enable_thinking`, `clear_thinking`, and `preserve_thinking`) must match the benchmark specification. Modifications that change the effective input to the model are not permitted.
 - **Input truncation:** If the reference implementation truncates inputs that exceed the model's context window, the submitter's truncation method must produce the same result.
 
 #### 2.9.3 Model Weight Rules
@@ -455,7 +455,7 @@ The operative requirement is that the token stream actually seen by the SUT cont
 **Accuracy runs use the un-salted reference dataset** to ensure model output matches the canonical implementation exactly. Submissions are not required to disable cross-query KV reuse in their serving stack for accuracy runs; the accuracy dataset simply omits the salt prefix, and the serving stack reuses KV as it would in production. This split (salted performance dataset, un-salted accuracy dataset) is the operational mechanism that allows blanket cross-query KV reuse without compromising the accuracy gate's role as a model-output check.
 
 > [!NOTE]
-> Agentic benchmarks use benchmark-specific salting to control KV-cache reuse. The mechanism is controlled by benchmark-specific flags and MUST be enabled for submissions.
+> Agentic benchmarks use benchmark-specific random salting to control KV-cache reuse. The mechanism is controlled by benchmark-specific flags and MUST be enabled for submissions.
 
 > [!NOTE]
 > **Backward compatibility note.** This rule intentionally diverges from MLPerf Inference's KV-cache FAQ, which states KV state "does not apply across queries". Endpoints submissions are not portable to standard MLPerf Inference without disabling cross-query KV reuse; conversely, MLPerf Inference submissions that already prohibit cross-query reuse are trivially compliant with this section. Submitters should treat the two rule sets as **not** mutually compatible for code paths that rely on this delta.
@@ -613,7 +613,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | `tps_per_user = 1000 / tpot_p90_ms`, where `tpot_p90_ms` is the P90 of valid per-response TPOT samples. Higher is better. |
-| E2E Interactivity | `e2e_interactivity` | For agentic benchmarks, the output-token rate across completed turns. `e2e_interactivity = sum(output_tokens_per_turn) / sum(e2e_turn_time_seconds)`, where each turn is measured from request issuance through receipt of the complete response. |
+| E2E Interactivity | `e2e_interactivity` | For agentic benchmarks, the output-token rate across completed turns, reported as a single scalar per measurement point. The scalar aggregates all completed turns across all trajectories in the run: `e2e_interactivity = sum(output_tokens_per_turn) / sum(e2e_turn_time_seconds)`, where each turn is measured from request issuance through receipt of the complete response. |
 | Time to First Token (P90) | `ttft_p90_ms` | 90th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning). |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
@@ -647,7 +647,7 @@ Accuracy and performance runs MUST use the same endpoint configuration, model we
 For both single-turn and multi-turn benchmarks, accuracy is required at the `N` points defined in [§5.3](#53-minimum-submission-requirements).
 
 - **Single-turn (per-point):** Each of the `N` required accuracy results MUST meet the quality threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after the corresponding performance run.
-- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the quality threshold; individual results need not. Accuracy concurrency may differ, and runs may use separate instances and need not be consecutive because multi-turn accuracy runs are time- and resource-intensive.
+- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn accuracy runs are time- and resource-intensive.
 
 ---
 
