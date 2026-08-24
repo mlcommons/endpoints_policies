@@ -844,7 +844,7 @@ An Endpoints submission must follow this directory structure:
       └── results/
           └── <system>/                     # e.g. H200-SXM-141GBx8_TRT/
               ├── system_desc_id.json       # §8.2 — one per system, not per point
-              └── <benchmark_model>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
+              └── <model_name>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
                   └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
                       ├── point.yaml              # §8.3 — includes shared_src / shared_docs pointers
                       ├── result_summary.json     # aggregate metrics (QPS, TPS, TTFT, TPOT, %iles)
