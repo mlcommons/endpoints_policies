@@ -8,10 +8,10 @@ Updated Aug 1, 2026
 Author: Uday Kurkure (uday.kurkure@broadcom.com) based on the original version by Zhihan Jiang (zhihanj@nvidia.com)
 
 = MLPerf-Inference Endpoints Audit Guidelines 
-
+> [!CAUTION]
 Warning: This is work in progress.
 
-This document describes the guidelines for the MLPerf-Inference Endpoints audit process. It is a complement to Section 2.8 of the https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc[MLPerf Inference Rules] and the overall https://github.com/mlcommons/policies/blob/master/submission_rules.adoc[MLCommon policies], and is meant to provide both submitters and auditors a general guideline for the audit process. The steps described here and the auditee's responses to them shall be documented in the audit report. Note that the auditor has the discretion to examine anything they find suspicious or interesting beyond the enumerated points below.
+This document describes the guidelines for the MLPerf-Inference Endpoints audit process. It is a complement to https://github.com/mlcommons/endpoints_policies/blob/main/endpoints_rules.md [MLPerf Endpoints Inference Rules] and the overall https://github.com/mlcommons/endpoints_policies/blob/main/endpoints_submission_rules.md, and is meant to provide both submitters and auditors a general guideline for the audit process. The steps described here and the auditee's responses to them shall be documented in the audit report. Note that the auditor has the discretion to examine anything they find suspicious or interesting beyond the enumerated points below.
 
 == Audit Preparation
 
