@@ -875,6 +875,7 @@ Endpoints submissions must include the following metadata:
 {
   "division": "",
   "system_name": "",
+  "shortened_system_name": "",
   "system_availability_status": "",
   "system_category": "",
   "system_size": "",
