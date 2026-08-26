@@ -500,14 +500,14 @@ Submitters may apply quantization, format conversion, or other weight transforma
 > **`[TENTATIVE — Subject to change after 2026-06-26]`** TTFT framing — see note below the table on percentile selection.
 
 > [!IMPORTANT]
-> **Versioning.** The P50 TPOT requirements in this section apply to MLPerf Endpoints v1.0 and later. v0.7 submissions retain their historical TPS/User definition (`system_tps / concurrency`) and are not recomputed or relabeled.
+> **Versioning.** The P90 TPOT requirements in this section apply to MLPerf Endpoints v1.0 and later. v0.7 submissions retain their historical TPS/User definition (`system_tps / concurrency`) and are not recomputed or relabeled.
 
 Each measurement point on the pareto curve captures the following metrics at a specific concurrency level:
 
 | Metric | Symbol | Definition |
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
-| TPS per User (version-specific) | `tps_per_user` | For v0.7, `tps_per_user = system_tps / concurrency`. For v1.0 and later, `tps_per_user = 1000 / tpot_p50_ms`, where `tpot_p50_ms` is the P50 of valid per-response TPOT samples. Higher is better. |
+| TPS per User (version-specific) | `tps_per_user` | For v0.7, `tps_per_user = system_tps / concurrency`. For v1.0 and later, `tps_per_user = 1000 / tpot_p90_ms`, where `tpot_p90_ms` is the P90 of valid per-response TPOT samples. Higher is better. |
 | Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time, in milliseconds, from query issuance to receipt of the first output token. |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
@@ -938,7 +938,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Streaming config** | `stream_all_chunks = true` for all performance runs. | Flag non-compliant points. |
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
-| **Metric consistency** | For v0.7, `system_tps` must be derivable from total tokens and elapsed duration and `tps_per_user = system_tps / concurrency`. For v1.0 and later, the valid per-response TPOT distribution must be non-empty with a finite, strictly positive P50; the normalized P50 value in milliseconds is `tpot_p50_ms` and `tps_per_user = 1000 / tpot_p50_ms`. The authoritative result schema defines TPOT serialization and units. | Flag inconsistent points. |
+| **Metric consistency** | For v0.7, `system_tps` must be derivable from total tokens and elapsed duration and `tps_per_user = system_tps / concurrency`. For v1.0 and later, the valid per-response TPOT distribution must be non-empty with a finite, strictly positive P90; the normalized P90 value in milliseconds is `tpot_p90_ms` and `tps_per_user = 1000 / tpot_p90_ms`. The authoritative result schema defines TPOT serialization and units. | Flag inconsistent points. |
 | **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, and software stack across all measurement points. | Flag inconsistencies. |
 

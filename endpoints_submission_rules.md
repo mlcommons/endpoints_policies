@@ -303,7 +303,7 @@ Automated compliance checks are executed immediately after submission. The check
 - The pareto curve satisfies minimum point count and region coverage requirements (minimum 7 points structured as 1 + 3 + 3; maximum 32 points total).
 - Run durations, minimum query counts, load patterns, and streaming configuration meet requirements.
 - Accuracy validation results are included and pass the quality target.
-- Metric consistency: for v0.7, `system_tps` is derivable from total tokens and elapsed duration and `tps_per_user = system_tps / concurrency`; for v1.0 and later, the valid per-response TPOT distribution is non-empty with a finite, strictly positive P50 and its normalized millisecond value is used to derive `tps_per_user = 1000 / tpot_p50_ms`.
+- Metric consistency: for v0.7, `system_tps` is derivable from total tokens and elapsed duration and `tps_per_user = system_tps / concurrency`; for v1.0 and later, the valid per-response TPOT distribution is non-empty with a finite, strictly positive P90 and its normalized millisecond value is used to derive `tps_per_user = 1000 / tpot_p90_ms`.
 - Configuration consistency across measurement points (same model, same endpoint, same software stack).
 
 The full list of automated checks is defined in [MLPerf Endpoints Rules §9](endpoints_rules.md#9-compliance-validation).
@@ -686,7 +686,7 @@ Each results publication includes:
 - Division (`Standardized` / `Serviced` / `RDI`).
 - Publication status (`Available` / `Preview` / `RDI`).
 - Pareto curve in step-function representation.
-- Key metrics at each submitted concurrency level: **System Tokens/Second** (`system_tps`), **TPS/User** (`tps_per_user`; v0.7 legacy definition, v1.0+ derived from P50 TPOT), **TTFT P95** (`ttft_p95_ms`).
+- Key metrics at each submitted concurrency level: **System Tokens/Second** (`system_tps`), **TPS/User** (`tps_per_user`; v0.7 legacy definition, v1.0+ derived from P90 TPOT), **TTFT P95** (`ttft_p95_ms`).
 - "Peer review pending" tag where applicable.
 
 ---
