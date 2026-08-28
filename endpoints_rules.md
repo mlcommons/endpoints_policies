@@ -29,6 +29,7 @@
    - [4.1 Primary Metrics](#41-primary-metrics)
    - [4.2 Derived and Presentation Metrics](#42-derived-and-presentation-metrics)
    - [4.3 Accuracy Metric](#43-accuracy-metric)
+   - [4.4 Reporting Basis (Steady-State Window)](#44-reporting-basis-steady-state-window)
 5. [Pareto Collection Methodology](#5-pareto-collection-methodology)
    - [5.1 What Is Measured](#51-what-is-measured)
    - [5.2 Pareto Curve Representation](#52-pareto-curve-representation)
@@ -531,6 +532,20 @@ Each benchmark defines a quality target expressed as a minimum acceptable score 
 
 One accuracy validation run is required per submission (not per measurement point). The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
 
+### 4.4 Reporting Basis (Steady-State Window)
+
+Today a point's metrics ([§4.1](#41-primary-metrics)) are averaged over the whole post-`TEST_STARTED` run, which still includes the load-dependent **ramp-up** (inflates the TTFT tail) and the **drain tail** (deflates throughput) that warmup discard ([§6.3](#63-warmup-period)) does not remove. The **official result is instead computed over the detected steady-state window**, with the whole-run (`total`) metrics kept as supplementary. The window is defined on **issue time** — excluding the drain from the throughput denominator with no end-crop — and the residual ramp is cropped from the data on top of the declared warmup. Detection is a post-processing step over the durable event log (`events.jsonl`, [§4.1](#41-primary-metrics)), off the measured path; methodology and default parameters: [`docs/steady-state-detection.md`](https://github.com/mlcommons/endpoints/blob/main/docs/steady-state-detection.md).
+
+Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total) **and** every gating metric — TTFT and TPOT at p50/p95 — is a **Plateau**, not **Drifting Up**. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix (≈ one dataset pass). Otherwise the point falls back by coverage `status`:
+
+| `status` | Condition | Official result |
+|---|---|---|
+| `windowable` | ≥ 4 super-pass steady window in Plateau | steady-state metrics; `total` supplementary |
+| `insufficient_passes` | ≥ 1 pass but window < 4 super-passes | `total` (steady-state reported low-confidence, not official) |
+| `partial_dataset` | < 1 full dataset pass | `total` only (no steady-state claim) |
+
+A **Drifting Up** metric is reported as drift, never a point estimate. A **staircase** (a first plateau stepping to a later, degraded one) still has a steady state: the first plateau is reported and the later shift is flagged as an **anomaly**. Only `ConcurrencyScheduler` points ([§6.1](#61-load-pattern)) are in scope; `MaxThroughput`/`Poisson` and single-pass agentic workloads are handled only by the ad-hoc diagnostic tool. The minimum run duration ([§6.2](#62-minimum-run-duration)) must be met over the steady window, not wall-clock. **Pending ratification:** whether the floor is raised above 4, and whether a no-steady-state run is declared *invalid* or *reported-with-flags*.
+
 ---
 
 ## 5. Pareto Collection Methodology
@@ -872,6 +887,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 - `runtime_settings`: The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.).
 - `dataset`: Dataset name and any `n_samples_from_dataset` override (if applicable).
 - `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
+- `steady_state`: The reporting block of [§4.4](#44-reporting-basis-steady-state-window) — `status`, `window` (super-pass range and sample count), per-metric `state` (`Plateau` / `Drifting Up` / `Drifting Down`), and `anomaly` (present only on a level shift); `total` metrics reported alongside as supplementary.
 
 ### 8.4 Software Disclosure
 
