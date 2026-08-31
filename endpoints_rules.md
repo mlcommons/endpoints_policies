@@ -869,7 +869,7 @@ Endpoints submissions must include the following metadata:
 
 #### 8.2.1 Template Structure
 
-`systems/<system_desc_id>.json` contains the fields defined in the table above. `node_types` and `accelerator_info` carry no data of their own — they exist to group the per-node and per-accelerator fields.
+`systems/<system_desc_id>.json` contains the fields defined in the table above.
 
 ```json
 {
