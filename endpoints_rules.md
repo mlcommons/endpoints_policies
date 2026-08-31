@@ -534,7 +534,7 @@ One accuracy validation run is required per submission (not per measurement poin
 
 ### 4.4 Reporting Basis (Steady-State Window)
 
-Today a point's metrics ([§4.1](#41-primary-metrics)) are averaged over the whole post-`TEST_STARTED` run, which still includes the load-dependent **ramp-up** (inflates the TTFT tail) and the **drain tail** (deflates throughput) that warmup discard ([§6.3](#63-warmup-period)) does not remove. The **official result is instead computed over the detected steady-state window**, with the whole-run (`total`) metrics kept as supplementary. The window is defined on **issue time** — excluding the drain from the throughput denominator with no end-crop — and the residual ramp is cropped from the data on top of the declared warmup. Detection is a post-processing step over the durable event log (`events.jsonl`, [§4.1](#41-primary-metrics)), off the measured path; methodology and default parameters: [`docs/steady-state-detection.md`](https://github.com/mlcommons/endpoints/blob/main/docs/steady-state-detection.md).
+Until v0.7, a point's metrics ([§4.1](#41-primary-metrics)) were averaged over the whole post-`TEST_STARTED` run, which still included the load-dependent **ramp-up** (inflates the TTFT tail) and the **drain tail** (deflates throughput) that warmup period ([§6.3](#63-warmup-period)) did not remove. For 1.0 and beyond, the **official result is instead computed over the detected steady-state window**, with the whole-run (`total`) metrics kept as supplementary. The window is defined on **issue time** — excluding the drain from the throughput denominator with no end-crop — and the residual ramp is cropped from the data on top of the declared warmup. Detection is a post-processing step over the durable event log (`events.jsonl`, [§4.1](#41-primary-metrics)), off the measured path; methodology and default parameters: [`scripts/steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md).
 
 Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total) **and** every gating metric — TTFT and TPOT at p50/p95 — is a **Plateau**, not **Drifting Up**. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix (≈ one dataset pass). Otherwise the point falls back by coverage `status`:
 
@@ -544,9 +544,19 @@ Steady-state is the official result **only where the condition holds**: the stea
 | `insufficient_passes` | ≥ 1 pass but window < 4 super-passes | `total` (steady-state reported low-confidence, not official) |
 | `partial_dataset` | < 1 full dataset pass | `total` only (no steady-state claim) |
 
-A **Drifting Up** metric is reported as drift, never a point estimate. A **staircase** (a first plateau stepping to a later, degraded one) still has a steady state: the first plateau is reported and the later shift is flagged as an **anomaly**. Only `ConcurrencyScheduler` points ([§6.1](#61-load-pattern)) are in scope; `MaxThroughput`/`Poisson` and single-pass agentic workloads are handled only by the ad-hoc diagnostic tool. The minimum run duration ([§6.2](#62-minimum-run-duration)) must be met over the steady window, not wall-clock. **Pending ratification:** whether the floor is raised above 4, and whether a no-steady-state run is declared *invalid* or *reported-with-flags*.
+Beyond the coverage `status` above (which gates on sample count), a point's official result depends on the **shape** the detector finds over the super-passes. The detector ([`steady_state_diagnostics`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md)) emits one verdict per run:
 
----
+| Detected shape | Verdict | What is reported | Accepted as steady-state? |
+|---|---|---|---|
+| All gated metrics stable across the window | `STEADY STATE` | Steady-state metrics over the window; `total` supplementary | ✅ Yes — the official result |
+| A gated metric keeps **climbing** over the super-passes after the window | `drifting_up` | That metric reported as **drift** (range/slope), never a point estimate; window flagged *local-plateau only* | ⚠️ Reported-with-flags — global steady state questionable |
+| A gated metric trends **down** over the tail | `drifting_down` | Reported as drift, not a point estimate | ⚠️ Reported-with-flags |
+| First plateau steps to a later, materially different plateau (change-point confirmed) | `anomaly` (staircase) | **First** plateau reported as the steady state; later shift flagged as `anomaly` (likely degradation) | ✅ Yes (first plateau); anomaly disclosed |
+| No contiguous run of super-passes is steady enough (drifts throughout, or too short) | `not found` | No steady-state claim; falls back to whole-run `total` | ❌ No — `total` only |
+
+**Scope.** Only `ConcurrencyScheduler` points ([§6.1](#61-load-pattern)) are in scope; `MaxThroughput`/`Poisson` and single-pass agentic workloads are handled only by the ad-hoc diagnostic tool. The minimum run duration ([§6.2](#62-minimum-run-duration)) must be met over the steady window, not wall-clock.
+
+**Pending ratification.** Whether the super-pass floor is raised above 4, and whether a `not found` run is declared *invalid* versus *reported-with-flags* (the ⚠️/❌ rows assume the latter).
 
 ## 5. Pareto Collection Methodology
 
