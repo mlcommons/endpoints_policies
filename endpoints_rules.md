@@ -926,6 +926,71 @@ Endpoints submissions must include the following metadata:
 | `link_config` | Link to full configuration logs for the run (e.g., in GitHub). |
 | `tps_utilization` | reported_system_tps / (max of all reported_system_tps for all runs) |
 
+#### 8.2.1 Template Structure
+
+`systems/<system_desc_id>.json` contains the fields defined in the table above.
+
+```json
+{
+  "division": "",
+  "system_name": "",
+  "shortened_system_name": "",
+  "system_availability_status": "",
+  "system_size": "",
+  "system_node_ensemble_count": 0,
+  "system_node_ensemble_total": 0,
+  "endpoint_url": "",
+  "serving_framework": "",
+  "node_types": [
+    {
+      "system_node_ensemble_id": 0,
+      "number_of_nodes": 0,
+      "host_processor_model_name": "",
+      "host_processors_per_node": 0,
+      "host_processor_core_count": 0,
+      "host_processor_vcpu_count": 0,
+      "host_memory_capacity": "",
+      "host_memory_configuration": "",
+      "accelerator_info": [
+        {
+          "accelerator_model_name": "",
+          "accelerators_per_node": 0,
+          "accelerator_memory_capacity": "",
+          "accelerator_memory_type": "",
+          "accelerator_interconnect": "",
+          "accelerator_host_interconnect": ""
+        }
+      ],
+      "host_network_card_count": "",
+      "host_networking": "",
+      "host_storage_capacity": "",
+      "host_storage_type": "",
+      "other_hardware": "",
+      "cooling": "",
+      "hw_notes": "",
+      "inference_backend": "",
+      "driver": "",
+      "operating_system": "",
+      "filesystem": "",
+      "container_link": "",
+      "other_software_stack": "",
+      "sw_notes": ""
+    }
+  ],
+  "node_config": "",
+  "disaggregated": 0,
+  "expert_parallel": 0,
+  "tensor_parallel": 0,
+  "pipeline_parallel": 0,
+  "data_parallel": 0,
+  "batch": 0,
+  "config_summary": "",
+  "config_summary_notes": "",
+  "link_config": "",
+  "tps_utilization": 0
+}
+```
+
 ### 8.3 Measurement Point YAML
 
 Each measurement point must be accompanied by a YAML configuration file specifying:
