@@ -877,7 +877,6 @@ Endpoints submissions must include the following metadata:
   "system_name": "",
   "shortened_system_name": "",
   "system_availability_status": "",
-  "system_category": "",
   "system_size": "",
   "system_node_ensemble_count": 0,
   "system_node_ensemble_total": 0,
@@ -928,7 +927,8 @@ Endpoints submissions must include the following metadata:
   "batch": 0,
   "config_summary": "",
   "config_summary_notes": "",
-  "link_config": ""
+  "link_config": "",
+  "tps_utilization": 0
 }
 ```
 
