@@ -318,7 +318,7 @@ The assistant-payload token count excludes empty chat-template framing. The refe
 | Chat-template framing / special tokens | Conditional | Payload-specific reasoning and tool-call framing inserted by the official reference chat template is counted; framing present for an empty assistant message is excluded by the baseline subtraction above |
 
 - Because frameworks differ in their internal serialization, the reconstructed assistant message may not be byte-identical to the server's raw generation. Rendering the received structured response with the official reference chat template provides one model-specific, reproducible representation for scoring every submitter.
-- Token-count metrics (System TPS, TPS/User) are derived from this single assistant-payload count. TTFT remains a latency measurement and is not derived from the reconstructed-response token count: it is measured from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in either the visible-output or tool-call category. Reasoning content does not stop the TTFT clock.
+- Token-count metrics (System TPS, TPS/User) are derived from this single assistant-payload count. TTFT remains a latency measurement and is not derived from the reconstructed-response token count: it is measured from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning).
 - Submitters may use any tokenizer internally for output generation or accounting; that output-side choice does not affect scoring. The official output-token count is always produced by the **client-side reference tokenizer applied once to the reconstructed assistant message through the official reference chat template**. No equivalence demonstration or mapping factor is required for an internal output tokenizer. This output-scoring rule does not waive the input tokenization and preprocessing equivalence requirements in [§2.9.2](#292-pre-processing-equivalence).
 
 > [!NOTE]
@@ -524,7 +524,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | Average output tokens per second experienced by a single user. `tps_per_user = system_tps / concurrency`. |
-| Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in either the visible-output or tool-call category. Reasoning content does not stop the TTFT clock. |
+| Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning). |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
 > [!CAUTION]
