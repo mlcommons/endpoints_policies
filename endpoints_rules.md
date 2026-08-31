@@ -880,6 +880,7 @@ Endpoints submissions must include the following metadata:
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
 | `system_name` | Submitter selected string to describe the system under test (SUT). |
 | `shortened_system_name` |  Shortened `system_name` that's at most 20 characters. |
+| `official_system_name` | concatenation of `[Submitter] System_Name` |
 | `system_availability_status` | `Available` , `Preview`, or `RDI` (not available for purchase soon) at submission time. |
 | `system_size` | Number of accelerators per node type, e.g. "72 accelerators + 144 accelerators" for a system comprising two types of nodes with 72 accelerators in the first node type and 144 accelerators in the second node type. |
 | `system_node_ensemble_count` | How many unique combinations of Hardware and Software are part of the SUT. |
