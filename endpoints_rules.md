@@ -553,9 +553,9 @@ Each submission must include a minimum of **7 measurement points**, structured a
 
 | Points | Placement |
 |---|---|
-| 1 mandatory point | One point in the [Low Latency region](#low-latency-region) (concurrency 1–32). |
-| 3 mandatory points | One point in each of the three [Throughput regions](#throughput-regions) (Low Throughput, Medium Throughput, High Throughput). |
-| 3 submitter's-choice points | Any concurrency level in any of the four regions, at the submitter's discretion. |
+| 1 mandatory point | One low-latency point in the [Ultra Low Concurrency region](#low-latency-region) (concurrency 1–32). |
+| 3 mandatory points | One point in each of the three [Concurrency regions](#concurrency-regions) (Low Concurrency, Medium Concurrency, High Concurrency). |
+| 3 submitter's-choice points | Any concurrency level in any of the three "concurrency" regions, at the submitter's discretion. |
 
 #### No Spacing Requirements
 
@@ -563,16 +563,16 @@ There is no requirement to space points evenly within or across regions. Submitt
 
 #### Submitter's-Choice Points
 
-The 3 submitter's-choice points may be placed in any of the four regions, including regions that already have a required point. For example, a submitter could place all 3 additional points in the High Throughput region to demonstrate scaling behavior, or distribute them to show overall consistency.
+The 3 submitter's-choice points may be placed in any of the three "concurrency" regions, including regions that already have a required point. For example, a submitter could place all 3 additional points in the High Concurrency region to demonstrate scaling behavior, or distribute them to show overall consistency.
 
 ### 5.4 Regions of Interest
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** Regions of Interest (ROIs) are named for either latency or throughput, but in both cases they are constrained by concurrency. Please read the methodology carefully before proceeding.
+> Regions of Interest (ROIs) are named for either latency or concurrency, and in both cases they are constrained by concurrency. Please read the methodology carefully before proceeding.
 
 The concurrency space is divided into four regions.
 
-#### Low Latency Region <a id="low-latency-region"></a>
+#### Ultra Low Concurrency Region <a id="low-latency-region"></a>
 
 | Property | Value |
 |---|---|
@@ -585,103 +585,104 @@ The concurrency space is divided into four regions.
 > Submitters are encouraged — but not required — to include a measurement at concurrency 1 (the single-user baseline) as their Low Latency point. Concurrency 1 represents the best-case per-user experience and is commonly cited in performance comparisons, but any concurrency level in the 1–32 range satisfies the region requirement.
 
 > [!WARNING]
-> **[Subject to WG Review]** — The bounds of the Low Latency region (currently 1–32) are not final and may be adjusted by the working group in a future revision of these rules.
+> The bounds of the Ultra Low Concurrency region (currently 1–32) are final for Endpoints v1.0, but they may be adjusted by the working group in a future version of these rules.
 
 #### Maximum Supported Concurrency
 
-Before the throughput regions can be defined, the submitter must declare a **Maximum Supported Concurrency** value `M`. This is the highest concurrency level at which the submitter chooses to benchmark their system.
+The concurrency regions are defined using the **minimum concurrency** value $C_{min}$ (ideally corresponds to the best interactivity on the system) and a **maximum supported concurrency** value $C_{max}$ (this is the highest concurrency level at which the submitter chooses to benchmark their system).
 
 Rules:
 
-- `M` must be greater than 32 (otherwise no throughput regions can be defined).
-- There is no compliance test to force a particular value of `M`.
-- Submitters are incentivized to choose well: `M` defines the extent of their published pareto curve. Declaring too low a value leaves performance on the table; declaring too high a value may produce degraded per-user metrics at the high end.
-- The declared `M` defines the upper bound of the High Throughput region.
+- $C_{min}$ is derived from the submission points, and $C_{max}$ defines the upper bound of the High Throughput region.
+- $C_{max}$ >> $C_{min}$.
+- There is no compliance test to force a particular value of $C_{max}$.
+- Submitters are incentivized to choose well: $C_{max}$ defines the extent of their published pareto curve, while $C_{min}$ should produce best case interactivity.
+- The value of $C_{max}$ defines the upper bound of the High Concurrency region.
 
-#### Throughput Regions <a id="throughput-regions"></a>
+#### Concurrency Regions <a id="concurrency-regions"></a>
 
-Beyond the Low Latency region (concurrency > 32), the remaining concurrency space up to `M` is divided into **three equal regions in logarithmic space (base 2)**.
+Beyond the Ultra Low Concurrency region (concurrency > $C_{min}$), the remaining concurrency space up to $C_{max}$ is divided into **three equal regions in logarithmic space (base 2)**.
 
 **Region Boundary Computation**
 
-Given a declared Maximum Supported Concurrency `M`, the log-space interval `I` is:
+Given a declared Maximum Supported Concurrency $C_{max}$, the log-space interval `I` is:
 
 ```
-I = log2(M - 32) / 3
+I = log2(C_max - C_min) / 3
 ```
 
-The three throughput regions are:
+The three concurrency regions are:
 
 | Region | Start | End |
 |---|---|---|
-| Low Throughput | 33 | `round(32 + 2^I)` |
-| Medium Throughput | `low_tput_end + 1` | `round(32 + 2^(2*I))` |
-| High Throughput | `med_tput_end + 1` | `M` |
+| Low Concurrency | $C_{min}+1$ | $round(C_{min} + 2^{I})$ |
+| Medium Concurrency | `low_conc_end + 1` | $round(C_{min} + 2^{2I})$ |
+| High Concurrency | `med_conc_end + 1` | $C_{max}$ |
 
 All non-integer boundaries are rounded to the nearest integer using **round-half-to-even (banker's rounding)**, consistent with Python's built-in `round()` function used in the reference implementation.
 
 > **Why logarithmic spacing?** Logarithmic spacing reflects how system behavior changes: the difference between concurrency 1 and 10 is far more significant than between 1000 and 1010. Log-space division ensures each region represents a similarly meaningful range of behavioral change, regardless of absolute concurrency scale.
 
-**High Throughput Margin**
+**High Concurrency Margin**
 
-The High Throughput region has a **10% margin** beyond `M`, extending the valid upper bound to `ceil(M * 1.10)`.
+The High Concurrency region has a **10% margin** beyond $C_{max}$, extending the valid upper bound to $ceil(1.10 * C_{max})$.
 
-This margin allows submitters to add points above their initial `M` during the post-submission update window (see [Submission Rules §8.1](endpoints_submission_rules.md#81-pareto-updates)) without requiring a complete redefinition of region boundaries. The margin does not affect the required point distribution.
+This margin allows submitters to add points above their initial $C_{max}$ during the post-submission update window (see [Submission Rules §8.1](endpoints_submission_rules.md#81-pareto-updates)) without requiring a complete redefinition of region boundaries. The margin does not affect the required point distribution.
 
 **Worked Examples**
 
 <details>
-<summary><strong>Example A — Large-Scale System (M = 8,192)</strong></summary>
+<summary><strong>Example A — Large-Scale System ($C_{min} = 32$; $C_{max} = 8,192$)</strong></summary>
 
 ```
 I = log2(8192 - 32) / 3 = log2(8160) / 3 = 12.994 / 3 = 4.331
 
 Region boundaries:
-  Low Latency:      concurrency    1 –   32  (fixed)
-  Low Throughput:   concurrency   33 –   52  (round(32 + 2^4.331) = round(32 + 20.1) = 52)
-  Med Throughput:   concurrency   53 –  437  (round(32 + 2^8.663) = round(32 + 405.2) = 437)
-  High Throughput:  concurrency  438 – 8192
+  Low Latency point:        concurrency    32
+  Low Concurrency:    concurrency   33 –   52  (round(32 + 2^4.331) = round(32 + 20.1) = 52)
+  Med Concurrency:    concurrency   53 –  437  (round(32 + 2^8.663) = round(32 + 405.2) = 437)
+  High Concurrency:   concurrency  438 – 8192
 
-Minimum 7-point example: {16, 40, 200, 2000, 500, 1000, 4096}
+Minimum 7-point example: {32, 40, 200, 500, 1000, 2000, 4096}
 ```
 </details>
 
 <details>
-<summary><strong>Example B — Smaller System (M = 256)</strong></summary>
+<summary><strong>Example B — Smaller System ($C_{min} = 1$; $C_{max} = 256$)</strong></summary>
 
 ```
-I = log2(256 - 32) / 3 = log2(224) / 3 = 7.807 / 3 = 2.602
+I = log2(256 - 1) / 3 = log2(255) / 3 = 7.994 / 3 = 2.665
 
 Region boundaries:
-  Low Latency:     concurrency  1 –  32  (fixed)
-  Low Throughput:  concurrency 33 –  38  (round(32 + 2^2.602) = round(32 + 6.1) = 38)
-  Med Throughput:  concurrency 39 –  69  (round(32 + 2^5.204) = round(32 + 36.9) = 69)
-  High Throughput: concurrency 70 – 256
+  Low Latency point:       concurrency  1
+  Low Concurrency:   concurrency 2 –  7  (round(1 + 2^2.665) = round(1 + 6.34) = 7)
+  Med Concurrency:   concurrency 8 –  41  (round(1 + 2^5.33) = round(1 + 40.21) = 41)
+  High Concurrency:  concurrency 42 – 256
 
-Minimum 7-point example: {16, 36, 55, 150, 80, 110, 200}
+Minimum 7-point example: {1, 4, 16, 32, 64, 128, 256}
 ```
 </details>
 
 <details>
-<summary><strong>Example C — Mid-Range System (M = 1,024)</strong></summary>
+<summary><strong>Example C — Mid-Range System ($C_{min} = 16$; $C_{max} = 1,024$)</strong></summary>
 
 ```
-I = log2(1024 - 32) / 3 = log2(992) / 3 = 9.955 / 3 = 3.318
+I = log2(1024 - 16) / 3 = log2(1008) / 3 = 9.977 / 3 = 3.326
 
 Region boundaries:
-  Low Latency:     concurrency   1 –   32  (fixed)
-  Low Throughput:  concurrency  33 –   42  (round(32 + 2^3.318) = round(32 + 10.0) = 42)
-  Med Throughput:  concurrency  43 –  131  (round(32 + 2^6.636) = round(32 + 99.4) = 131)
-  High Throughput: concurrency 132 – 1024
+  Low Latency point:       concurrency   16
+  Low Concurrency:   concurrency  16 –   26  (round(16 + 2^3.326) = round(16 + 10.0) = 26)
+  Med Concurrency:   concurrency  27 –  116  (round(16 + 2^6.652) = round(16 + 100.4) = 116)
+  High Concurrency:  concurrency 117 – 1024
 
-Minimum 7-point example: {16, 38, 88, 512, 256, 768, 1000}
+Minimum 7-point example: {16, 24, 64, 96, 128, 256, 1000}
 ```
 </details>
 
 **Boundary Edge Cases**
 
-- **M ≤ 33:** All three throughput regions collapse to approximately one level each. Submitters with `M ≤ 33` must notify the working group and provide written justification. The working group will review and may request additional information before accepting the submission.
-- **M > 100,000:** The algorithm scales correctly. The Low Throughput region will be narrow while the High Throughput region spans most of the range, reflecting the log-scale nature of concurrency scaling.
+- **$C_{max}$ ≤ 33:** All three concurrency regions collapse to approximately one level each. Submitters with $C_{max} ≤ 33$ must notify the working group and provide written justification. The working group will review and may request additional information before accepting the submission.
+- **$C_{max}$ > 100,000:** The algorithm scales correctly. The Low Concurrency region will be narrow while the High Concurrency region spans most of the range, reflecting the log-scale nature of concurrency scaling.
 - **Region boundary collisions:** If rounding causes two boundaries to be equal, the affected region has zero width and a single valid concurrency level at the boundary value. One point at that level satisfies the region's requirement.
 
 ### 5.5 Region Boundary Reference Algorithm
@@ -689,32 +690,33 @@ Minimum 7-point example: {16, 38, 88, 512, 256, 768, 1000}
 The following pseudocode defines the authoritative computation. Submitters must use the reference implementation in the MLCommons Endpoints repository to compute their boundaries and validate their submitted points.
 
 ```python
-def compute_regions(M: int) -> dict:
-    assert M > 32, "Maximum Supported Concurrency must be > 32"
+def compute_regions(C_max: int, C_min: int) -> dict:
+    assert 1 <= C_min <= 32, "Minimum concurrency must be between 1 and 32 (inclusive)"
+    assert C_max > 32, "Maximum Supported Concurrency must be > 32"
 
-    # Low Latency region (fixed boundaries)
-    low_latency = {"start": 1, "end": 32}
+    # Low Latency point (in Ultra Low Concurrency region)
+    low_latency = {"start": 1, "end": C_min}
 
     # Compute log-space interval
-    I = math.log2(M - 32) / 3
+    I = math.log2(C_max - C_min) / 3
 
-    # Throughput region boundaries (banker's rounding)
-    low_tput_end = round(32 + 2**I)
-    med_tput_end = round(32 + 2**(2 * I))
+    # Concurrency region boundaries (banker's rounding)
+    low_conc_end = round(C_min + 2**I)
+    med_conc_end = round(C_min + 2**(2 * I))
 
-    low_throughput  = {"start": 33,              "end": low_tput_end}
-    med_throughput  = {"start": low_tput_end+1,  "end": med_tput_end}
-    high_throughput = {"start": med_tput_end+1,  "end": M}
+    low_concurrency  = {"start": C_min + 1,              "end": low_conc_end}
+    med_concurrency  = {"start": low_conc_end+1,  "end": med_conc_end}
+    high_concurrency = {"start": med_conc_end+1,  "end": C_max}
 
-    # Extended High Throughput margin (10%)
-    margin_end = math.ceil(M * 1.10)
+    # Extended High Concurrency margin (10%)
+    margin_end = math.ceil(1.10 * C_max)
 
     return {
         "low_latency":      low_latency,
-        "low_throughput":   low_throughput,
-        "med_throughput":   med_throughput,
-        "high_throughput":  high_throughput,
-        "margin":           {"start": M+1, "end": margin_end},
+        "low_concurrency":   low_concurrency,
+        "med_concurrency":   med_concurrency,
+        "high_concurrency":  high_concurrency,
+        "margin":           {"start": C_max+1, "end": margin_end},
     }
 ```
 
@@ -744,10 +746,10 @@ Each measurement point must sustain the target concurrency for a minimum duratio
 
 | Concurrency Region | Minimum Duration (steady state) | Rationale |
 |---|---|---|
-| Low Latency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at low concurrency. |
-| Low Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
-| Medium Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
-| High Throughput | 1200 seconds | Standard duration for statistical confidence at scale. |
+| Ultra Low Concurrency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at ultra low concurrency. |
+| Low Concurrency | 1200 seconds | Standard duration for statistical confidence at scale. |
+| Medium Concurrency | 1200 seconds | Standard duration for statistical confidence at scale. |
+| High Concurrency | 1200 seconds | Standard duration for statistical confidence at scale. |
 
 ### 6.3 Warmup Period
 
@@ -790,10 +792,10 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 
 | Concurrency Region | Minimum Completed Queries | Rationale |
 |---|---|---|
-| Low Latency (1–32) | One pass over the low-latency dataset | Lower count acceptable given longer run duration. |
-| Low Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs. |
-| Medium Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
-| High Throughput | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
+| Ultra Low Concurrency (1–32) | One pass over the Ultra low concurrency dataset | Lower count acceptable given longer run duration. |
+| Low Concurrency | One pass over the dataset | Consistent and comparable accuracy across all runs. |
+| Medium Concurrency | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
+| High Concurrency | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
 
 > [!NOTE]
 > These minimum query counts require statistical validation against required sample sizes for target confidence intervals. Values are subject to adjustment pending working group ratification.
@@ -804,7 +806,7 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 
 - Performance runs use `WithReplacementSampleOrder` (random sampling with replacement from the performance dataset).
 - Accuracy runs use `WithoutReplacementSampleOrder` (each sample exactly once).
-- For Low Latency region runs, a representative subset of the dataset may be used (configured via `n_samples_from_dataset`) to reduce run time, subject to pre-approval by the working group. The subset must be documented and identical across all submitters.
+- For Ultra Low Concurrency region runs, a representative subset of the dataset may be used (configured via `n_samples_from_dataset`) to reduce run time, subject to pre-approval by the working group. The subset must be documented and identical across all submitters.
 - `stream_all_chunks` must be set to `true` for all performance runs to enable accurate per-token timing.
 
 ### 6.6 Accuracy Requirement
@@ -880,7 +882,7 @@ In addition to the standard fields defined in [General Submission Rules §5.7](h
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
 | `publication_status` | `Available`, `Preview`, or `RDI`. |
 | `benchmark_model` | Benchmark model name (must match supported model list). |
-| `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
+| `max_supported_concurrency` | Declared Maximum Supported Concurrency $C_{max}$. |
 | `endpoint_url` | URL or description of the endpoint under test. |
 | `serving_framework` | Inference serving framework and version (e.g., `vLLM 0.4.0`). |
 
@@ -889,7 +891,7 @@ In addition to the standard fields defined in [General Submission Rules §5.7](h
 Each measurement point must be accompanied by a YAML configuration file specifying:
 
 - `concurrency`: The target concurrency level.
-- `region`: The region this point satisfies (`low_latency`, `low_throughput`, `med_throughput`, `high_throughput`, or `submitters_choice`).
+- `region`: The region this point satisfies (`low_latency`, `low_concurrency`, `med_concurrency`, `high_concurrency`, or `submitters_choice`).
 - `runtime_settings`: The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.).
 - `dataset`: Dataset name and any `n_samples_from_dataset` override (if applicable).
 - `warmup`: The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`).
@@ -920,13 +922,13 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
 | **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
 | **Point count** | ≥ 7 total measurement points. | Reject submission. |
-| **Low Latency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
-| **Low Throughput coverage** | ≥ 1 point in the Low Throughput region. | Reject submission. |
-| **Medium Throughput coverage** | ≥ 1 point in the Medium Throughput region. | Reject submission. |
-| **High Throughput coverage** | ≥ 1 point in the High Throughput region. | Reject submission. |
-| **Max concurrency declared** | `M > 32`; declared in `system_desc_id.json`. | Reject submission. |
+| **Ultra Low Concurrency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
+| **Low Concurrency coverage** | ≥ 1 point in the Low Concurrency region. | Reject submission. |
+| **Medium Concurrency coverage** | ≥ 1 point in the Medium Concurrency region. | Reject submission. |
+| **High Concurrency coverage** | ≥ 1 point in the High Concurrency region. | Reject submission. |
+| **Max concurrency declared** | $C_{max} > 32$; declared in `system_desc_id.json`. | Reject submission. |
 | **Point cap** | ≤ 32 total measurement points. | Reject points beyond 32. |
-| **Concurrency in range** | Each point's concurrency falls within a valid region (including the 10% High Throughput margin), computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm). | Flag out-of-range points. |
+| **Concurrency in range** | Each point's concurrency falls within a valid region (including the 10% High Concurrency margin), computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm). | Flag out-of-range points. |
 | **Load pattern** | All points used `ConcurrencyScheduler`. | Reject non-conforming points. |
 | **Run duration** | Each point meets the minimum steady-state duration for its region (see [§6.2](#62-minimum-run-duration)). | Flag non-compliant points. |
 | **Minimum query count** | Each point meets the minimum completed queries for its region (see [§6.4](#64-minimum-completed-queries)). | Flag non-compliant points. |
@@ -1011,18 +1013,28 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 ## Appendix B: Quick-Reference Region Boundary Table
 
-Pre-computed region boundaries for common Maximum Supported Concurrency values using the reference algorithm (Low Latency fixed at 1–32).
+<details>
+<summary><strong>Quick-Reference Region Boundaries by $C_{min}$ and $C_{max}$</strong></summary>
 
-| Max Concurrency (M) | Low Latency | Low Throughput | Medium Throughput | High Throughput | 10% Margin |
+Pre-computed region boundaries for common combinations of Minimum Concurrency ($C_{min}$) and Maximum Supported Concurrency ($C_{max}$) values using the reference algorithm.
+
+| Max Concurrency <br>($C_{max}$) | Min Concurrency <br>($C_{min}$) | Low Concurrency | Medium Concurrency | High Concurrency | 10% Margin |
 |---|---|---|---|---|---|
-| 64 | 1–32 | 33–35 | 36–42 | 43–64 | 65–71 |
-| 128 | 1–32 | 33–37 | 38–53 | 54–128 | 129–141 |
-| 256 | 1–32 | 33–38 | 39–69 | 70–256 | 257–282 |
-| 512 | 1–32 | 33–40 | 41–93 | 94–512 | 513–564 |
-| 1,024 | 1–32 | 33–42 | 43–131 | 132–1,024 | 1,025–1,127 |
-| 2,048 | 1–32 | 33–45 | 46–192 | 193–2,048 | 2,049–2,253 |
-| 4,096 | 1–32 | 33–48 | 49–287 | 288–4,096 | 4,097–4,506 |
-| 8,192 | 1–32 | 33–52 | 53–437 | 438–8,192 | 8,193–9,012 |
-| 16,384 | 1–32 | 33–57 | 58–676 | 677–16,384 | 16,385–18,023 |
+| 64 | 2 | 3–6 | 7–18 | 19–64 | 65–71 |
+| 128 | 2 | 3–7 | 8–27 | 28–128 | 129–141 |
+| 256 | 2 | 3–8 | 9–42 | 43–256 | 257–282 |
+| 256 | 8 | 9–14 | 15–47 | 48–256 | 257–282 |
+| 512 | 8 | 9–16 | 17–71 | 72–512 | 513–564 |
+| 1,024 | 8 | 9–18 | 19–109 | 110–1,024 | 1,025–1,127 |
+| 512 | 16 | 17–24 | 25–79 | 80–512 | 513–564 |
+| 1,024 | 16 | 17–26 | 27–117 | 118–1,024 | 1,025–1,127 |
+| 2,048 | 16 | 17–29 | 30–176 | 177–2,048 | 2,049–2,253 |
+| 1,024 | 32 | 33–42 | 43–131 | 132–1,024 | 1,025–1,127 |
+| 2,048 | 32 | 33–45 | 46–192 | 193–2,048 | 2,049–2,253 |
+| 4,096 | 32 | 33–48 | 49–287 | 288–4,096 | 4,097–4,506 |
+| 8,192 | 32 | 33–52 | 53–437 | 438–8,192 | 8,193–9,012 |
+| 16,384 | 32 | 33–57 | 58–676 | 677–16,384 | 16,385–18,023 |
 
-*All boundaries computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm) with banker's rounding. The Low Latency region has fixed boundaries across all submissions; all other region boundaries are submission-specific and depend on the declared `M`.*
+*All boundaries computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm) with banker's rounding. The Low Latency point is a single point at the declared $C_{min}$ value (in the Ultra Low Concurrency region); all concurrency regions and their boundaries are submission-specific and depend on both $C_{min}$ and $C_{max}$.*
+
+</details>
