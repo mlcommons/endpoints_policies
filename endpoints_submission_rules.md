@@ -26,6 +26,8 @@
    - [4.2 Publication Cohorts and Embargo](#42-publication-cohorts-and-embargo)
    - [4.3 Submission-to-Publication Alignment](#43-submission-to-publication-alignment)
    - [4.4 Benchmark Roadmap](#44-benchmark-roadmap)
+   - [4.5 Review Cycle Example](#45-review-cycle-example)
+   - [4.6 Seed Rotation](#46-seed-rotation)
 5. [Submission](#5-submission)
    - [5.1 Registration](#51-registration)
    - [5.2 How to Submit](#52-how-to-submit)
@@ -214,6 +216,20 @@ The figure below illustrates three representative scenarios for a submission mad
 **Scenario 2 — Objections resolved in peer review:** Automated checks pass on August 12. An objection is filed August 21, responded to August 26, and fully resolved August 28 — before peer review closes on September 2. Early finalization applies; results publish in the **2026-09-C0** cohort.
 
 **Scenario 3 — Provisional publication; objections carry into resolution:** The submitter opts in to provisional publication. Automated checks pass August 12; the "peer review pending" result becomes visible at the **2026-08-C1** cohort (August 19), running in parallel with peer review. An objection filed August 27 carries into the objection resolution window. The objector provides a validation schedule; resolution is confirmed September 9. Results are finalized in the **2026-09-C1** cohort (September 16), at which point the "peer review pending" tag is removed.
+
+### 4.6 Seed Rotation
+
+A **seed set** is the collection of seeds published by MLCommons that control the reference client's sources of run-to-run non-determinism for a cohort. These seeds drive the random number generators the client uses for benchmarking (request-issue / sample order, and the per-query salt). The seed set is an *extensible collection* — additional seeds may be introduced in future versions without changing this rule. This mirrors MLPerf Inference, where MLCommons rotates the LoadGen seeds (`qsl_rng_seed`, `sample_index_rng_seed`, `schedule_rng_seed`) every submission round.
+
+MLCommons refreshes the seed set **once every two publication cohorts**. Its relationship to the cohort has two distinct parts — a window during which a *new* submission may **adopt** a set, and the lifetime for which a submission stays **bound** to the set it adopted. Keeping these separate is what lets a rolling submission keep growing without seed rotation ever cutting it short.
+
+- **Publication and adoption window.** MLCommons publishes a new seed set every two publication cohorts ([§4.2](#42-publication-cohorts-and-embargo)), keyed by the cohort ID (`YYYY-MM-C0` / `YYYY-MM-C1`) in which it is published. Each published seed set is available for **adoption by new submissions for four consecutive cohorts** — its publication cohort and the following three cohorts — and is then dropped from the sets available for adoption. Because refresh occurs every two cohorts and each set remains adoptable for four, **two seed sets are normally available for adoption**. For example, a set published in cohort `N` is adoptable in cohorts `N` through `N+3`; the next set is published in `N+2`, and the first set is dropped when cohort `N+4` begins. The adoption window governs only which set a *new* submission may bind to; it does **not** expire the seed set of a submission already in flight (see *Binding lifetime* below).
+
+- **Binding at first submission.** A submission binds to exactly **one** seed set when it first appears, chosen from the sets in its adoption window. The adopted seed set and the targeted cohort MUST be recorded in the submission ([`endpoints_rules.md` §8.3](endpoints_rules.md#83-measurement-point-yaml)) so a reviewer or auditor can reproduce the run and the seeded-RNG integrity check ([`endpoints_rules.md` §2.1.1](endpoints_rules.md#211-client-on-prem-cop)) can confirm the client used the published seeds without modification.
+
+- **Binding lifetime.** Once a submission binds to a seed set, that set stays valid **for that submission for the full applicable Pareto-update window** ([§8.1](#81-pareto-updates)), even after the set's adoption window has closed and newer sets have been published. Every measurement point added later MUST use the bound seed set. Because the binding is fixed at first submission and does not expire with rotation, seed rotation never forces an in-flight run to be re-executed, an embargo of up to 60 days ([§4.2](#42-publication-cohorts-and-embargo)) never invalidates a submission, and changing the length of the Pareto-update window does not change seed-set adoption or binding. A *new* submission (as distinct from an update to an existing one) must always adopt a set within its current adoption window — an expired set may not be adopted afresh — but that set remains valid for every submission already bound to it.
+
+- **Comparability.** All submissions bound to the same seed set are directly comparable. Because a submission keeps its seed set for its full update window, two submissions being compared may hold different seed sets; such comparison is permitted on the assumption that seed choice has a negligible effect on measured performance.
 
 ---
 
@@ -703,6 +719,7 @@ Submitters may add additional measurement points to their pareto curve during a 
 Rules for post-submission updates:
 
 - New points must follow the same measurement methodology, run duration, and accuracy requirements as the initial submission.
+- Every new or replacement point MUST use the original submission's bound seed set. The seed set's current eligibility for adoption by new submissions is not reevaluated for an amendment.
 - New points may be at any concurrency level within the defined regions, including the 10% High Throughput margin zone.
 - If a newly submitted point is at the same concurrency level as an existing point, the new result supersedes the old one and becomes the active displayed result. The previous result is not discarded — it is retained in the historical record (see [Versioning and Historical Record](#versioning-and-historical-record) below).
 - The submitter must provide updated YAML configurations and result artifacts for each new point.
