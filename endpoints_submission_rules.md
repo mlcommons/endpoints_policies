@@ -335,16 +335,7 @@ Full content and directory structure requirements are defined in [MLPerf Endpoin
 
 ### 5.6 `system_desc_id.json` Metadata
 
-In addition to the standard fields defined in [General Submission Rules §5.7](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#system_desc_id-json-metadata), Endpoints submissions must include:
-
-| Field | Description |
-|---|---|
-| `division` | One of `Standardized`, `Serviced`, or `RDI`. |
-| `publication_status` | One of `Available`, `Preview`, or `RDI`. |
-| `benchmark_model` | The benchmark model name (e.g., `llama3-70b`). |
-| `max_supported_concurrency` | The declared Maximum Supported Concurrency `M`. |
-| `endpoint_url` | URL or description of the inference endpoint under test. |
-| `serving_framework` | Inference serving framework and version (e.g., `vLLM 0.4.0`). |
+The complete list of fields is defined in [MLPerf Endpoints Rules §8.2](endpoints_rules.md#82-system-description-system_desc_idjson), which is the canonical source.
 
 ### 5.7 Logging Requirements
 
