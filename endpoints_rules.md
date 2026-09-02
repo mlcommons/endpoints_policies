@@ -296,15 +296,34 @@ Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf En
 
 Tokenizers can produce different token counts depending on how text is fed to them — the same output text tokenized as a single string versus tokenized as a sequence of streamed chunks can yield different counts, even with the same tokenizer. To ensure consistent and representative measurement across divisions:
 
-- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its canonical Hugging Face repository — produces the canonical token count for the system under measurement. All token-count metrics (`system_tps`, `tps_per_user`, etc.) are computed from the reference tokenizer applied to the coalesced output, not from any tokenizer used internally by the SUT.
-- **Token counts are obtained by applying the reference tokenizer once to the entire coalesced output** — the full response text reassembled from the submission, tokenized as a single string. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
+- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its canonical Hugging Face repository — produces the canonical token count for the system under measurement. All token-count metrics (`system_tps`, `tps_per_user`, etc.) are computed from the reference tokenizer applied to the fully reconstructed assistant response through the benchmark model's official reference chat template, not from any tokenizer used internally by the SUT.
+- **Token counts are obtained by applying the reference tokenizer once per completed assistant response.** Visible-output and reasoning fragments are reassembled in arrival order, while tool-call fragments are reassembled by tool-call list index as defined below. The reconstructed visible output, reasoning, and structured tool calls are supplied together as one assistant message to the official reference chat template and tokenized once. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
   - *Fairness:* every submitter is scored against the same tokenizer applied the same way, independent of how their system batches, chunks, or streams during generation.
-  - *Representativeness:* this measures the tokens the user perceives in the final response, rather than implementation artifacts of streamed token boundaries that can differ across submitters.
-- Token-count metrics (System TPS, TPS/User) are derived from these coalesced-output counts. TTFT remains a latency measurement (time to receipt of the first output token from the submission, per §5) and is not derived from coalesced counts.
-- Submitters using alternative tokenizers must demonstrate equivalence to — or report mapping factors against — the reference tokenizer applied to the coalesced output.
+  - *Representativeness:* this measures the benchmark model's canonical representation of the completed assistant response, rather than implementation artifacts of streamed token boundaries that can produce different token counts across submitters.
+
+**Input sequence length (ISL).** For each request, the reference client first applies all benchmark-required input preprocessing, including request construction, salting where required, and the benchmark model's official reference chat template. The fully preprocessed input is then tokenized with the reference tokenizer using the generation-prompt and special-token behavior defined by the reference implementation. If the reference implementation truncates the tokenized input, ISL is the length after that truncation. This sequence replicates the input tokenization expected on the server side; special tokens inserted by the reference chat template are included in ISL. Where model-equivalence rules apply, a submitter may use a different implementation only if it produces the same effective prompt and token IDs. The generated benchmark report includes ISL statistics computed from these per-request values.
+
+**Response categories and what is counted.** A model response can carry three kinds of content — user-visible **output**, **tool-call** content, and **reasoning** (thinking) traces. Serving frameworks convert the raw generation into structured OpenAI chat-completion objects received by the reference client. For visible output and reasoning, the client concatenates all text fragments in arrival order. Tool calls are reassembled into structured objects by list index as described below. The client supplies all three reconstructed fields together as one assistant message to the benchmark model's official reference chat template and tokenizes the rendered message once.
+
+Category assignment is mutually exclusive: the reference client MUST assign each received text fragment to exactly one response field, and a fragment MUST NOT contribute more than once to the reconstructed assistant message. Deliberately duplicating substantially identical content across fields, or adding padding content to any field, for the purpose of increasing reported token counts is prohibited and invalidates the affected measurement point.
+
+For parallel tool calls, the client maintains a list keyed by the tool-call index supplied by the response protocol. Function-argument fragments are appended in arrival order within their corresponding index; the protocol-provided call ID, type, and function name are retained. After the response completes, the structured tool calls are ordered by ascending list index. If `function.arguments` is a JSON string encoding an object, the client parses it to that object for the reference chat template; otherwise, it preserves the received value. If the transport provides separate streams for parallel tool calls, each stream is reassembled independently before the completed calls are ordered. The resulting structured tool-call list is supplied, together with assistant visible output and reasoning, to the official reference chat template.
+
+The assistant-payload token count excludes empty chat-template framing. The reference client renders and tokenizes both (a) a minimal reference conversation containing an empty user message followed by the reconstructed assistant response and (b) the same conversation with an empty assistant message. The official output-token count is `max(0, count(a) - count(b))`. Both renders use `add_generation_prompt = false`. Tokens introduced specifically to represent the reconstructed assistant payload, including model-defined reasoning or tool-call framing, are counted; framing already present for an empty assistant message is not.
+
+| Content category | Counted? | How it is measured |
+|---|---|---|
+| Visible output | Yes | Text fragments concatenated in arrival order and supplied as assistant `content` |
+| Tool-call content | Yes | Fragments reassembled into structured calls, ordered by ascending tool-call index, and supplied as assistant `tool_calls` |
+| Reasoning / thinking | Yes | Text fragments concatenated in arrival order and supplied as the assistant reasoning field expected by the reference chat template |
+| Chat-template framing / special tokens | Conditional | Payload-specific reasoning and tool-call framing inserted by the official reference chat template is counted; framing present for an empty assistant message is excluded by the baseline subtraction above |
+
+- Because frameworks differ in their internal serialization, the reconstructed assistant message may not be byte-identical to the server's raw generation. Rendering the received structured response with the official reference chat template provides one model-specific, reproducible representation for scoring every submitter.
+- Token-count metrics (System TPS, TPS/User) are derived from this single assistant-payload count. TTFT remains a latency measurement and is not derived from the reconstructed-response token count: it is measured from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning).
+- Submitters may use any tokenizer internally for output generation or accounting; that output-side choice does not affect scoring. The official output-token count is always produced by the **client-side reference tokenizer applied once to the reconstructed assistant message through the official reference chat template**. No equivalence demonstration or mapping factor is required for an internal output tokenizer. This output-scoring rule does not waive the input tokenization and preprocessing equivalence requirements in [§2.9.2](#292-pre-processing-equivalence).
 
 > [!NOTE]
-> **[WIP]** — Edge-case handling (e.g., partial Unicode at chunk boundaries, special-token treatment, alternative-tokenizer equivalence criteria, and the definition of "coalesced output" for multi-turn or tool-use responses) is under development by the working group.
+> **[WIP]** — One edge case remains under working-group development: partial Unicode at chunk boundaries.
 
 ---
 
@@ -456,7 +475,7 @@ A: No. Returning a cached response verbatim to a request that matches a previous
 The salt is itself part of the submission's **bound seed set** ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)), so it changes when MLCommons refreshes the seed set every two cohorts.
 
 **Q5: Is iteration coalescing — the server returning multiple generated tokens in a single network message — allowed?**
-A: *Open question.* See [Appendix A](#appendix-a-open-questions-and-working-group-items); the WG is discussing this in the context of Client-over-Network (CoN) scenarios. Until resolved, submitters must disclose any token-coalescing behavior and conservatively assume `stream_all_chunks = true` semantics. Token-count metrics use the reference tokenizer applied to the coalesced output (see [§2.8 Tokenizer Rules](#28-tokenizer-rules)).
+A: *Open question.* See [Appendix A](#appendix-a-open-questions-and-working-group-items); the WG is discussing this in the context of Client-over-Network (CoN) scenarios. Until resolved, submitters must disclose any token-coalescing behavior and conservatively assume `stream_all_chunks = true` semantics. Token-count metrics reconstruct the completed assistant response, including parallel tool calls ordered by tool-call list index, and apply the official reference chat template and tokenizer once (see [§2.8 Tokenizer Rules](#28-tokenizer-rules)).
 
 **Q6: Is PTQ allowed on the speculative-decoding drafter?**
 A: Yes. The drafter weights MAY be post-training quantized using the same rules as the canonical model ([§2.9.3 Model Weight Rules](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, must be disclosed, must pass the accuracy gate. The drafter remains *frozen* in every other training-side sense ([§2.9.4](#294-speculative-decoding)) — no fine-tuning, no RLHF, no continued pre-training, no swap for a custom-trained model.
@@ -507,8 +526,11 @@ Each measurement point on the pareto curve captures the following metrics at a s
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | Average output tokens per second experienced by a single user. `tps_per_user = system_tps / concurrency`. |
-| Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time, in milliseconds, from query issuance to receipt of the first output token. |
+| Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning). |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
+
+> [!NOTE]
+> **Genuine first token.** TTFT is triggered by the first non-empty fragment (`len(s) > 0`). Emitting whitespace, control characters, punctuation, or other meaningless leading content solely to stop the TTFT clock — rather than as a genuine part of the model response — is not allowed.
 
 > [!NOTE]
 > **TTFT percentiles under discussion.** The WG has agreed to use **P95** for the publication plot and as the primary TTFT metric in v0.7. Additional TTFT percentiles (e.g., P50, P99) are under discussion and may be added as a **secondary metrics** table in a later version. Until then, only `ttft_p95_ms` is required to be reported per measurement point; submitters MAY voluntarily report additional percentiles in their submission YAML, but they will not appear on the publication chart for v0.7.
@@ -851,7 +873,7 @@ An Endpoints submission must follow this directory structure:
               └── <benchmark_model>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
                   └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
                       ├── point.yaml              # §8.3 — includes shared_src / shared_docs pointers
-                      ├── result_summary.json     # aggregate metrics (QPS, TPS, TTFT, TPOT, %iles)
+                      ├── result_summary.json     # aggregate metrics (QPS, TPS, TTFT, TPOT, ISL, %iles)
                       ├── accuracy_results.json   # §6.6
                       ├── run_metadata.json       # framework/parallelism/precision for this point
                       └── server_configs/         # OPTIONAL, point-specific: backend configs tuned
@@ -867,9 +889,9 @@ per-measurement-point:
   instantiation, endpoint setup, client harness) and documentation are not duplicated per Pareto
   point. A submitter that needs different code or documentation for different systems or models adds
   another `src/<implementation_id>/` or a subdirectory under `docs/` rather than duplicating the tree.
-- **Point-specific content** is only what varies with concurrency level: `point.yaml`, the result and
-  metadata JSON files, and the optional `server_configs/`. Adding, replacing, or withdrawing a Pareto
-  point must not require any change under `src/` or `docs/`.
+- **Point-specific content** is only what varies with concurrency level: `point.yaml`, the result and metadata
+  JSON files, and the optional `server_configs/`. Adding, replacing, or withdrawing a Pareto point must not
+  require any change under `src/` or `docs/`.
 
 Each point declares which shared content it used via the `shared_src` and `shared_docs` pointers in
 its `point.yaml` (see [§8.3](#83-measurement-point-yaml)). A point whose pointers are missing or do
@@ -950,6 +972,8 @@ Human reviewers should focus on aspects that automation cannot easily verify:
 
 - Whether the pareto curve shape is physically plausible (throughput should generally increase with concurrency up to saturation, then plateau or decrease).
 - Whether metric distributions suggest artificial manipulation (e.g., suspiciously uniform TTFT values across very different concurrency levels).
+- Whether TTFT-triggering fragments are genuine parts of the model response rather than meaningless leading content emitted to stop the TTFT clock.
+- Whether content is duplicated across assistant-response fields or padded to inflate the official output-token count.
 - Whether warmup requests drew on any sample from the performance dataset (prohibited under [§6.3.1](#631-prohibited-warmup-data)); reviewers may cross-check retained warmup logs against the performance dataset.
 - Whether the system description accurately reflects the hardware and software used.
 - Cross-submission consistency for the same hardware platform.
@@ -995,24 +1019,24 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 **Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values, and the [§6.3](#63-warmup-period) warmup model — submitter discretion plus mandatory disclosure, in place of a fixed warmup duration — is itself pending ratification. All constraints in that section are pending working group ratification based on empirical validation data.
 
-### \[TOK-COUNT\] Coalesced-Output Tokenization and Reported Throughput
+### \[TOK-COUNT\] Reference-Chat-Template Tokenization and Reported Throughput
 
-**Question:** The reference-tokenizer-on-coalesced-output rule ([§2.8 Tokenizer Rules](#28-tokenizer-rules)) produces token counts that may be ~10–20% lower than what individual serving stacks report as "tokens/second" internally. Have MLC stakeholders and submitter organizations agreed that the published metric will be the coalesced-tokenizer count and not the serving-stack-reported count?
+**Question:** The reference-chat-template tokenization rule ([§2.8 Tokenizer Rules](#28-tokenizer-rules)) may produce token counts that differ from what individual serving stacks report as "tokens/second" internally. Have MLC stakeholders and submitter organizations agreed that the published metric will use the client-side reference count and not the serving-stack-reported count?
 
-**Context:** Resolution is needed before v0.7 publishes side-by-side comparison charts. The current §2.8 wording (apply reference tokenizer once to the coalesced output) is the proposed rule; the open question is whether stakeholders accept that the published numbers will differ from internal serving-stack-reported numbers by the expected 10–20% margin.
+**Context:** Resolution is needed before v1.0 publishes side-by-side comparison charts. The current §2.8 wording—coalesce visible output and reasoning in arrival order, reassemble parallel tool calls by list index, render the complete structured assistant message with the official reference chat template, subtract empty assistant framing, and tokenize once—is the proposed rule. The open question is whether stakeholders accept that the published numbers may differ from internal serving-stack-reported numbers.
 
 ### Division and Scenario Open Items
 
 | Item | Current Proposal | Status |
 |---|---|---|
 | Allowed techniques for Standardized CoN | Framework defined, details TBD | TBD |
-| Tokenizer equivalence rules | Reference tokenizer as canonical; alternative tokenizers must show equivalence on coalesced output | Proposed |
+| Output-tokenizer scoring rules | Client-side reference tokenizer is canonical for official output counts; internal serving tokenizers do not require equivalence or mapping factors for output scoring | Proposed |
 | Serviced division audit procedures | Required, details TBD | TBD |
 | Caching rules for Serviced division | Not allowed across queries | Proposed |
 | Response stream modification rules | Not allowed outside reference API | Proposed |
 | Future division for new models/datasets | To be determined by WG | TBD |
 | Fabric vs. bus restrictions (Standardized CoN) | Not imposed (borrowed from Network Division) | Proposed |
-| Batch/chunk tokenizer variability | Apply reference tokenizer once to the entire coalesced output (not per-chunk) for all token-count metrics | Proposed |
+| Batch/chunk tokenizer variability | Reconstruct the complete structured assistant response, render it with the official reference chat template, exclude empty assistant framing, and apply the reference tokenizer once | Proposed |
 
 ---
 
