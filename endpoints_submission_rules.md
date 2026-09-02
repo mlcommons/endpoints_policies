@@ -19,6 +19,7 @@
    - [2.3 Reviewer Obligations](#23-reviewer-obligations)
    - [2.4 Conflict of Interest](#24-conflict-of-interest)
    - [2.5 Confidential and Not Precedent Setting](#25-confidential-and-not-precedent-setting)
+   - [2.6 Peer Review Process](#26-peer-review-process)
 3. [Operating Principles](#3-operating-principles)
 4. [Schedule](#4-schedule)
    - [4.0 Submission Milestones](#40-submission-milestones)
@@ -26,6 +27,8 @@
    - [4.2 Publication Cohorts and Embargo](#42-publication-cohorts-and-embargo)
    - [4.3 Submission-to-Publication Alignment](#43-submission-to-publication-alignment)
    - [4.4 Benchmark Roadmap](#44-benchmark-roadmap)
+   - [4.5 Review Cycle Example](#45-review-cycle-example)
+   - [4.6 Seed Rotation](#46-seed-rotation)
 5. [Submission](#5-submission)
    - [5.1 Registration](#51-registration)
    - [5.2 How to Submit](#52-how-to-submit)
@@ -67,6 +70,8 @@
    - [9.4 Appeal](#94-appeal)
    - [9.5 Status](#95-status)
 10. [Audit Process](#10-audit-process)
+    - [10.1 Audit Nomination on Reproducibility Grounds](#101-audit-nomination-on-reproducibility-grounds)
+    - [10.2 Audit Votes](#102-audit-votes)
 11. [Appendices](#11-appendices)
 
 ---
@@ -115,10 +120,11 @@ Responsibilities of the chair and co-chair include:
 - Calling review committee meetings when disputes escalate (see [§9 Dispute Resolution](#9-dispute-resolution)).
 - Certifying that submissions have completed the review process.
 - Recusing themselves from review of their own organization's submissions (if applicable).
+- Overseeing peer review assignment (see [§2.6](#26-peer-review-process)).
 
 ### 2.3 Reviewer Obligations
 
-Review committee members are expected to participate in peer review of submissions within their area of expertise. There is no mandatory minimum number of reviews per member, but the committee is collectively responsible for ensuring all submissions receive adequate scrutiny within the review window.
+Review committee members are expected to participate in peer review of submissions within their area of expertise. Beyond the assigned reviews defined in [§2.6](#26-peer-review-process), there is no mandatory minimum number of reviews per member, but the committee is collectively responsible for ensuring all submissions receive adequate scrutiny within the review window.
 
 ### 2.4 Conflict of Interest
 
@@ -128,9 +134,52 @@ For clarity: being a competitor is not a conflict of interest. The peer review m
 
 Submitters or other review committee members may raise conflict of interest concerns about a reviewer at any time during the review process. The review chair will evaluate the concern and determine whether recusal is warranted.
 
+#### Neutral Members
+
+Several processes in these rules are staffed by **neutral members**: the dispute resolution panel ([§9.2](#92-escalation-path)), the objection review panel ([§8.5](#85-issues-discovered-after-publication)), and audit-nomination screening ([§10.1](#101-audit-nomination-on-reproducibility-grounds)).
+
+A neutral member is a person with **minimal conflict of interest in the matter at hand**, assessed against the criteria above: no direct financial interest in its outcome, no employment or equivalent relationship with either party, and no involvement in preparing or reviewing the submission in question. Consistent with the paragraph above, ordinary competitive relationships and CSP/OEM/ODM partnerships do **not** disqualify a person from serving as a neutral member.
+
+Neutral members **need not be members of the review committee**, and need not belong to the MLPerf Endpoints working group. Where the committee cannot supply enough conflict-free members — because the parties to a dispute between them account for much of the committee, or because the subject matter is narrow — the review chair may appoint neutrals from outside it.
+
+Neutral members **should** have practical experience with AI benchmarking and with MLPerf in particular: familiarity with submission and review practice, with the divisions and publication status categories, and with the measurement methodology. This is a preference rather than a requirement. Where the two cannot both be satisfied, freedom from conflict takes precedence over subject-matter experience.
+
+The review chair records the basis on which each neutral member was selected, in the submission's issue thread or in the dispute record. Either party may raise a conflict of interest concern about a proposed neutral member, which the chair evaluates as above.
+
 ### 2.5 Confidential and Not Precedent Setting
 
 *Inherits from [General Submission Rules §2.4](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#confidential-and-not-precedent-setting) without modification.*
+
+### 2.6 Peer Review Process
+
+Ensuring all submissions are rigorously evaluated and adhere to the rules and policies of MLPerf is critical to maintaining the integrity of MLPerf. Any member of the review committee is entitled to conduct peer review of any submission and to verify that it meets the requirements of the MLPerf Endpoints policy documents. To ensure that every submission is reviewed by at least one member, each new submission is additionally assigned a designated reviewer. Subsequent updates to the pareto ([§8.1](#81-pareto-updates)) are evaluated by the same assigned reviewer.
+
+An assigned review must be completed before the close of the peer review window (end of Week 3; see [§6.3](#63-peer-review-weeks-13)). Assigned reviews are the one exception to [§2.3](#23-reviewer-obligations): members carry no minimum review quota, but an assignment once received must be completed.
+
+#### Reviewer Assignment
+
+- The submission CLI randomly selects a reviewer from the eligible pool when the submission is received, before the peer review period begins. The review chairs oversee assignment and may override it as described below.
+- The submitting organization is excluded from the pool for its own submissions, per [§2.4 Conflict of Interest](#24-conflict-of-interest).
+- Once a member has been assigned a review, they are removed from the selection pool until every other member of the pool has completed at least one assigned review. A member may opt back into the pool earlier, once their current assignment is complete. If the rotation cannot advance because assignments remain outstanding, the review chairs may reset it.
+- Review chairs may reassign a review if the assigned reviewer recuses themselves, or if the chairs determine the reviewer lacks the resources or experience to review the particular submission.
+- Review chairs may request a member to review more than one submission, depending on the member's availability.
+
+#### Failure to Complete an Assigned Review
+
+An organization that does not complete an assigned review by the close of the peer review window is removed from the review committee. It becomes eligible for committee membership again once it has a newly finalized MLPerf Endpoints result — a published result no longer carrying the "peer review pending" tag, per the participation definition in [§2.1](#21-structure).
+
+#### Scope of Review
+
+A peer review should cover, at minimum:
+
+- Whether the results are within the expected and reasonable range for the hardware and software used.
+- Whether the reproducibility instructions are clear and easy to follow.
+- The benchmark methodology.
+- The content of the JSON files in the `systems` directory.
+
+Reviewers should open a GitHub issue for any problem they find or any question they have, per [§6.7 Filing Objections](#67-filing-objections). Where a submission contains more results than a reviewer can cover, they should focus on the subset they can handle, prioritizing high-performing results and those that compete against other submissions. This list is not exhaustive — any other issue noticed in a submission should be raised the same way.
+
+Reproducing results is not required. Where a reviewer does attempt reproduction, inconsistencies are assessed against the margins defined in [§6.6 Reproducibility Expectations](#reproducibility-expectations).
 
 ---
 
@@ -214,6 +263,20 @@ The figure below illustrates three representative scenarios for a submission mad
 **Scenario 2 — Objections resolved in peer review:** Automated checks pass on August 12. An objection is filed August 21, responded to August 26, and fully resolved August 28 — before peer review closes on September 2. Early finalization applies; results publish in the **2026-09-C0** cohort.
 
 **Scenario 3 — Provisional publication; objections carry into resolution:** The submitter opts in to provisional publication. Automated checks pass August 12; the "peer review pending" result becomes visible at the **2026-08-C1** cohort (August 19), running in parallel with peer review. An objection filed August 27 carries into the objection resolution window. The objector provides a validation schedule; resolution is confirmed September 9. Results are finalized in the **2026-09-C1** cohort (September 16), at which point the "peer review pending" tag is removed.
+
+### 4.6 Seed Rotation
+
+A **seed set** is the collection of seeds published by MLCommons that control the reference client's sources of run-to-run non-determinism for a cohort. These seeds drive the random number generators the client uses for benchmarking (request-issue / sample order, and the per-query salt). The seed set is an *extensible collection* — additional seeds may be introduced in future versions without changing this rule. This mirrors MLPerf Inference, where MLCommons rotates the LoadGen seeds (`qsl_rng_seed`, `sample_index_rng_seed`, `schedule_rng_seed`) every submission round.
+
+MLCommons refreshes the seed set **once every two publication cohorts**. Its relationship to the cohort has two distinct parts — a window during which a *new* submission may **adopt** a set, and the lifetime for which a submission stays **bound** to the set it adopted. Keeping these separate is what lets a rolling submission keep growing without seed rotation ever cutting it short.
+
+- **Publication and adoption window.** MLCommons publishes a new seed set every two publication cohorts ([§4.2](#42-publication-cohorts-and-embargo)), keyed by the cohort ID (`YYYY-MM-C0` / `YYYY-MM-C1`) in which it is published. Each published seed set is available for **adoption by new submissions for four consecutive cohorts** — its publication cohort and the following three cohorts — and is then dropped from the sets available for adoption. Because refresh occurs every two cohorts and each set remains adoptable for four, **two seed sets are normally available for adoption**. For example, a set published in cohort `N` is adoptable in cohorts `N` through `N+3`; the next set is published in `N+2`, and the first set is dropped when cohort `N+4` begins. The adoption window governs only which set a *new* submission may bind to; it does **not** expire the seed set of a submission already in flight (see *Binding lifetime* below).
+
+- **Binding at first submission.** A submission binds to exactly **one** seed set when it first appears, chosen from the sets in its adoption window. The adopted seed set and the targeted cohort MUST be recorded in the submission ([`endpoints_rules.md` §8.3](endpoints_rules.md#83-measurement-point-yaml)) so a reviewer or auditor can reproduce the run and the seeded-RNG integrity check ([`endpoints_rules.md` §2.1.1](endpoints_rules.md#211-client-on-prem-cop)) can confirm the client used the published seeds without modification.
+
+- **Binding lifetime.** Once a submission binds to a seed set, that set stays valid **for that submission for the full applicable Pareto-update window** ([§8.1](#81-pareto-updates)), even after the set's adoption window has closed and newer sets have been published. Every measurement point added later MUST use the bound seed set. Because the binding is fixed at first submission and does not expire with rotation, seed rotation never forces an in-flight run to be re-executed, an embargo of up to 60 days ([§4.2](#42-publication-cohorts-and-embargo)) never invalidates a submission, and changing the length of the Pareto-update window does not change seed-set adoption or binding. A *new* submission (as distinct from an update to an existing one) must always adopt a set within its current adoption window — an expired set may not be adopted afresh — but that set remains valid for every submission already bound to it.
+
+- **Comparability.** All submissions bound to the same seed set are directly comparable. Because a submission keeps its seed set for its full update window, two submissions being compared may hold different seed sets; such comparison is permitted on the assumption that seed choice has a negligible effect on measured performance.
 
 ---
 
@@ -367,7 +430,7 @@ An objection is considered resolved when:
 - The objecting party retracts the objection, or
 - The objecting party does not respond within 3 business days of the submitter's resolution response.
 
-Unresolved objections at the end of Week 6 are escalated to the dispute resolution process (see [§9](#9-dispute-resolution)).
+Unresolved objections at the end of Week 6 are escalated to the dispute resolution process. Escalation is **automatic**: the review chair certifies which objections remain open and refers them, without requiring a motion from either party. A submission with an escalated objection does not finalize until the dispute concludes. The process and its deadlines are set out in [§9.2](#92-escalation-path).
 
 Once all objections are resolved or retracted, the "peer review pending" tag is removed and the submission's results are finalized.
 
@@ -378,7 +441,8 @@ Once all objections are resolved or retracted, the "peer review pending" tag is 
 | Automated Compliance | Week 0 (up to 1 week; may complete in as little as 1 day) | Automated checks run. Pass → advances to peer review immediately. Fail by end of Week 0 → **rejected**; submitter may resubmit. Results remain confidential by default; provisional publication if submitter opted in (subject to embargo). |
 | Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 cohort at 3 biz days, +2 cohorts at 6, withdrawn at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
 | Objection Resolution | Weeks 4–6 | Open objections must be resolved; same non-response penalty schedule applies; objector has 2 business days to explain insufficiency or provide validation schedule (silence = objection retracted after 3 days); chairs may call meeting if objection is 12+ biz days old or entering Week 5; submission finalized or escalated to dispute resolution. |
-| Late Objections ⚠️ | Post Week 6 | Availability and validity objections only via dispute resolution process. **[WIP — pending WG approval]** |
+| Dispute Resolution | From end of Week 6, ~5 weeks | Escalation is automatic for objections still open at Week 6; the submission does not finalize. Chair certifies and names a panel within 2 business days; written statements within 10; panel convenes within 15; recommendation +5; binding decision +5. One investigation extension. 8-week backstop, after which the chair decides on the record. Appeal within 14 days. |
+| Late Objections ⚠️ | Post Week 6 | Availability, validity, model-equivalence, and division-rule objections only, via the dispute resolution process. Reproducibility is not eligible. **[WIP — pending WG approval]** |
 
 ### 6.6 Late Objections (Post Week 6)
 
@@ -389,19 +453,69 @@ After Week 6, late objections may be raised only on the following grounds:
 
 - **Availability** — the system does not meet the availability status claimed at submission.
 - **Validity** — specific metric values are found to be incorrect or inconsistent with known hardware capabilities.
+- **Model equivalence** — the submission does not meet the model-equivalence rules of [Endpoints Rules §2.9](endpoints_rules.md#29-model-equivalence-rules-standardized-division): for example a prohibited weight transformation, an undisclosed approximation, or a drafter, sparsity, or KV-cache configuration that was never declared.
+- **Division rules** — the submission does not meet the requirements of the division under which it was published, or was published in the wrong division.
+
+Reproducibility remains **ineligible** as a late objection ground; reproducibility objections must be filed within the peer review window. A member with a reproducibility concern about a published result instead makes their case by **nominating the submission for audit** under [§10.1](#101-audit-nomination-on-reproducibility-grounds).
+
+> [!NOTE]
+> **Why these grounds extend past Week 6.** Model-equivalence and division-rule violations are frequently not discoverable during the review window. Under [§6.10](#610-visibility-of-results-during-review), code and submission artifacts are visible only to the review committee and other submitters until finalization, so for many parties the first opportunity to examine them arises after Week 6.
+
+As with objections raised during review, the remedy for a division or availability misclassification is normally reclassification rather than withdrawal ([§6.8](#68-types-of-objections)).
 
 Late objections are handled through the dispute resolution process (see [§9](#9-dispute-resolution)).
 
+#### Scope and Standing for Late Concerns
+
+The limits in this subsection apply both to late objections under §6.6 and to audit nominations under [§10.1](#101-audit-nomination-on-reproducibility-grounds).
+
+**Standing.** Only members of the review committee ([§2.1](#21-structure)) may raise a late objection or nominate a submission for audit. An organization that is not on the committee for the cohort in question may bring its concern to a committee member. [§8.5](#85-issues-discovered-after-publication) remains open to any MLCommons member, but only for allegations of direct fraud or misrepresentation.
+
+**Time window.** The window runs from **finalization** — the point at which all objections are resolved and the "peer review pending" tag is removed ([§6.4](#64-objection-resolution-weeks-46)) — not from provisional publication. A result is open to late objection and audit nomination until the **later** of:
+
+- the next **audit vote** following finalization ([§10.2](#102-audit-votes)), or
+- **90 calendar days** after finalization.
+
+Once that point passes the result is settled, and is no longer subject to late objection or audit nomination.
+
+Anchoring to finalization gives every submission the same exposure period. Anchoring to first publication would penalize submitters who opt in to provisional publication ([§6.2](#62-provisional-publication)), whose results appear weeks earlier and would therefore settle sooner than an otherwise identical confidential submission.
+
+The 90-day floor guarantees a minimum challenge period regardless of where in the audit-vote cycle a result lands, while the audit-vote ceiling keeps the period bounded. It matches the 90-day endpoint-accessibility requirement for Standardized CoN submissions ([§7.2.5](#725-division-specific-available-requirements)), so that the endpoint remains reachable for as long as the result can be challenged. A submitter's obligation to retain the benchmarked system and its configuration for a possible audit runs to the close of this window and no further.
+
+> *Example:* A result finalized 10 days before an audit vote does not settle at that vote — 90 days have not elapsed — and settles on day 90. A result finalized 100 days before the next vote remains open until that vote.
+
+**Supersession by a more recent submission.** Where the submitter has a more recent **finalized** result for the same benchmark model on a *similar system*, that result is taken as the reference for evaluating a reproducibility or validity concern, and supersedes the concern as it applies to the older submission. A similar system is one with the same accelerator model and count, the same host and interconnect topology, and a software stack differing only in component versions. The submitter identifies the superseding result; the review chair confirms it meets these criteria.
+
+Supersession does **not** apply to availability, division-rule, or model-equivalence concerns — a later compliant submission is evidence about performance, not a cure for an earlier misclassification or equivalence violation — nor where the concern alleges intentional misrepresentation ([§8.5](#85-issues-discovered-after-publication)).
+
 #### Reproducibility Expectations
 
-Perfect reproducibility of results cannot be reasonably expected and must not be used to block publication unless the deviation is egregious. Due to natural variability in silicon, machine configuration, setup, power delivery, cooling, and thermal state, **a performance variability of up to 10% is expected and allowed** during the review period. Large-scale submissions (hundreds of accelerators) may exhibit even higher variance and should be assessed with proportionally greater tolerance.
+Perfect reproducibility of results cannot be reasonably expected and must not be used to block publication unless the deviation is egregious. Due to natural variability in silicon, machine configuration, setup, power delivery, cooling, and thermal state, some run-to-run variation is expected.
 
-The only exception is same-system reproducibility: when re-running on the **exact same system** (e.g., during an audit), results must be **within 5%** of the original submission.
+**Throughput metrics.** The margins below apply to `system_tps`, and to `tps_per_user` derived from it ([Endpoints Rules §4.1](endpoints_rules.md#41-primary-metrics)):
+
+- **Up to 10%** variability is expected and allowed when an independent party re-runs the benchmark during the review period. Large-scale submissions (hundreds of accelerators) may exhibit higher variance and should be assessed with proportionally greater tolerance.
+- **Within 5%** when re-running on the **exact same system** — for example during an audit.
+
+**Latency metrics.** These margins do **not** apply to `ttft_p95_ms`, or to any other latency percentile. A fixed percentage band is not a sound test for a percentile statistic:
+
+- A percentile is a substantially noisier estimator than a mean, and its sampling error depends on the number of completed queries at the measurement point.
+- TTFT distributions are right-skewed and heavy-tailed, so a band that is generous for a mean can be punishing for a tail statistic.
+- The absolute scale spans orders of magnitude across the pareto — tens of milliseconds in the Low Latency region, seconds at high concurrency — so a single relative band is simultaneously too tight at one end and too loose at the other.
+- For Client-over-Network submissions, measured TTFT includes public Internet latency that the submitter does not control, and whose run-to-run variation may exceed any submitter-attributable difference.
+
+**Interim rule.** Until the working group ratifies a method, a reproducibility objection may not rest on latency metrics alone. Latency evidence may be offered in support of an objection whose primary basis is throughput or accuracy, and a reviewer may raise an unexplained latency discrepancy as a *Suspect or Incomprehensible Results* objection ([§6.8](#68-types-of-objections)).
 
 **Accuracy must always pass** — the accuracy quality target is a hard gate with no variability allowance, both during automated compliance and throughout the review period.
 
 > [!NOTE]
-> **[WG Decision Required]** — The 10% performance variability margin and the 5% same-system threshold are current proposals and must be ratified by the working group before they can be enforced. The working group should consider whether different margins apply to different metric types (e.g., TTFT vs. system TPS) and whether large-scale submission thresholds need separate treatment.
+> **[WG Decision Required]** — The 10% and 5% throughput margins are current proposals and require ratification before they can be enforced.
+>
+> **A method for latency metrics has yet to be developed.** The per-metric **histogram** the reference client writes with each run is the natural input: it carries the whole distribution rather than a single percentile, and needs no new instrumentation. Three prerequisites must be settled before it can support cross-run comparison — bin edges specified by the reference client and identical across every run and measurement point (log-spaced, given the range latency spans across the pareto); per-bin counts retained so that the sample size is recoverable; and coverage restricted to steady state, excluding warmup per [Endpoints Rules §6.3.2](endpoints_rules.md#632-discard-policy). Given those, candidate tests include agreement across several quantiles rather than one, a distributional distance over the binned counts (Wasserstein, or a chi-square over bins), and bootstrap confidence intervals resampled from the histogram. The histogram's own resolution supplies a principled noise floor: a difference smaller than one bin width at the quantile under test is not actionable. Separating the network component for CoN submissions remains desirable, and [Endpoints Rules §2.1.1](endpoints_rules.md#211-client-on-prem-cop) already requires a measured baseline for CoP.
+>
+> **Artifact prerequisite.** [Endpoints Rules §8.1](endpoints_rules.md#81-directory-structure) does not currently require the histogram to be retained: the per-point artifacts are `result_summary.json` with aggregate metrics and percentiles. Any method resting on the histogram requires it to be added as a required artifact, with its binning fixed in the data dictionary referenced by [§5.7](#57-logging-requirements).
+>
+> The working group should also decide whether large-scale submissions warrant a distinct throughput threshold.
 
 ### 6.7 Filing Objections
 
@@ -421,7 +535,7 @@ Objections filed during peer review must be categorized as one of the following 
 |---|---|---|
 | **Compliance Failure** | Submission does not meet stated rules (point count, region coverage, run duration, load pattern, etc.). | High — may require withdrawal. |
 | **Methodology** | Disagreement with how the benchmark was configured or executed (e.g., dataset handling, warmup procedure). | High. |
-| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)). Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window — they are not eligible as late objections after week 7. | High — but must exceed the allowed variability margin to be actionable. |
+| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin for the metric in question (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)); the throughput margins do not apply to latency metrics, and an objection may not rest on latency alone until a method is ratified. Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window (through the end of Week 3) and are not eligible as late objections; after finalization, a reproducibility concern is pursued by nominating the submission for audit under [§10.1](#101-audit-nomination-on-reproducibility-grounds). | High — but must exceed the allowed variability margin to be actionable. |
 | **Validity of Results** | Specific metric values appear incorrect, inconsistent, or incompatible with known hardware capabilities. | High. |
 | **Division Rules** | Submission placed in wrong division, or system does not meet division requirements (availability, API compliance, etc.). The review committee may allow the submitting organization to reclassify to the correct division rather than withdraw. | Medium. |
 | **Availability** | System claimed as Available or Preview does not meet the availability requirements at the stated date. The review committee may allow the submitting organization to reclassify (e.g., from Available to Preview or RDI) rather than withdraw. | Medium. |
@@ -578,13 +692,14 @@ The Available software stack requirement (§7.2.3) is waived for software compon
 
 #### 7.3.3 Performance Continuity Requirement
 
-When a Preview submission transitions to Available, the re-submitted result must achieve equal or better performance compared to the Preview result. A degradation of up to **5%** is accepted to account for variance inherent to endpoints workloads — the high-interactivity region of the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit higher run-to-run variance than traditional batch inference.
+When a Preview submission transitions to Available, the re-submitted result must achieve equal or better performance compared to the Preview result.
+
+**Throughput metrics.** For `system_tps` and `tps_per_user`, a degradation of up to **5%** is accepted, to account for variance inherent to endpoints workloads — the high-interactivity region of the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit higher run-to-run variance than traditional batch inference. The tolerance applies to each such metric independently.
+
+**Latency metrics.** The 5% tolerance does **not** apply to `ttft_p95_ms` or to any other latency percentile, for the reasons set out in [§6.6 Reproducibility Expectations](#reproducibility-expectations): a fixed percentage band is not a sound test for a percentile statistic. Until the working group ratifies a comparison method for latency, a Preview-to-Available transition is not blocked on latency alone. A material and unexplained latency regression is instead raised as an objection during the re-submission's own review window, subject to the same interim rule.
 
 > [!NOTE]
-> **[WG Approval Required]** — The 5% Preview-to-Available margin is a proposal pending working group ratification. Until approved, treat this as provisional and flag any results that pass only under the 5% (vs. 2%) threshold.
-> Approved by TaskForce 
-
-The tolerance applies to each reported metric independently.
+> **[WG Decision Required]** — The 5% throughput margin has been approved by the Task Force. The latency comparison method is open, and is shared with [§6.6](#reproducibility-expectations); until it is settled, this section is enforceable on throughput metrics only.
 
 #### 7.3.4 Declaration Requirements
 
@@ -694,6 +809,7 @@ Submitters may add additional measurement points to their pareto curve during a 
 Rules for post-submission updates:
 
 - New points must follow the same measurement methodology, run duration, and accuracy requirements as the initial submission.
+- Every new or replacement point MUST use the original submission's bound seed set. The seed set's current eligibility for adoption by new submissions is not reevaluated for an amendment.
 - New points may be at any concurrency level within the defined regions, including the 10% High Throughput margin zone.
 - If a newly submitted point is at the same concurrency level as an existing point, the new result supersedes the old one and becomes the active displayed result. The previous result is not discarded — it is retained in the historical record (see [Versioning and Historical Record](#versioning-and-historical-record) below).
 - The submitter must provide updated YAML configurations and result artifacts for each new point.
@@ -749,7 +865,9 @@ Any use of published results in connection with the MLPerf trademark must follow
 
 ### 8.5 Issues Discovered After Publication
 
-Any MLCommons member may raise an objection to any published results via email to any MLCommons WG chair. An objection review panel (minimally the review chair plus two neutral committee members) will screen the objection. If rejected at this stage, the chair will respond to the objector with the reasoning.
+This section is limited to allegations of **direct fraud or misrepresentation** — a submission that knowingly reports results it did not achieve, materially misstates the system under test, or conceals a material fact from reviewers. Post-publication concerns that do not allege fraud are handled as late objections ([§6.6](#66-late-objections-post-week-6)) or audit nominations ([§10.1](#101-audit-nomination-on-reproducibility-grounds)), subject to the standing and time-window limits of [§6.6](#scope-and-standing-for-late-concerns). This section carries no time limit and is not subject to supersession by a later submission.
+
+Any MLCommons member may raise a fraud or misrepresentation allegation via email to any MLCommons WG chair. An objection review panel — minimally the review chair plus two **neutral members** ([§2.4](#24-conflict-of-interest)) — will screen the allegation. If rejected at this stage, the chair will respond to the objector with the reasoning.
 
 Otherwise, the chair will designate an investigator with no conflict of interest to produce a brief report confidential to the committee, which will include a response from the submitter of the disputed result.
 
@@ -771,17 +889,35 @@ Possible investigation outcomes:
 The dispute resolution process handles:
 
 - Objections that cannot be resolved through the standard peer review process ([§6.4](#64-objection-resolution-weeks-46)).
-- Late availability and validity objections ([§6.6](#66-late-objections-post-week-6)).
+- Late objections on any of the grounds listed in [§6.6](#66-late-objections-post-week-6) — availability, validity, model equivalence, and division rules.
 - Disagreements about rule interpretation.
+- Findings referred from an audit ([§10](#10-audit-process)).
 
 ### 9.2 Escalation Path
 
-When an objection is escalated:
+**Trigger.** At the close of Week 6 the review chair certifies which objections remain open and escalates them. Escalation is automatic — neither party needs to request it, and no motion is required. Objections resolved or retracted during Weeks 1–6 do not reopen.
 
-1. The review chair convenes a dispute resolution panel consisting of the objecting party, the submitter, and at least two neutral committee members.
-2. The objecting party and the submitter present their evidence and arguments.
-3. The neutral members issue a recommendation: uphold objection, dismiss objection, or request additional investigation.
-4. The review chair makes a binding decision based on the recommendation.
+**Status of the submission during a dispute.** A submission with an escalated objection **does not finalize** until the dispute concludes. Results already published provisionally remain visible and keep the "peer review pending" tag; results under confidential review remain unpublished. Where an escalated objection is confined to identifiable measurement points, the chair may certify the remainder of the submission for finalization and hold only the disputed points — provided the submission still satisfies the minimum point and region-coverage requirements without them.
+
+**Panel.** The chair convenes a panel consisting of the objecting party, the submitter, and at least two **neutral members** as defined in [§2.4](#24-conflict-of-interest). The parties present evidence; only the neutral members deliberate and recommend.
+
+**Timeline.** Business days are counted as in [§6.3](#63-peer-review-weeks-13), with the same local-holiday rule.
+
+| Step | Deadline |
+|---|---|
+| Chair certifies the open objections, notifies both parties and the committee, and names the panel | Within **2 business days** of the close of Week 6 |
+| Each party files a written statement of position with supporting evidence | Within **10 business days** of notification |
+| Panel convenes — as a meeting or an asynchronous review, at the chair's discretion | Within **15 business days** of notification |
+| Neutral members issue a recommendation: uphold, dismiss, or investigate further | Within **5 business days** of the panel convening |
+| Chair issues a binding decision | Within **5 business days** of the recommendation |
+
+Where the recommendation is to investigate further, the chair appoints an investigator with no conflict of interest, and the remaining deadlines restart from delivery of the investigator's report. An investigation may extend the process **once only**.
+
+**Non-participation.** If the submitter does not file a written statement by its deadline, the non-response penalties of [§6.3](#63-peer-review-weeks-13) continue to accrue, and at 10 business days past the deadline the submission is withdrawn. If the objecting party does not file, the objection lapses and is treated as retracted; where it was the only escalated objection, the submission proceeds to finalization.
+
+**Backstop.** If the process has not concluded within **8 weeks** of escalation, the chair decides on the record then available. A dispute may not remain open indefinitely, and a party's failure to produce evidence is not grounds for extension beyond the single investigation extension above.
+
+**After the decision.** Remedies are applied per [§9.3](#93-remedies). A submission that survives the dispute finalizes and is published in the next cohort for which it clears the alignment window of [§4.3](#43-submission-to-publication-alignment); one that does not is reclassified or withdrawn as the remedy directs. The late-concern window of [§6.6](#scope-and-standing-for-late-concerns) runs from that finalization, so time spent in dispute does not consume it.
 
 ### 9.3 Remedies
 
@@ -799,7 +935,7 @@ Either party may appeal the review chair's decision to the Head of MLPerf within
 ### 9.5 Status
 
 > [!TIP]
-> **[TBD]** — The full dispute resolution procedure, including quorum requirements, voting rules, confidentiality provisions, and timeline constraints, will be specified in a separate document by the Rules Task Force.
+> **[WG Approval Required]** — The panel composition, deadlines, non-participation consequences, and 8-week backstop in [§9.2](#92-escalation-path) are a current proposal and require ratification before they can be enforced. Still unspecified and deferred to the Rules Task Force: the **quorum and voting rule** among neutral members where a panel has more than two (the current text assumes a recommendation carries with a simple majority, with the chair deciding on a tie), **confidentiality provisions** covering the written statements and the investigator's report, and whether a **standing roster** of pre-cleared neutral members should be maintained so that panels can be convened inside the 2-business-day window.
 
 ---
 
@@ -809,6 +945,35 @@ Either party may appeal the review chair's decision to the Head of MLPerf within
 > **[TBD]** — The audit process for MLPerf Endpoints, including audit selection criteria, audit procedures, and non-compliance remedies, will be defined in a separate document. The audit rules will account for the rolling submission model and the higher volume of measurement points per submission (up to 32 pareto points per benchmark model).
 >
 > Current proposal (subject to WG ratification): up to **2 audits per quarter**, selected by the review chair. Audit selection criteria and procedures are not yet finalized.
+
+### 10.1 Audit Nomination on Reproducibility Grounds
+
+Reproducibility concerns arising after the peer review window are not eligible as late objections ([§6.6](#66-late-objections-post-week-6)). A member who cannot reproduce a published result instead makes their case by **nominating the submission for audit**.
+
+Nominations are subject to the standing, time-window, and supersession limits of [§6.6 Scope and Standing for Late Concerns](#scope-and-standing-for-late-concerns): only review committee members may nominate, a result is eligible only until the later of the next audit vote or 90 days after finalization, and a more recent finalized result on a similar system supersedes the concern. A nomination must:
+
+- Identify the specific measurement points or results in question.
+- Describe the reproduction attempt — the configuration used, the hardware and software stack, and the deviation observed against the published result.
+- Demonstrate that the deviation exceeds the margins of [§6.6 Reproducibility Expectations](#reproducibility-expectations): 10% in general, or 5% when re-running on the exact same system. A failure to meet the accuracy quality target requires no margin showing, as accuracy is a hard gate.
+- Reference the applicable rule or section.
+
+Nominations go to the review chair, who screens them together with at least two **neutral members** ([§2.4](#24-conflict-of-interest)) — the same panel composition as [§8.5](#85-issues-discovered-after-publication). If the nomination is accepted, the submission enters the audit queue subject to the audit capacity in force for that quarter. The chair notifies the submitter and the nominating member of the decision, with reasoning where a nomination is declined.
+
+Where an audit substantiates the concern, remedies follow [§9.3](#93-remedies) and [§8.5](#85-issues-discovered-after-publication): correction and re-submission of the affected points, reclassification to a different division or publication status, withdrawal of specific results or the entire submission, or a formal finding of non-compliance.
+
+> [!NOTE]
+> **[WG Open Item]** — Two questions remain open: whether nominated audits count against the proposed 2-per-quarter capacity or are additional to chair-selected audits, and whether a nominating member bears any share of the audit cost. A nomination route with no capacity guarantee may in practice defer indefinitely.
+
+### 10.2 Audit Votes
+
+The review committee holds an **audit vote** to decide which submissions are audited. At each vote the committee considers the nominations received since the previous vote ([§10.1](#101-audit-nomination-on-reproducibility-grounds)) together with any submissions the review chair has selected, and chooses those to audit, subject to the audit capacity then in force.
+
+Audit votes also fix one boundary of the late-concern window: a result settles at the later of the next audit vote following finalization or 90 days after finalization ([§6.6](#scope-and-standing-for-late-concerns)). The review chair publishes the schedule of audit votes in advance, so that submitters and committee members can determine when a given result becomes settled.
+
+A nomination filed within the window is considered at the next audit vote. Where the 90-day floor extends past that vote, an unselected nomination remains open for any further vote falling inside the window; otherwise the result settles at the close of the window and the nomination lapses.
+
+> [!NOTE]
+> **[WG Open Item]** — The cadence of audit votes (the current proposal of up to 2 audits per quarter implies a quarterly vote), the quorum and voting rule, and whether the review chair retains independent selection authority alongside committee nominations are all undecided. Because the vote cadence now also determines how long a published result remains open to challenge, setting it is a prerequisite for §6.6 as well as for §10.
 
 ---
 
