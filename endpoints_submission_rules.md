@@ -686,7 +686,7 @@ Each results publication includes:
 - Division (`Standardized` / `Serviced` / `RDI`).
 - Publication status (`Available` / `Preview` / `RDI`).
 - Pareto curve in step-function representation.
-- Key metrics at each submitted concurrency level: **System Tokens/Second** (`system_tps`), **TPS/User** (`tps_per_user`), **TTFT P95** (`ttft_p95_ms`).
+- Key metrics at each submitted concurrency level: **System Tokens/Second** (`system_tps`), **TPS/User** (`tps_per_user`), **TTFT P90** (`ttft_p90_ms`).
 - "Peer review pending" tag where applicable.
 
 ---
