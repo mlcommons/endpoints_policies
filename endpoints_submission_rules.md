@@ -19,6 +19,7 @@
    - [2.3 Reviewer Obligations](#23-reviewer-obligations)
    - [2.4 Conflict of Interest](#24-conflict-of-interest)
    - [2.5 Confidential and Not Precedent Setting](#25-confidential-and-not-precedent-setting)
+   - [2.6 Peer Review Process](#26-peer-review-process)
 3. [Operating Principles](#3-operating-principles)
 4. [Schedule](#4-schedule)
    - [4.0 Submission Milestones](#40-submission-milestones)
@@ -117,10 +118,11 @@ Responsibilities of the chair and co-chair include:
 - Calling review committee meetings when disputes escalate (see [§9 Dispute Resolution](#9-dispute-resolution)).
 - Certifying that submissions have completed the review process.
 - Recusing themselves from review of their own organization's submissions (if applicable).
+- Overseeing peer review assignment (see [§2.6](#26-peer-review-process)).
 
 ### 2.3 Reviewer Obligations
 
-Review committee members are expected to participate in peer review of submissions within their area of expertise. There is no mandatory minimum number of reviews per member, but the committee is collectively responsible for ensuring all submissions receive adequate scrutiny within the review window.
+Review committee members are expected to participate in peer review of submissions within their area of expertise. Beyond the assigned reviews defined in [§2.6](#26-peer-review-process), there is no mandatory minimum number of reviews per member, but the committee is collectively responsible for ensuring all submissions receive adequate scrutiny within the review window.
 
 ### 2.4 Conflict of Interest
 
@@ -133,6 +135,37 @@ Submitters or other review committee members may raise conflict of interest conc
 ### 2.5 Confidential and Not Precedent Setting
 
 *Inherits from [General Submission Rules §2.4](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#confidential-and-not-precedent-setting) without modification.*
+
+### 2.6 Peer Review Process
+
+Ensuring all submissions are rigorously evaluated and adhere to the rules and policies of MLPerf is critical to maintaining the integrity of MLPerf. Any member of the review committee is entitled to conduct peer review of any submission and to verify that it meets the requirements of the MLPerf Endpoints policy documents. To ensure that every submission is reviewed by at least one member, each new submission is additionally assigned a designated reviewer. Subsequent updates to the pareto ([§8.1](#81-pareto-updates)) are evaluated by the same assigned reviewer.
+
+An assigned review must be completed before the close of the peer review window (end of Week 3; see [§6.3](#63-peer-review-weeks-13)). Assigned reviews are the one exception to [§2.3](#23-reviewer-obligations): members carry no minimum review quota, but an assignment once received must be completed.
+
+#### Reviewer Assignment
+
+- The submission CLI randomly selects a reviewer from the eligible pool when the submission is received, before the peer review period begins. The review chairs oversee assignment and may override it as described below.
+- The submitting organization is excluded from the pool for its own submissions, per [§2.4 Conflict of Interest](#24-conflict-of-interest).
+- Once a member has been assigned a review, they are removed from the selection pool until every other member of the pool has completed at least one assigned review. A member may opt back into the pool earlier, once their current assignment is complete. If the rotation cannot advance because assignments remain outstanding, the review chairs may reset it.
+- Review chairs may reassign a review if the assigned reviewer recuses themselves, or if the chairs determine the reviewer lacks the resources or experience to review the particular submission.
+- Review chairs may request a member to review more than one submission, depending on the member's availability.
+
+#### Failure to Complete an Assigned Review
+
+An organization that does not complete an assigned review by the close of the peer review window is removed from the review committee. It becomes eligible for committee membership again once it has a newly finalized MLPerf Endpoints result — a published result no longer carrying the "peer review pending" tag, per the participation definition in [§2.1](#21-structure).
+
+#### Scope of Review
+
+A peer review should cover, at minimum:
+
+- Whether the results are within the expected and reasonable range for the hardware and software used.
+- Whether the reproducibility instructions are clear and easy to follow.
+- The benchmark methodology.
+- The content of the JSON files in the `systems` directory.
+
+Reviewers should open a GitHub issue for any problem they find or any question they have, per [§6.7 Filing Objections](#67-filing-objections). Where a submission contains more results than a reviewer can cover, they should focus on the subset they can handle, prioritizing high-performing results and those that compete against other submissions. This list is not exhaustive — any other issue noticed in a submission should be raised the same way.
+
+Reproducing results is not required. Where a reviewer does attempt reproduction, inconsistencies are assessed against the margins defined in [§6.6 Reproducibility Expectations](#reproducibility-expectations).
 
 ---
 
