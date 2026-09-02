@@ -796,6 +796,7 @@ Vendors, OEMs, and ODMs may qualify custom SKUs as **Available**, including SKUs
 
 Each results publication includes:
 
+- Result ID, as defined in [MLPerf Endpoints Rules §8.5](endpoints_rules.md#85-result-id).
 - Submitter organization and system description.
 - Benchmark model.
 - Division (`Standardized` / `Serviced` / `RDI`).
