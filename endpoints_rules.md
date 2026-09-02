@@ -509,7 +509,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
 > [!NOTE]
-> **TTFT percentiles under discussion.** The WG has agreed to use **P90** for the publication plot and as the primary TTFT metric in v0.7. Additional TTFT percentiles (e.g., P50, P99) are under discussion and may be added as a **secondary metrics** table in a later version. Until then, only `ttft_p90_ms` is required to be reported per measurement point; submitters MAY voluntarily report additional percentiles in their submission YAML, but they will not appear on the publication chart for v0.7.
+> **TTFT versioning.** The historical v0.7 rules used **P95** for the publication plot and as the primary TTFT metric. These v1.0 rules use **P90**; only `ttft_p90_ms` is required to be reported per measurement point. Additional TTFT percentiles (e.g., P50, P99) may be reported in a submission YAML, but they are not plotted in the v1.0 publication chart.
 
 ### 4.2 Derived and Presentation Metrics
 
@@ -522,7 +522,7 @@ The following metrics are derived from primary measurements and used in publicat
 |---|---|
 | **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
 | **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
-| **TTFT (P90) vs. Concurrency** | **Y-axis:** `ttft_p90_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P90 is the default and the only percentile plotted for v0.7; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
+| **TTFT (P90) vs. Concurrency** | **Y-axis:** `ttft_p90_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P90 is the default and the only percentile plotted for v1.0; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
 | **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how per-user output rate degrades with load. |
 
 ### 4.3 Accuracy Metric
