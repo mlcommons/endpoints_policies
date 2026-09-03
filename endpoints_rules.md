@@ -632,7 +632,7 @@ The following metrics are derived from primary measurements and used in publicat
 
 | Metric | Description |
 |---|---|
-| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart for single-turn benchmarks. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
 | **Agentic Pareto curve (System TPS vs. E2E Average Interactivity)** | The primary publication chart for agentic benchmarks. **Y-axis:** `system_tps`. **X-axis:** `e2e_avg_interactivity`. Each point corresponds to a different concurrency level. Higher values are better on both axes. |
 | **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
 | **TTFT (P90) vs. Concurrency** | **Y-axis:** `ttft_p90_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P90 is the default and the only percentile plotted for v1.0; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
