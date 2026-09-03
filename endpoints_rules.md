@@ -613,7 +613,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | `tps_per_user = 1000 / tpot_p90_ms`, where `tpot_p90_ms` is the P90 of valid per-response TPOT samples. Higher is better. |
-| E2E Interactivity | `e2e_interactivity` | For agentic benchmarks, the output-token rate across completed turns, reported as a single scalar per measurement point. The scalar aggregates all completed turns across all trajectories in the run: `e2e_interactivity = sum(output_tokens_per_turn) / sum(e2e_turn_time_seconds)`, where each turn is measured from request issuance through receipt of the complete response. |
+| E2E Average Interactivity | `e2e_avg_interactivity` | For agentic benchmarks, the output-token rate across completed turns, reported as a single scalar per measurement point. The scalar aggregates all completed turns across all trajectories in the run: `e2e_avg_interactivity = sum(output_tokens_per_turn) / sum(e2e_turn_time_seconds)`, where `e2e_turn_time_seconds` is the server-side time from receipt of the request through completion of the response for each turn and excludes tool-call execution time. |
 | Time to First Token (P90) | `ttft_p90_ms` | 90th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning). |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
@@ -633,7 +633,7 @@ The following metrics are derived from primary measurements and used in publicat
 | Metric | Description |
 |---|---|
 | **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
-| **Agentic Pareto curve (System TPS vs. E2E Interactivity)** | The primary publication chart for agentic benchmarks. **Y-axis:** `system_tps`. **X-axis:** `e2e_interactivity`. Each point corresponds to a different concurrency level. Higher values are better on both axes. |
+| **Agentic Pareto curve (System TPS vs. E2E Average Interactivity)** | The primary publication chart for agentic benchmarks. **Y-axis:** `system_tps`. **X-axis:** `e2e_avg_interactivity`. Each point corresponds to a different concurrency level. Higher values are better on both axes. |
 | **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
 | **TTFT (P90) vs. Concurrency** | **Y-axis:** `ttft_p90_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P90 is the default and the only percentile plotted for v1.0; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
 | **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how per-user output rate degrades with load. |
