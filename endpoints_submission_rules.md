@@ -359,14 +359,7 @@ Penalties are cumulative and non-reversible — responding after a penalty thres
 
 #### Updating submissions during peer review
 
-After compliance checks pass for a submission, there are two supported kinds of changes for run and submission data:
-
-1. Adding or removing a run from a submission.
-2. Updating run and submission metadata.
-
-For (1), submitters must use the submission CLI to add and remove a run using the commands listed in the submission guide. These will re-run the submission checker, and confirm that the complete submission works as intended.
-
-For (2), submitters are encouraged to use the GitHub Web UI for making changes. Any and all changes are synced up with the database, and should shortly be viewable in the visualizer.
+After compliance checks pass for a submission,  submitters may only update run and submission metadata. Submitters are encouraged to use the GitHub Web UI for making changes. Any and all changes are synced up with the database, and should shortly be viewable in the visualizer.
 
 
 ### 6.4 Objection Resolution (Weeks 4–6)
