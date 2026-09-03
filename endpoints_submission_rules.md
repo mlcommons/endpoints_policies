@@ -705,22 +705,6 @@ Each results publication includes:
 
 ## 8. Post-Publication
 
-### 8.1 Pareto Updates
-
-Submitters may add additional measurement points to their pareto curve during a **post-submission update window of 90 days** from the initial submission date.
-
-> [!NOTE]
-> The 90-day update window may be adjusted per submission round by working group decision.
-
-Rules for post-submission updates:
-
-- New points must follow the same measurement methodology, run duration, and accuracy requirements as the initial submission.
-- New points may be at any concurrency level within the defined regions, including the 10% High Throughput margin zone.
-- If a newly submitted point is at the same concurrency level as an existing point, the new result supersedes the old one and becomes the active displayed result. The previous result is not discarded — it is retained in the historical record (see [Versioning and Historical Record](#versioning-and-historical-record) below).
-- The submitter must provide updated YAML configurations and result artifacts for each new point.
-- Each update must be submitted as a clearly labeled amendment to the original submission.
-- **New points undergo the full review process** — automated compliance checks followed by the standard 6-week peer review and objection resolution lifecycle — before being finalized. They are published in the next available bi-weekly cycle after passing automated checks, carrying a "peer review pending" tag until review is complete.
-- The total number of points on a single submission's pareto may not exceed 32 at any time, including post-submission additions.
 
 #### Versioning and Historical Record
 
@@ -731,7 +715,7 @@ MLCommons maintains a complete historical record of all versions of every pareto
 - All historical versions are aligned to cohorts: the record shows which points were active in each `YYYY-MM-C0` / `YYYY-MM-C1` cohort.
 - Superseded points are clearly labeled in the historical view with the cohort in which they were replaced.
 
-### 8.2 Corrections
+### 8.1 Corrections
 
 The types of corrections permitted depend on when the error is discovered.
 
@@ -757,18 +741,18 @@ Corrections to published results are **not permitted**. Errors in finalized resu
 - Invalidated points are removed from the active results page but remain in the historical archive with an "Invalidated" designation and a description of the error.
 - Non-result corrections (documentation, metadata) after finalization require review chair approval and are published with a clear change log.
 
-### 8.3 Withdrawal
+### 8.2 Withdrawal
 
 A submitter may voluntarily withdraw their submission at any time.
 
 - **Before finalization** (while results still carry the "peer review pending" tag): The submission is removed entirely from both the active results page and the historical archive. No record of the provisional publication is retained.
 - **After finalization:** Results are removed from the active results page but remain in the historical archive with a "Withdrawn" designation.
 
-### 8.4 Terms of Use
+### 8.3 Terms of Use
 
 Any use of published results in connection with the MLPerf trademark must follow the [MLPerf Results Messaging Guidelines](https://github.com/mlcommons/policies/blob/master/MLPerf_Results_Messaging_Guidelines.adoc) and any relevant policies at https://mlcommons.org/en/policies/.
 
-### 8.5 Issues Discovered After Publication
+### 8.4 Issues Discovered After Publication
 
 Any MLCommons member may raise an objection to any published results via email to any MLCommons WG chair. An objection review panel (minimally the review chair plus two neutral committee members) will screen the objection. If rejected at this stage, the chair will respond to the objector with the reasoning.
 
