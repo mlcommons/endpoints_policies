@@ -675,7 +675,7 @@ Each submission must include a minimum of **7 measurement points**, structured a
 | 3 mandatory points | One point in each of the three [Concurrency regions](#concurrency-regions) (Low Concurrency, Medium Concurrency, High Concurrency). |
 | 3 submitter's-choice points | Any concurrency level in any of the three "concurrency" regions, at the submitter's discretion. |
 
-Accuracy results are required at `N` points: the four mandatory points—one Low Latency point and one point in each of the Low Throughput, Medium Throughput, and High Throughput regions—plus one additional Offline point if Offline results are submitted.
+Accuracy results are required at `N` points: the four mandatory points—one low-latency point in the Ultra Low Concurrency region and one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions—plus one additional Offline point if Offline results are submitted.
 
 #### No Spacing Requirements
 
