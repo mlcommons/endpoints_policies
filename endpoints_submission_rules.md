@@ -413,7 +413,7 @@ Penalties are cumulative and non-reversible — responding after a penalty thres
 
 #### Updating submissions during peer review
 
-After compliance checks pass for a submission,  submitters may only update run and submission metadata. Submitters are encouraged to use the GitHub Web UI for making changes. Any and all changes are synced up with the database, and should shortly be viewable in the visualizer.
+After compliance checks pass for a submission, submitters may only update run and submission metadata when requested by review committee. Updates are restricted to cases where insufficient information, code, or instructions was provided, or a material flaw is discovered that must be rectified. Any improvement to performance metrics must be justified and explained to the review committee. Submitters are encouraged to use the GitHub Web UI for making changes. Any and all changes are synced up with the database, and should shortly be viewable in the visualizer.
 
 
 ### 6.4 Objection Resolution (Weeks 4–6)
