@@ -225,7 +225,7 @@ The RDI division provides a category for experimental, pre-release, or internal 
 #### 2.4.1 Rules
 
 - Must use the standard MLPerf Endpoints performance and accuracy datasets.
-- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT P50/P95) using the same measurement methodology.
+- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT P50/P90) using the same measurement methodology.
 - Must use the same base reference model. RDI submissions may augment the model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms.
 - No audit or compliance tests required. No code visibility requirement.
 - Submitters must report achieved accuracy on the accuracy dataset.
@@ -297,8 +297,8 @@ Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf En
 
 Tokenizers can produce different token counts depending on how text is fed to them — the same output text tokenized as a single string versus tokenized as a sequence of streamed chunks can yield different counts, even with the same tokenizer. To ensure consistent and representative measurement across divisions:
 
-- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its canonical Hugging Face repository — produces the canonical token count for the system under measurement. All token-count metrics (`system_tps`, `tps_per_user`, etc.) are computed from the reference tokenizer applied to the fully reconstructed assistant response through the benchmark model's official reference chat template, not from any tokenizer used internally by the SUT.
-- **Token counts are obtained by applying the reference tokenizer once per completed assistant response.** Visible-output and reasoning fragments are reassembled in arrival order, while tool-call fragments are reassembled by tool-call list index as defined below. The reconstructed visible output, reasoning, and structured tool calls are supplied together as one assistant message to the official reference chat template and tokenized once. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
+- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its canonical Hugging Face repository — produces the canonical token count for the system under measurement. Complete-response token-count metrics such as `system_tps` are computed from the reference tokenizer applied to the fully reconstructed assistant response through the benchmark model's official reference chat template, not from any tokenizer used internally by the SUT.
+- **Complete-response token counts are obtained by applying the reference tokenizer once per completed assistant response.** Visible-output and reasoning fragments are reassembled in arrival order, while tool-call fragments are reassembled by tool-call list index as defined below. The reconstructed visible output, reasoning, and structured tool calls are supplied together as one assistant message to the official reference chat template and tokenized once. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
   - *Fairness:* every submitter is scored against the same tokenizer applied the same way, independent of how their system batches, chunks, or streams during generation.
   - *Representativeness:* this measures the benchmark model's canonical representation of the completed assistant response, rather than implementation artifacts of streamed token boundaries that can produce different token counts across submitters.
 
@@ -320,7 +320,7 @@ The assistant-payload token count excludes empty chat-template framing. The refe
 | Chat-template framing / special tokens | Conditional | Payload-specific reasoning and tool-call framing inserted by the official reference chat template is counted; framing present for an empty assistant message is excluded by the baseline subtraction above |
 
 - Because frameworks differ in their internal serialization, the reconstructed assistant message may not be byte-identical to the server's raw generation. Rendering the received structured response with the official reference chat template provides one model-specific, reproducible representation for scoring every submitter.
-- Token-count metrics (System TPS, TPS/User) are derived from this single assistant-payload count. TTFT remains a latency measurement and is not derived from the reconstructed-response token count: it is measured from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning).
+- Complete-response token-count metrics such as System TPS are derived from this single assistant-payload count. TPOT instead uses the suffix after the first output-bearing streamed chunk; that suffix is tokenized once with the reference tokenizer, and non-positive or non-finite samples and non-streaming responses are excluded. TTFT remains a latency measurement and is not derived from token counts: it is measured from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning).
 - Submitters may use any tokenizer internally for output generation or accounting; that output-side choice does not affect scoring. The official output-token count is always produced by the **client-side reference tokenizer applied once to the reconstructed assistant message through the official reference chat template**. No equivalence demonstration or mapping factor is required for an internal output tokenizer. This output-scoring rule does not waive the input tokenization and preprocessing equivalence requirements in [§2.9.2](#292-pre-processing-equivalence).
 
 > [!NOTE]
@@ -606,15 +606,15 @@ Each measurement point on the pareto curve captures the following metrics at a s
 | Metric | Symbol | Definition |
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
-| TPS per User | `tps_per_user` | Average output tokens per second experienced by a single user. `tps_per_user = system_tps / concurrency`. |
-| Time to First Token (P95) | `ttft_p95_ms` | 95th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning). |
+| TPS per User | `tps_per_user` | `tps_per_user = 1000 / tpot_p90_ms`, where `tpot_p90_ms` is the P90 of valid per-response TPOT samples. Higher is better. |
+| Time to First Token (P90) | `ttft_p90_ms` | 90th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning). |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
 > [!NOTE]
 > **Genuine first token.** TTFT is triggered by the first non-empty fragment (`len(s) > 0`). Emitting whitespace, control characters, punctuation, or other meaningless leading content solely to stop the TTFT clock — rather than as a genuine part of the model response — is not allowed.
 
 > [!NOTE]
-> **TTFT percentiles under discussion.** The WG has agreed to use **P95** for the publication plot and as the primary TTFT metric in v0.7. Additional TTFT percentiles (e.g., P50, P99) are under discussion and may be added as a **secondary metrics** table in a later version. Until then, only `ttft_p95_ms` is required to be reported per measurement point; submitters MAY voluntarily report additional percentiles in their submission YAML, but they will not appear on the publication chart for v0.7.
+> **TTFT versioning.** The historical v0.7 rules used **P95** for the publication plot and as the primary TTFT metric. These v1.0 rules use **P90**; only `ttft_p90_ms` is required to be reported per measurement point. Additional TTFT percentiles (e.g., P50, P99) may be reported in a submission YAML, but they are not plotted in the v1.0 publication chart.
 
 ### 4.2 Derived and Presentation Metrics
 
@@ -627,7 +627,7 @@ The following metrics are derived from primary measurements and used in publicat
 |---|---|
 | **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
 | **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
-| **TTFT (P95) vs. Concurrency** | **Y-axis:** `ttft_p95_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P95 is the default and the only percentile plotted for v0.7; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
+| **TTFT (P90) vs. Concurrency** | **Y-axis:** `ttft_p90_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P90 is the default and the only percentile plotted for v1.0; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
 | **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how per-user output rate degrades with load. |
 
 ### 4.3 Accuracy Metric
@@ -1182,7 +1182,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Streaming config** | `stream_all_chunks = true` for all performance runs. | Flag non-compliant points. |
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
-| **Metric consistency** | `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`. | Flag inconsistent points. |
+| **Metric consistency** | The valid per-response TPOT distribution must be non-empty with a finite, strictly positive P90; the normalized P90 value in milliseconds is `tpot_p90_ms` and `tps_per_user = 1000 / tpot_p90_ms`. The authoritative result schema defines TPOT serialization and units. | Flag inconsistent points. |
 | **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
 | **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |

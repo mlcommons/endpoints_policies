@@ -357,7 +357,7 @@ Automated compliance checks are executed immediately after submission. The check
 - The pareto curve satisfies minimum point count and region coverage requirements (minimum 7 points structured as 1 + 3 + 3; maximum 32 points total).
 - Run durations, minimum query counts, load patterns, and streaming configuration meet requirements.
 - Accuracy validation results are included and pass the quality target.
-- Metric consistency (e.g., `system_tps` derivable from total tokens and elapsed duration; `tps_per_user = system_tps / concurrency`).
+- Metric consistency: the valid per-response TPOT distribution is non-empty with a finite, strictly positive P90 and its normalized millisecond value is used to derive `tps_per_user = 1000 / tpot_p90_ms`.
 - Configuration consistency across measurement points (same model, same endpoint, same software stack).
 
 The full list of automated checks is defined in [MLPerf Endpoints Rules §9](endpoints_rules.md#9-compliance-validation).
@@ -502,7 +502,7 @@ Perfect reproducibility of results cannot be reasonably expected and must not be
 - **Up to 10%** variability is expected and allowed when an independent party re-runs the benchmark during the review period. Large-scale submissions (hundreds of accelerators) may exhibit higher variance and should be assessed with proportionally greater tolerance.
 - **Within 5%** when re-running on the **exact same system** — for example during an audit.
 
-**Latency metrics.** These margins do **not** apply to `ttft_p95_ms`, or to any other latency percentile. A fixed percentage band is not a sound test for a percentile statistic:
+**Latency metrics.** These margins do **not** apply to `ttft_p90_ms`, or to any other latency percentile. A fixed percentage band is not a sound test for a percentile statistic:
 
 - A percentile is a substantially noisier estimator than a mean, and its sampling error depends on the number of completed queries at the measurement point.
 - TTFT distributions are right-skewed and heavy-tailed, so a band that is generous for a mean can be punishing for a tail statistic.
@@ -701,7 +701,7 @@ When a Preview submission transitions to Available, the re-submitted result must
 
 **Throughput metrics.** For `system_tps` and `tps_per_user`, a degradation of up to **5%** is accepted, to account for variance inherent to endpoints workloads — the high-interactivity region of the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit higher run-to-run variance than traditional batch inference. The tolerance applies to each such metric independently.
 
-**Latency metrics.** The 5% tolerance does **not** apply to `ttft_p95_ms` or to any other latency percentile, for the reasons set out in [§6.6 Reproducibility Expectations](#reproducibility-expectations): a fixed percentage band is not a sound test for a percentile statistic. Until the working group ratifies a comparison method for latency, a Preview-to-Available transition is not blocked on latency alone. A material and unexplained latency regression is instead raised as an objection during the re-submission's own review window, subject to the same interim rule.
+**Latency metrics.** The 5% tolerance does **not** apply to `ttft_p90_ms` or to any other latency percentile, for the reasons set out in [§6.6 Reproducibility Expectations](#reproducibility-expectations): a fixed percentage band is not a sound test for a percentile statistic. Until the working group ratifies a comparison method for latency, a Preview-to-Available transition is not blocked on latency alone. A material and unexplained latency regression is instead raised as an objection during the re-submission's own review window, subject to the same interim rule.
 
 > [!NOTE]
 > **[WG Decision Required]** — The 5% throughput margin has been approved by the Task Force. The latency comparison method is open, and is shared with [§6.6](#reproducibility-expectations); until it is settled, this section is enforceable on throughput metrics only.
@@ -798,7 +798,7 @@ Each results publication includes:
 - Division (`Standardized` / `Serviced` / `RDI`).
 - Publication status (`Available` / `Preview` / `RDI`).
 - Pareto curve in step-function representation.
-- Key metrics at each submitted concurrency level: **System Tokens/Second** (`system_tps`), **TPS/User** (`tps_per_user`), **TTFT P95** (`ttft_p95_ms`).
+- Key metrics at each submitted concurrency level: **System Tokens/Second** (`system_tps`), **TPS/User** (`tps_per_user`), **TTFT P90** (`ttft_p90_ms`).
 - "Peer review pending" tag where applicable.
 
 ---
