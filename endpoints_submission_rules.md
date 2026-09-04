@@ -411,6 +411,11 @@ Penalties are cumulative and non-reversible — responding after a penalty thres
 
 **Early finalization.** Objections may be fully resolved during the peer review window. If all objections are resolved or retracted before the end of Week 3, the submission is eligible for **early finalization** — it does not need to wait for the close of the objection resolution window. The review chair certifies early finalization and the submission is queued for the next available cohort.
 
+#### Updating submissions during peer review
+
+After compliance checks pass for a submission, submitters may only update run and submission metadata when requested by review committee. Updates are restricted to cases where insufficient information, code, or instructions was provided, or a material flaw is discovered that must be rectified. Any improvement to performance metrics must be justified and explained to the review committee. Submitters are encouraged to use the GitHub Web UI for making changes. Any and all changes are synced up with the database, and should shortly be viewable in the visualizer.
+
+
 ### 6.4 Objection Resolution (Weeks 4–6)
 
 From Week 4 through Week 6, all filed objections carried over from the peer review window must be resolved. All objections must reach resolution; escalation to dispute resolution is reserved for cases where the parties cannot agree on the facts or interpretation.
@@ -800,23 +805,6 @@ Each results publication includes:
 
 ## 8. Post-Publication
 
-### 8.1 Pareto Updates
-
-Submitters may add additional measurement points to their pareto curve during a **post-submission update window of 90 days** from the initial submission date.
-
-> [!NOTE]
-> The 90-day update window may be adjusted per submission round by working group decision.
-
-Rules for post-submission updates:
-
-- New points must follow the same measurement methodology, run duration, and accuracy requirements as the initial submission.
-- Every new or replacement point MUST use the original submission's bound seed set. The seed set's current eligibility for adoption by new submissions is not reevaluated for an amendment.
-- New points may be at any concurrency level within the defined regions, including the 10% High Throughput margin zone.
-- If a newly submitted point is at the same concurrency level as an existing point, the new result supersedes the old one and becomes the active displayed result. The previous result is not discarded — it is retained in the historical record (see [Versioning and Historical Record](#versioning-and-historical-record) below).
-- The submitter must provide updated YAML configurations and result artifacts for each new point.
-- Each update must be submitted as a clearly labeled amendment to the original submission.
-- **New points undergo the full review process** — automated compliance checks followed by the standard 6-week peer review and objection resolution lifecycle — before being finalized. They are published in the next available bi-weekly cycle after passing automated checks, carrying a "peer review pending" tag until review is complete.
-- The total number of points on a single submission's pareto may not exceed 32 at any time, including post-submission additions.
 
 #### Versioning and Historical Record
 
@@ -827,7 +815,7 @@ MLCommons maintains a complete historical record of all versions of every pareto
 - All historical versions are aligned to cohorts: the record shows which points were active in each `YYYY-MM-C0` / `YYYY-MM-C1` cohort.
 - Superseded points are clearly labeled in the historical view with the cohort in which they were replaced.
 
-### 8.2 Corrections
+### 8.1 Corrections
 
 The types of corrections permitted depend on when the error is discovered.
 
@@ -853,18 +841,18 @@ Corrections to published results are **not permitted**. Errors in finalized resu
 - Invalidated points are removed from the active results page but remain in the historical archive with an "Invalidated" designation and a description of the error.
 - Non-result corrections (documentation, metadata) after finalization require review chair approval and are published with a clear change log.
 
-### 8.3 Withdrawal
+### 8.2 Withdrawal
 
 A submitter may voluntarily withdraw their submission at any time.
 
 - **Before finalization** (while results still carry the "peer review pending" tag): The submission is removed entirely from both the active results page and the historical archive. No record of the provisional publication is retained.
 - **After finalization:** Results are removed from the active results page but remain in the historical archive with a "Withdrawn" designation.
 
-### 8.4 Terms of Use
+### 8.3 Terms of Use
 
 Any use of published results in connection with the MLPerf trademark must follow the [MLPerf Results Messaging Guidelines](https://github.com/mlcommons/policies/blob/master/MLPerf_Results_Messaging_Guidelines.adoc) and any relevant policies at https://mlcommons.org/en/policies/.
 
-### 8.5 Issues Discovered After Publication
+### 8.4 Issues Discovered After Publication
 
 This section is limited to allegations of **direct fraud or misrepresentation** — a submission that knowingly reports results it did not achieve, materially misstates the system under test, or conceals a material fact from reviewers. Post-publication concerns that do not allege fraud are handled as late objections ([§6.6](#66-late-objections-post-week-6)) or audit nominations ([§10.1](#101-audit-nomination-on-reproducibility-grounds)), subject to the standing and time-window limits of [§6.6](#scope-and-standing-for-late-concerns). This section carries no time limit and is not subject to supersession by a later submission.
 
