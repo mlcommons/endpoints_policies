@@ -641,13 +641,13 @@ One accuracy validation run is required per submission (not per measurement poin
 
 Until v0.7, a point's metrics ([§4.1](#41-primary-metrics)) were averaged over the whole post-`TEST_STARTED` run, which still included the load-dependent **ramp-up** (inflates the TTFT tail) and the **drain tail** (deflates throughput) that warmup period ([§6.3](#63-warmup-period)) did not remove. For 1.0 and beyond, the **official result is instead computed over the detected steady-state window**, with the whole-run (`total`) metrics kept as supplementary. The window is defined on **issue time** — excluding the drain from the throughput denominator with no end-crop — and the residual ramp is cropped from the data on top of the declared warmup. Detection is a post-processing step over the durable event log (`events.jsonl`, [§4.1](#41-primary-metrics)), off the measured path; methodology and default parameters: [`scripts/steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md).
 
-Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total) **and** every gating metric — TTFT and TPOT at p50/p95 — is a **Plateau**, not **Drifting Up**. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix (≈ one dataset pass). Otherwise the point falls back by coverage `status`:
+Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total) **and** every gating metric — TTFT and TPOT at p50/p95 — is a **Plateau**, not **Drifting Up**. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix — by default one full dataset pass, unless the [benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Otherwise the point falls back by coverage `status`:
 
 | `status` | Condition | Official result |
 |---|---|---|
 | `windowable` | ≥ 4 super-pass steady window in Plateau | steady-state metrics; `total` supplementary |
-| `insufficient_passes` | ≥ 1 pass but window < 4 super-passes | `total` (steady-state reported low-confidence, not official) |
-| `partial_dataset` | < 1 full dataset pass | `total` only (no steady-state claim) |
+| `insufficient_passes` | ≥ 1 super-pass but window < 4 super-passes | `total` (steady-state reported low-confidence, not official) |
+| `partial_dataset` | < 1 super-pass | `total` only (no steady-state claim) |
 
 Beyond the coverage `status` above (which gates on sample count), a point's official result depends on the **shape** the detector finds over the super-passes. The detector ([`steady_state_diagnostics`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md)) emits one verdict per run:
 
@@ -1116,7 +1116,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `dataset_name` | Display name of dataset, should be consistent across all external usages. |
 | `dataset_type` | Is the dataset used for "Accuracy", "Performance", or "Accuracy + Performance". |
 | `dataset_link` | Link to data used for submission e.g., via GitHub. |
-| `steady_state` | The reporting block of [§4.4](#44-reporting-basis-steady-state-window) — `status`, `window` (super-pass range and sample count), per-metric `state` (`Plateau` / `Drifting Up` / `Drifting Down`), and `anomaly` (present only on a level shift); `total` metrics reported alongside as supplementary. |
+| `steady_state` | The reporting block of [§4.4](#44-reporting-basis-steady-state-window) — `status`, `window` (super-pass range, sample count, and the effective super-pass size used), per-metric `state` (`Plateau` / `Drifting Up` / `Drifting Down`), and `anomaly` (present only on a level shift); `total` metrics reported alongside as supplementary. |
 
 ### 8.4 Software Disclosure
 
