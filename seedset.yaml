@@ -1,5 +1,5 @@
   seed_sets:                              # a submission selects exactly one, by id
     - id: A
-      scheduler_rng_seed:    295793930642748725264791672138389612482
-      sample_index_rng_seed: 3740254276054744714297447358247524
-      model_seed:            92776823117223812132892571004940786379
+      scheduler_rng_seed:    10487924139932647040
+      sample_index_rng_seed: 586478644936801402
+      model_seed:            9315206023656308754
