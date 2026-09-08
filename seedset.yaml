@@ -1,3 +1,6 @@
+cohort:
+  version: 1.0
+  cohort-id: 2026-10-C1
   seed_sets:                              # a submission selects exactly one, by id
     - id: A
       scheduler_rng_seed:    10487924139932647040
