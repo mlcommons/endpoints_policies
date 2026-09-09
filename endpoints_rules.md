@@ -984,7 +984,37 @@ Endpoints submissions must include the following metadata:
 | Field | Description |
 |---|---|
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
-| `publication_status` | `Available`, `Preview`, or `RDI`. |
+| `system_name` | Submitter selected string to describe the system under test (SUT). |
+| `shortened_system_name` |  Shortened `system_name` that's at most 20 characters. |
+| `system_availability_status` | `Available` , `Preview`, or `RDI` (not available for purchase soon) at submission time. |
+| `system_size` | Number of accelerators per node type, e.g. "72 accelerators + 144 accelerators" for a system comprising two types of nodes with 72 accelerators in the first node type and 144 accelerators in the second node type. |
+| `system_node_ensemble_count` | How many unique combinations of Hardware and Software are part of the SUT. |
+| `system_node_ensemble_total` | Total number of nodes in the SUT, equal to the sum of all number_of_nodes.|
+| `system_node_ensemble_id` | Identifies a unique node type within the SUT. |
+| `number_of_nodes` | How many nodes of type system_node_ensemble_id are in the SUT. |
+| `host_processor_model_name` | Model name of the host processor. |
+| `host_processors_per_node` | # of host processors per node. |
+| `host_processor_core_count` | # of CPU cores in each processor. Optional, but at least one of host_processor_core_count and host_processor_cpu_count must be present. |
+| `host_processor_vcpu_count` | # of vCPUs in each processor. Optional, but at least one of host_processor_core_count and host_processor_vcpu_count must be present. |
+| `accelerator_model_name` | Model name of the accelerator. |
+| `accelerators_per_node` | # of accelerators per node. |
+| `accelerator_host_interconnect` | Describes the interconnect link between the accelerator and the host processors. |
+| `accelerator_interconnect` | Describes the interconnect link between accelerators, when multiple accelerators are present as indicated by accelerators_per_node > 1. |
+| `accelerator_memory_capacity` | Memory capacity per accelerator. |
+| `accelerator_memory_type` | Type of memory for the accelerator. |
+| `host_memory_capacity` | Total memory capacity for all host processors. Not per-processor. |
+| `host_memory_configuration` | Memory configuration for the host processors, e.g., how many DIMMs, what kind of memory (DDR5, LPDDR4, etc.), and speed. |
+| `host_network_card_count` | Describes the # and type of networking cards and associated speeds. |
+| `host_networking` | Describes the networking protocol, e.g., Infiniband, Ethernet. |
+| `host_storage_capacity` | Total storage capacity for the node. |
+| `host_storage_type` | Description of the type of storage in the node. |
+| `other_hardware` | Describes any other performance relevant hardware in the node, freeform field. |
+| `cooling` | Describes if the node uses any liquid cooling, only air-cooling, or only passive cooling. |
+| `hw_notes` | Submitter hardware notes to supplement other information, freeform field. |
+| `serving_framework` | Serving Framework used for submission, e.g., SGLang, vLLM, etc. |
+| `inference_backend` | Inference backend used for submission, e.g., vendor stack components. |
+| `driver` | Driver and version number for any accelerators. |
+| `container_link` | Link to container for submission. |
 | `model_name` | Benchmark model name (must match supported model list). |
 | `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
 | `endpoint_url` | URL or description of the endpoint under test. |
