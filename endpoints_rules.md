@@ -636,7 +636,7 @@ The following metrics are derived from primary measurements and used in publicat
 
 Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
 
-One accuracy validation run is required per region. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
+One accuracy validation run is required for each of the 4 pareto regions. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
 
 ---
 
@@ -1186,7 +1186,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | The valid per-response TPOT distribution must be non-empty with a finite, strictly positive P90; the normalized P90 value in milliseconds is `tpot_p90_ms` and `tps_per_user = 1000 / tpot_p90_ms`. The authoritative result schema defines TPOT serialization and units. | Flag inconsistent points. |
-| **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
+| **Accuracy** | At least one accuracy run per pareto region passes the benchmark quality target. | Reject submission. |
 | **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |
 
