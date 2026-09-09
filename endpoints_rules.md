@@ -46,7 +46,7 @@
 7. [Publication Status](#7-publication-status)
 8. [Submission Requirements](#8-submission-requirements)
    - [8.1 Directory Structure](#81-directory-structure)
-   - [8.2 System Description (system\_desc\_id.json)](#82-system-description-system_desc_idjson)
+   - [8.2 System Description (system\_desc.json)](#82-system-description-system_desc_idjson)
    - [8.3 Measurement Point YAML](#83-measurement-point-yaml)
    - [8.4 Software Disclosure](#84-software-disclosure)
    - [8.5 Result ID](#85-result-id)
@@ -979,7 +979,7 @@ Each point declares which shared content it used via the `shared_src` and `share
 its `point.yaml` (see [§8.3](#83-measurement-point-yaml)). A point whose pointers are missing or do
 not resolve to an existing directory is incomplete under [§9.1](#91-automated-checks).
 
-### 8.2 System Description (`system_desc_id.json`)
+### 8.2 System Description (`system_desc.json`)
 
 Endpoints submissions must include the following metadata:
 
@@ -1151,7 +1151,7 @@ The **result ID** identifies a single published result and is human-readable. A 
 | `major-version` | Major version of the MLPerf Endpoints rules under which the result was submitted (e.g., `1` for v1.0). |
 | `minor-version` | Minor version of the same (e.g., `0` for v1.0). |
 | `cohort-number` | Cohort Number for this submission (e.g., `0` for the first cohort of a given version, `1` for the second, etc.)
-| `model_id` | Benchmark model identifier from the round's supported model list ([§3.2](#32-supported-models)). Must match `benchmark_model` in `system_desc_id.json` ([§8.2](#82-system-description-system_desc_idjson)). |
+| `model_id` | Benchmark model identifier from the round's supported model list ([§3.2](#32-supported-models)). Must match `benchmark_model` in `system_desc.json` ([§8.2](#82-system-description-system_desc_idjson)). |
 | `dataset_id` | Identifier of the dataset used for the performance and accuracy runs, as named in the benchmark definition ([§3.1](#31-benchmark-definition)) and recorded in each point's `dataset` field ([§8.3](#83-measurement-point-yaml)). |
 | `entry-number` | Sequence number assigned at publication, unique within the preceding four components. |
 
