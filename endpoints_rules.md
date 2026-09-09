@@ -1108,7 +1108,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | Field | Description |
 |---|---|
 | `concurrency` | The target concurrency level. |
-| `region` | The region this point satisfies (`low_latency`, `low_throughput`, `med_throughput`, `high_throughput`, or `submitters_choice`). |
+| `region` | The region this point satisfies (`low_latency`, `low_concurrency`, `med_concurrency`, `high_concurrency`, or `submitters_choice`). |
 | `runtime_settings` | The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.). |
 | `dataset` | Dataset name and any `n_samples_from_dataset` override (if applicable). |
 | `warmup` | The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`). |
