@@ -642,7 +642,7 @@ The following metrics are derived from primary measurements and used in publicat
 
 Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
 
-Accuracy and performance runs MUST use the same endpoint configuration, model weights, and software stack.
+Accuracy and performance runs MUST use the same server endpoint configuration, model weights, and software stack.
 
 For both single-turn and multi-turn benchmarks, accuracy is required at the `N` points defined in [§5.3](#53-minimum-submission-requirements).
 
