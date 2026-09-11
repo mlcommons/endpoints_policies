@@ -641,6 +641,23 @@ One accuracy validation run is required per submission (not per measurement poin
 
 Until v0.7, a point's metrics ([§4.1](#41-primary-metrics)) were averaged over the whole post-`TEST_STARTED` run, which still included the load-dependent **ramp-up** (inflates the TTFT tail) and the **drain tail** (deflates throughput) that warmup period ([§6.3](#63-warmup-period)) did not remove. For 1.0 and beyond, the **official result is instead computed over the detected steady-state window**, with the whole-run (`total`) metrics kept as supplementary. The window is defined on **issue time** — excluding the drain from the throughput denominator with no end-crop — and the residual ramp is cropped from the data on top of the declared warmup. Detection is a post-processing step over the durable event log (`events.jsonl`, [§4.1](#41-primary-metrics)), off the measured path; methodology and default parameters: [`scripts/steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md).
 
+**Definitions.** The terms used throughout this section:
+
+| Term | Definition |
+|---|---|
+| **Super-pass** | A contiguous issue-order block of queries sized to one full pass over the dataset, unless the [benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Window length and the trend-test floor are measured in super-passes. |
+| **Ramp-up** | The load-dependent transient at the start of a run — after the declared warmup ([§6.3](#63-warmup-period)) — while in-flight concurrency and queue depth are still climbing to target; it inflates the TTFT tail. The residual ramp is cropped from the front of the data before detection. |
+| **Drain (drain tail)** | The transient at the end of a run during which no new queries are issued and in-flight queries complete; it deflates throughput. Excluded by defining the window on issue time (no end-crop required). |
+| **Gating metric** | The metrics whose stability decides whether a steady state holds: TPOT at P50 and P90. |
+| **Plateau** | A gating-metric state showing no significant trend across the super-passes (per the trend-test in [`steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md)) — i.e., stable. |
+| **Drifting Up / Drifting Down** | A gating-metric state showing a significant increasing / decreasing trend across the super-passes; reported as drift (range/slope), never as a point estimate. |
+| **Trend-test / `MIN_TREND_N`** | The per-metric trend test applied across super-passes; `MIN_TREND_N = 4` is its minimum-sample floor (≥ 4 super-passes). Exact test and parameters: [`steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md). |
+| **Change-point** | A confirmed step between two materially different, internally stable plateaus within one run; triggers the `anomaly` (staircase) verdict, where the first plateau is the reported steady state and the later shift is disclosed as likely degradation. |
+| **Steady-state window** | The contiguous issue-time interval — after warmup and residual-ramp crop, before the drain — over which the gating metrics are stable (Plateau). The official result is computed over this window when the steady-state condition holds. |
+| **`total` (whole-run) metrics** | Metrics averaged over the entire post-`TEST_STARTED` run (the pre-1.0 basis). Reported as supplementary alongside the steady-state result, and the official fallback where no steady state holds. |
+| **Coverage `status`** | Sample-count classification of a point — `windowable`, `insufficient_passes`, `partial_dataset` (see the status table below). |
+| **Detected shape / verdict** | The detector's per-run classification of gating-metric behavior — `STEADY STATE`, `drifting_up`, `drifting_down`, `anomaly`, `not found` (see the shape table below). |
+
 Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total) **and** every gating metric — TTFT and TPOT at P50/P90 — is a **Plateau**, not **Drifting Up**. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix — by default one full dataset pass, unless the [benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Otherwise the point falls back by coverage `status`:
 
 | `status` | Condition | Official result |
