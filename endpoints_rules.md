@@ -351,6 +351,7 @@ Each benchmark has a **reference implementation** published in the MLPerf Endpoi
 - The **speculative-decoding configuration** if the benchmark designates a drafter (drafter ID, precision, algorithm, default per-point configuration). See [§2.9.4](#294-speculative-decoding).
 - The accuracy evaluation methodology and quality target.
 - The endpoint API interface.
+- **Fixed configuration:** Configuration parameters explicitly designated as fixed by the reference implementation MUST NOT be modified by submitters.
 
 An **alternative reference implementation** may be designated by the working group for a specific architecture or hardware class, subject to passing the same accuracy quality target as the primary reference implementation.
 
@@ -362,7 +363,7 @@ An **alternative reference implementation** may be designated by the working gro
 The server-side processing of each incoming request — both input pre-processing and output post-processing — must be functionally equivalent to the reference implementation:
 
 - **Tokenization:** Must produce the same token IDs as the reference tokenizer for the same input text. Submitters using an alternative tokenizer implementation must demonstrate token-for-token equivalence on the accuracy dataset.
-- **Chat template / prompt formatting:** The system prompt, user turn formatting, and special tokens (BOS, EOS, role markers) must match the canonical chat template defined in the benchmark specification. Modifications to the chat template that change the effective input to the model are not permitted.
+- **Chat template / prompt formatting:** The system prompt, user turn formatting, special tokens (BOS, EOS, role markers), and chat-template flags (for example, `enable_thinking`, `clear_thinking`, and `preserve_thinking`) must match the benchmark specification. Modifications that change the effective input to the model are not permitted.
 - **Input truncation:** If the reference implementation truncates inputs that exceed the model's context window, the submitter's truncation method must produce the same result.
 
 #### 2.9.3 Model Weight Rules
@@ -452,6 +453,9 @@ The operative requirement is that the token stream actually seen by the SUT cont
 **Clients that pre-tokenize.** A client that pre-tokenizes prompts (e.g., SGLang-style adapters that send `input_tokens` rather than text) MUST ensure the *token stream* it sends to the SUT contains the unique per-query salt between the system-prompt tokens and the user-context tokens. Two conforming approaches: (a) apply the salt to the text and re-tokenize the result before sending, or (b) reserve a salt-marker token ID (or short sequence) and emit it inline. Applying the salt only to a `prompt` text field while sending the original `input_tokens` will *not* prevent KV reuse — the SUT never sees the text — and is non-compliant. The reference implementation in `mlcommons/endpoints` follows path (a); see the warning logged by `Dataset._apply_salt` in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the contract.
 
 **Accuracy runs use the un-salted reference dataset** to ensure model output matches the canonical implementation exactly. Submissions are not required to disable cross-query KV reuse in their serving stack for accuracy runs; the accuracy dataset simply omits the salt prefix, and the serving stack reuses KV as it would in production. This split (salted performance dataset, un-salted accuracy dataset) is the operational mechanism that allows blanket cross-query KV reuse without compromising the accuracy gate's role as a model-output check.
+
+> [!NOTE]
+> Agentic benchmarks use benchmark-specific random salting to control KV-cache reuse. The mechanism is controlled by benchmark-specific flags and MUST be enabled for submissions.
 
 > [!NOTE]
 > **Backward compatibility note.** This rule intentionally diverges from MLPerf Inference's KV-cache FAQ, which states KV state "does not apply across queries". Endpoints submissions are not portable to standard MLPerf Inference without disabling cross-query KV reuse; conversely, MLPerf Inference submissions that already prohibit cross-query reuse are trivially compliant with this section. Submitters should treat the two rule sets as **not** mutually compatible for code paths that rely on this delta.
@@ -609,6 +613,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 |---|---|---|
 | System Tokens per Second | `system_tps` | Total output tokens produced per second across all concurrent users. `system_tps = total_output_tokens / elapsed_duration_seconds`. |
 | TPS per User | `tps_per_user` | `tps_per_user = 1000 / tpot_p90_ms`, where `tpot_p90_ms` is the P90 of valid per-response TPOT samples. Higher is better. |
+| E2E Average Interactivity | `e2e_avg_interactivity` | For agentic benchmarks, the output-token rate across completed turns, reported as a single scalar per measurement point. The scalar aggregates all completed turns across all trajectories in the run: `e2e_avg_interactivity = sum(output_tokens_per_turn) / sum(e2e_turn_time_seconds)`, where `e2e_turn_time_seconds` is the server-side time from receipt of the request through completion of the response for each turn and excludes tool-call execution time. |
 | Time to First Token (P90) | `ttft_p90_ms` | 90th-percentile time, in milliseconds, from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning). |
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
@@ -627,7 +632,8 @@ The following metrics are derived from primary measurements and used in publicat
 
 | Metric | Description |
 |---|---|
-| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart for single-turn benchmarks. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **Agentic Pareto curve (System TPS vs. E2E Average Interactivity)** | The primary publication chart for agentic benchmarks. **Y-axis:** `system_tps`. **X-axis:** `e2e_avg_interactivity`. Each point corresponds to a different concurrency level. Higher values are better on both axes. |
 | **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
 | **TTFT (P90) vs. Concurrency** | **Y-axis:** `ttft_p90_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P90 is the default and the only percentile plotted for v1.0; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
 | **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how per-user output rate degrades with load. |
@@ -636,7 +642,12 @@ The following metrics are derived from primary measurements and used in publicat
 
 Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
 
-One accuracy validation run is required per submission (not per measurement point). The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
+Accuracy and performance runs MUST use the same server endpoint configuration, model weights, and software stack.
+
+For both single-turn and multi-turn benchmarks, accuracy is required at the `N` points defined in [§5.3](#53-minimum-submission-requirements).
+
+- **Single-turn (per-point):** Each of the `N` required accuracy results MUST meet the quality threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after the corresponding performance run.
+- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn accuracy runs are time- and resource-intensive.
 
 ---
 
@@ -644,7 +655,7 @@ One accuracy validation run is required per submission (not per measurement poin
 
 ### 5.1 What Is Measured
 
-Each measurement point on the pareto curve is a benchmark run at a specific concurrency level using the **ConcurrencyScheduler** load pattern in the MLPerf Endpoints reference client. The ConcurrencyScheduler maintains a fixed number of in-flight queries at all times: when a query completes, a new query is immediately issued to maintain the target concurrency.
+Each measurement point is a benchmark run at a specific target concurrency using the benchmark-defined fixed-concurrency load pattern. Replacement queries and dependent turns are issued according to benchmark-defined timing.
 
 ### 5.2 Pareto Curve Representation
 
@@ -663,6 +674,8 @@ Each submission must include a minimum of **7 measurement points**, structured a
 | 1 mandatory point | One low-latency point in the [Ultra Low Concurrency region](#low-latency-region) (concurrency 1–32). |
 | 3 mandatory points | One point in each of the three [Concurrency regions](#concurrency-regions) (Low Concurrency, Medium Concurrency, High Concurrency). |
 | 3 submitter's-choice points | Any concurrency level in any of the three "concurrency" regions, at the submitter's discretion. |
+
+Accuracy results are required at `N` points: the four mandatory points—one low-latency point in the Ultra Low Concurrency region and one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions—plus one additional Offline point if Offline results are submitted.
 
 #### No Spacing Requirements
 
@@ -843,7 +856,7 @@ At no point shall the total number of measurement points on a single submission'
 
 ### 6.1 Load Pattern
 
-All measurement points must use the **ConcurrencyScheduler** load pattern in the MLPerf Endpoints reference client. The `target_concurrency` setting specifies the exact concurrency level for each point. Other load patterns (`MaxThroughput`, `Poisson`) are not valid for pareto submission points.
+All measurement points must use the benchmark-defined fixed-concurrency load pattern. The `target_concurrency` setting specifies the exact concurrency level for each point. Other load patterns (`MaxThroughput`, `Poisson`) are not valid for pareto submission points.
 
 ### 6.2 Minimum Run Duration
 
@@ -907,6 +920,8 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 > [!NOTE]
 > These minimum query counts require statistical validation against required sample sizes for target confidence intervals. Values are subject to adjustment pending working group ratification.
 
+At each measurement point, the total number of samples issued MUST be a positive integer multiple of the dataset size.
+
 ### 6.5 Dataset Considerations
 
 *(Example constraints — subject to ratification.)*
@@ -920,7 +935,7 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 
 *(Example constraint — subject to ratification.)*
 
-Accuracy validation is required per submission (including per measurement point). The accuracy run verifies that the system meets the benchmark's quality target. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
+Accuracy validation is required at the points defined in [§5.3](#53-minimum-submission-requirements). The accuracy runs verify that the system meets the benchmark's quality target and MUST follow the applicable single-turn or multi-turn requirements in [§4.3](#43-accuracy-metric).
 
 ---
 
@@ -1179,14 +1194,15 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Max concurrency declared** | $C_{max} > 32$; declared in `system_desc_id.json`. | Reject submission. |
 | **Point cap** | ≤ 32 total measurement points. | Reject points beyond 32. |
 | **Concurrency in range** | Each point's concurrency falls within a valid region (including the 10% High Concurrency margin), computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm). | Flag out-of-range points. |
-| **Load pattern** | All points used `ConcurrencyScheduler`. | Reject non-conforming points. |
+| **Load pattern** | All points used the benchmark-defined fixed-concurrency load pattern. | Reject non-conforming points. |
 | **Run duration** | Each point meets the minimum steady-state duration for its region (see [§6.2](#62-minimum-run-duration)). | Flag non-compliant points. |
 | **Minimum query count** | Each point meets the minimum completed queries for its region (see [§6.4](#64-minimum-completed-queries)). | Flag non-compliant points. |
 | **Streaming config** | `stream_all_chunks = true` for all performance runs. | Flag non-compliant points. |
 | **Warmup metadata** | Each point's YAML declares the warmup fields required by [§6.3.3](#633-documentation-requirements) (`duration_s`, `requests_issued`, `requests_completed`, `data_source`, `concurrency`, `initialization_steps`). | Flag non-compliant points. |
 | **Warmup logs retained** | Warmup request logs are retained and available for reviewer inspection (see [§6.3.2](#632-discard-policy)). | Flag non-compliant points. |
 | **Metric consistency** | The valid per-response TPOT distribution must be non-empty with a finite, strictly positive P90; the normalized P90 value in milliseconds is `tpot_p90_ms` and `tps_per_user = 1000 / tpot_p90_ms`. The authoritative result schema defines TPOT serialization and units. | Flag inconsistent points. |
-| **Accuracy** | At least one accuracy run passes the benchmark quality target. | Reject submission. |
+| **Agentic metric consistency** | Reported agentic metrics are derivable from their §4 definitions. | Flag inconsistent points. |
+| **Accuracy** | Accuracy results are present for all points required by §5.3 and satisfy the applicable single-turn or multi-turn gate in §4.3. | Reject submission. |
 | **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |
 
