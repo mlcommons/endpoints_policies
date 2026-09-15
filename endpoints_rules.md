@@ -36,6 +36,7 @@
    - [5.4 Regions of Interest](#54-regions-of-interest)
    - [5.5 Region Boundary Reference Algorithm](#55-region-boundary-reference-algorithm)
    - [5.6 Maximum Point Cap](#56-maximum-point-cap)
+   - [5.7 Offline Point](#57-offline-point)
 6. [Run Requirements Per Measurement Point](#6-run-requirements-per-measurement-point)
    - [6.1 Load Pattern](#61-load-pattern)
    - [6.2 Minimum Run Duration](#62-minimum-run-duration)
@@ -621,6 +622,9 @@ Each measurement point on the pareto curve captures the following metrics at a s
 > **Genuine first token.** TTFT is triggered by the first non-empty fragment (`len(s) > 0`). Emitting whitespace, control characters, punctuation, or other meaningless leading content solely to stop the TTFT clock — rather than as a genuine part of the model response — is not allowed.
 
 > [!NOTE]
+> **TTFT does not apply to the Offline point.** Every query is queued at the start of an Offline run, so TTFT is unbounded in principle and carries no information. `ttft_p90_ms` is not required for the Offline point — see [§5.7](#57-offline-point).
+
+> [!NOTE]
 > **TTFT versioning.** The historical v0.7 rules used **P95** for the publication plot and as the primary TTFT metric. These v1.0 rules use **P90**; only `ttft_p90_ms` is required to be reported per measurement point. Additional TTFT percentiles (e.g., P50, P99) may be reported in a submission YAML, but they are not plotted in the v1.0 publication chart.
 
 ### 4.2 Derived and Presentation Metrics
@@ -663,19 +667,22 @@ The pareto curve is represented exclusively as a **step-function** plot. Each su
 
 Visualization tools may optionally overlay interpolated or smoothed curves for readability, but these must be clearly labeled as **"interpolated (not official)"** and must not replace the step-function representation in official publications.
 
+The Offline point ([§5.7](#57-offline-point)) appears on the curve as the throughput ceiling and is labelled separately; it does not define a step in the fixed-concurrency step function.
+
 ### 5.3 Minimum Submission Requirements
 
 #### Minimum Point Count
 
-Each submission must include a minimum of **7 measurement points**, structured as **1 + 3 + 3**:
+Each submission must include a minimum of **8 measurement points**, structured as **1 + 3 + 3 + 1**:
 
 | Points | Placement |
 |---|---|
 | 1 mandatory point | One low-latency point in the [Ultra Low Concurrency region](#low-latency-region) (concurrency 1–32). |
 | 3 mandatory points | One point in each of the three [Concurrency regions](#concurrency-regions) (Low Concurrency, Medium Concurrency, High Concurrency). |
 | 3 submitter's-choice points | Any concurrency level in any of the three "concurrency" regions, at the submitter's discretion. |
+| 1 mandatory **Offline** point | The unconstrained-throughput point defined in [§5.7](#57-offline-point). Required for every submission. |
 
-Accuracy results are required at `N` points: the four mandatory points—one low-latency point in the Ultra Low Concurrency region and one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions—plus one additional Offline point if Offline results are submitted.
+Accuracy results are required at `N` points: the five mandatory points — one low-latency point in the Ultra Low Concurrency region, one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions, and the Offline point.
 
 #### No Spacing Requirements
 
@@ -846,6 +853,40 @@ At no point shall the total number of measurement points on a single submission'
 
 *Rationale:* The 32-point cap balances comprehensive characterization against review burden and result presentation clarity.
 
+The Offline point ([§5.7](#57-offline-point)) counts toward this cap.
+
+### 5.7 Offline Point
+
+> [!CAUTION]
+> **`[TENTATIVE — Pending working-group ratification]`** The Offline point is newly introduced for Endpoints v1.0.
+
+Every submission MUST include one **Offline** measurement point. It is the analogue of the **Offline scenario** in [MLPerf Inference](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc): all queries are available to the system under test at once, and the only question asked is how much total throughput the system can sustain when nothing constrains it.
+
+#### 5.7.1 Definition
+
+- **All queries are available at once.** The client makes the entire sample set available to the SUT at the start of the run rather than pacing issuance to hold a target concurrency. The SUT drains the queue at whatever rate it can.
+- **Throughput is the only metric of interest.** The Offline point reports `system_tps` and the resulting `concurrency`. It characterizes the system's peak aggregate capacity.
+- **Latency metrics do not apply.** Because every query is queued at the start, a query at the back of the queue may wait arbitrarily long before its first token. **`ttft_p90_ms` is therefore unbounded in principle, is not required for the Offline point, and MUST NOT be used as a compliance criterion or an objection basis against it.**
+
+#### 5.7.2 Relationship to Maximum Supported Concurrency
+
+The Offline point may or may not coincide with the point at maximum supported concurrency $C_{max}$. Where it does not, both of the following MUST hold:
+
+| Quantity | Constraint |
+|---|---|
+| System throughput | `system_tps(Offline)` ≥ `system_tps` at the $C_{max}$ point |
+| Concurrency | `concurrency(Offline)` ≥ $C_{max}$ |
+
+*Rationale:* Offline removes every pacing constraint on the load generator, so it is by construction an upper bound on what the fixed-concurrency points can achieve. An Offline result below the $C_{max}$ point indicates either that the run did not saturate the system or that the $C_{max}$ point was measured under conditions the Offline run did not reproduce. Either way the submission does not characterize its own ceiling, and the points are inconsistent.
+
+An Offline point that violates either constraint is flagged at automated compliance ([§9.1](#91-automated-checks)).
+
+#### 5.7.3 Presentation
+
+The Offline point is plotted on the pareto curve as the system's **throughput ceiling** — the highest `system_tps` the submission reports. It is labelled **"Offline"** and is visually distinguished from the fixed-concurrency points, because it is measured under a different load pattern and carries no meaningful latency coordinate.
+
+All other run requirements of [§6](#6-run-requirements-per-measurement-point) — minimum duration, minimum completed queries, dataset handling, and the accuracy requirement — apply to the Offline point as they do to any other measurement point, except that the load pattern is the Offline pattern rather than the fixed-concurrency pattern ([§6.1](#61-load-pattern)).
+
 ---
 
 ## 6. Run Requirements Per Measurement Point
@@ -856,7 +897,9 @@ At no point shall the total number of measurement points on a single submission'
 
 ### 6.1 Load Pattern
 
-All measurement points must use the benchmark-defined fixed-concurrency load pattern. The `target_concurrency` setting specifies the exact concurrency level for each point. Other load patterns (`MaxThroughput`, `Poisson`) are not valid for pareto submission points.
+All measurement points except the Offline point must use the benchmark-defined fixed-concurrency load pattern. The `target_concurrency` setting specifies the exact concurrency level for each point. Other load patterns (`Poisson` and similar) are not valid for fixed-concurrency pareto submission points.
+
+The **Offline point** ([§5.7](#57-offline-point)) instead uses the benchmark-defined Offline load pattern, in which the entire sample set is made available to the SUT at once rather than paced to a target concurrency. It is the only point for which the fixed-concurrency pattern is not used.
 
 ### 6.2 Minimum Run Duration
 
@@ -1186,7 +1229,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 |---|---|---|
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
 | **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
-| **Point count** | ≥ 7 total measurement points. | Reject submission. |
+| **Point count** | ≥ 8 total measurement points, including the Offline point. | Reject submission. |
+| **Offline point present** | Exactly one point is declared as the Offline point ([§5.7](#57-offline-point)). | Reject submission. |
 | **Ultra Low Concurrency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
 | **Low Concurrency coverage** | ≥ 1 point in the Low Concurrency region. | Reject submission. |
 | **Medium Concurrency coverage** | ≥ 1 point in the Medium Concurrency region. | Reject submission. |
@@ -1194,7 +1238,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Max concurrency declared** | $C_{max} > 32$; declared in `system_desc_id.json`. | Reject submission. |
 | **Point cap** | ≤ 32 total measurement points. | Reject points beyond 32. |
 | **Concurrency in range** | Each point's concurrency falls within a valid region (including the 10% High Concurrency margin), computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm). | Flag out-of-range points. |
-| **Load pattern** | All points used the benchmark-defined fixed-concurrency load pattern. | Reject non-conforming points. |
+| **Offline ordering** | `system_tps(Offline)` ≥ `system_tps` at the $C_{max}$ point, and `concurrency(Offline)` ≥ $C_{max}$ ([§5.7.2](#572-relationship-to-maximum-supported-concurrency)). | Flag non-compliant submission. |
+| **Load pattern** | All points except the Offline point used the benchmark-defined fixed-concurrency load pattern; the Offline point used the Offline pattern. | Reject non-conforming points. |
 | **Run duration** | Each point meets the minimum steady-state duration for its region (see [§6.2](#62-minimum-run-duration)). | Flag non-compliant points. |
 | **Minimum query count** | Each point meets the minimum completed queries for its region (see [§6.4](#64-minimum-completed-queries)). | Flag non-compliant points. |
 | **Streaming config** | `stream_all_chunks = true` for all performance runs. | Flag non-compliant points. |
