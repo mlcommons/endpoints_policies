@@ -29,6 +29,7 @@
    - [4.1 Primary Metrics](#41-primary-metrics)
    - [4.2 Derived and Presentation Metrics](#42-derived-and-presentation-metrics)
    - [4.3 Accuracy Metric](#43-accuracy-metric)
+   - [4.4 Performance Normalization](#44-performance-normalization)
 5. [Pareto Collection Methodology](#5-pareto-collection-methodology)
    - [5.1 What Is Measured](#51-what-is-measured)
    - [5.2 Pareto Curve Representation](#52-pareto-curve-representation)
@@ -648,6 +649,108 @@ For both single-turn and multi-turn benchmarks, accuracy is required at the `N` 
 
 - **Single-turn (per-point):** Each of the `N` required accuracy results MUST meet the quality threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after the corresponding performance run.
 - **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn accuracy runs are time- and resource-intensive.
+
+### 4.4 Performance Normalization
+
+> [!CAUTION]
+> **`[TENTATIVE — Pending working-group ratification]`** This section introduces power-based normalization for Endpoints v1.0. Tier definitions, overhead fractions, component references, and the name and units of the reported normalized metric are subject to change.
+
+MLPerf Endpoints normalizes total system throughput by **provisioned power**, so that systems of different scale can be compared on a common basis. Normalization is what makes results *comparable*: without it a larger system trivially out-performs a smaller one, and a buyer cannot tell which delivers more for a given deployment budget.
+
+Normalization need not use the same factor for every deployment type. Provisioned power is the factor for on-prem systems; cloud instances and managed endpoints may normalize on a published price basis instead, where one exists.
+
+#### 4.4.1 Power Normalization Roadmap and Rationale
+
+**Goal.** MLPerf Endpoints will transition to mandatory provisioned-power-based normalization of performance (total system throughput) in Endpoints v1.0 and beyond. Toward this goal the benchmark adopts a phased approach of increasing provisioned-power fidelity, and will eventually add true measured power as an additional normalization option.
+
+**Why provisioned power.** Provisioned power is selected as the normalizing factor because:
+
+- It is a good proxy for **total cost of ownership** (cost of acquisition + cost of operation). In practice a buyer computes the cost of a system and the cost of operating it; this is a rough proxy for that.
+- It correlates with the **capital cost of power delivery** for deploying a system into a rack or data center — UPS, PDUs, generators, and similar.
+- It correlates with **measured power in well-utilized data centers**. Operators generally optimize to keep utilization high, which implies measured power tracks provisioned power.
+- Data center operators are typically **capacity limited by provisioned power** rather than by floor space.
+- CSPs, neoclouds, and others have given feedback that they evaluated provisioned power and find it **more useful than power consumption**.
+- The prior **measured-power approach saw very limited uptake**, because it required additional power meters and extra test time against tight submission deadlines.
+- Modern systems have **configurable power capping**, which lets OEMs and buyers limit consumption — and lets provisioned power be sized correctly for partially populated systems.
+- Provisioned power is **more feasible to obtain or estimate for systems that have not been submitted** to MLPerf, which matters for comprehensive testing.
+
+**Phased tiers.** Provisioned power definition, calculation, and methodology advance through three tiers of increasing fidelity, accuracy, and quality. Endpoints begins at Tier 3 and works upward.
+
+| Tier | Definition | Status |
+|---|---|---|
+| **Tier 1** | Highest fidelity. Not yet defined; the roadmap anticipates true measured power as an additional normalization option. | Future |
+| **Tier 2** | The **nameplate power** of the system's power supplies, accounting for any software-managed power capping. Requires robust verification of system- and rack-level power provisioning. Any power capping must be validated by an MLCommons-defined methodology, which may include Redfish-based logging, independent third-party audit of datacenter deployments, or publicly available documentation of the system's deployment specifications published by the submitting organization. | Target. Requires a dedicated effort to define verification criteria and methodology before it can be rolled out. |
+| **Tier 3** | The **sum of the rated power of the key power-consuming components**, plus an assumed margin. Where publicly available and verifiable data is absent, MLCommons may substitute a proxy value for a component based on public data and analysis. | **In force for Endpoints v1.0** ([§4.4.2](#442-proposed-endpoints-v10-normalization-methodology)) |
+
+**What provisioned power must account for.** The goal is to capture the key power-consuming elements and the reasonable margins and buffers that vendors, OEMs, ODMs, and customers would themselves employ. Key components include computing elements (CPU, GPU, ASIC), switching, storage, networking, cooling, and any power-correction units.
+
+- For **remote-hosted storage**, the power of dedicated storage racks need not be included.
+- For **DC-level liquid cooling**, submitters may provide the power of the entire data center and scale it to the submitted system's size. For an individually hosted rack or system with a dedicated CDU, cooling power MUST be included.
+
+**Why Tier 3 first.** The component-sum definition is less precise than nameplate power, but it works well for comprehensive testing — where the claimed or rated power of the performance-determining devices (CPU, GPU, ASIC) is the information most readily found. It accommodates systems that are partially filled or racks that are not fully used, and it puts every submitter on the same methodology.
+
+#### 4.4.2 Proposed Endpoints v1.0 Normalization Methodology
+
+The v1.0 approach normalizes by power using three elements:
+
+1. An **MLC-approved, simplified and consistent method** for calculating the power of a system from the TDP or power consumption of its most significant components.
+2. A mechanism and guidelines for **submitters to provide the inputs** in a verifiable manner. This is the preferred path.
+3. A mechanism and guidelines for a **third party to estimate the inputs**, as a conservative default or fallback path.
+
+##### Methodology
+
+- MLCommons provides a defined template for total system power, summing critical component power and adding margins for cooling and PSU overheads.
+- Submitters are **encouraged to provide accurate and publicly verifiable** details for component or system power. In the absence of publicly verifiable sources provided by the submitter, MLCommons will use conservative estimations.
+- If a submitter is not satisfied with an MLCommons power estimate, they must either point to better verified sources or disclose component power directly.
+- The MLC default template uses publicly available sources for the TDP/TGP of each component. Where vendor documentation is absent, MLCommons relies on industry and academic sources.
+- Estimation is done conservatively, from components with similar specifications or via an energy-per-unit calculation. For example, for a custom CPU SKU whose TDP is not publicly listed, MLCommons will use CPUs of similar architecture, core count, and memory configuration.
+
+**Verifiable and unverified sources.**
+
+| Category | Examples |
+|---|---|
+| **Verifiable** (preferred) | A spec sheet on the vendor's website; disclosures in an academic or technical conference or publication; statements made to press or media during a keynote or earnings call; other public statements officially sanctioned by the submitting organization. |
+| **Unverified** | Any source not officially stated by a representative of the submitting organization — media speculation, third-party social media posts, industry analyst blogs, videos, and reports. |
+
+**Running below rated TDP.** Any component running below its rated TDP, as stated in publicly verifiable documentation, MUST be accompanied by evidence of the lowered TDP. That evidence must be reproducible by a third-party audit, or the reduced mode must be publicly listed as an alternative production or operational mode. The burden of evidence for custom and low-volume SKUs is identical to that for any other component.
+
+##### Power Model
+
+```
+System Power   = Major_components + Other_components
+
+Major_components = CPU_power + Accelerator_power + Network_scale_up_power
+Other_components = overhead_fraction × Major_components
+
+overhead_fraction = 0.30   liquid-cooled systems
+                  = 0.50   air-cooled systems
+```
+
+- **`CPU_power`** — power required for the CPUs in the system (e.g. Intel Xeon processors, Axion CPUs alongside a Google TPU), calculated as `number of CPUs × TDP`. Where the TDP is not disclosed, public sources may be used to estimate it.
+- **`Accelerator_power`** — power required for the accelerators (e.g. AMD MI355X, Google TPU), calculated as `number of accelerators × TDP`. Where the TDP is not disclosed, public sources may be used to estimate it.
+- In some systems CPU and accelerator power are published as a **single combined value**. That is a valid alternative formulation.
+- **`Network_scale_up_power`** — power for the high-bandwidth network connecting the accelerators, such as NVIDIA NVLink, the TPU Inter-Chip Interconnect, or UALink over Ethernet. The scale-up network accounts for the majority of networking power. Calculated as `number of switches × TDP per switch`; where switch power is not disclosed it may be estimated as `total switch bandwidth × energy per bit`. In systems with no switches this term is zero.
+- **`Other_components`** — scale-out networking, storage, power-supply overhead, and cooling. Individually these may not be substantial; in aggregate they are significant and must be accounted for. They are estimated as a fixed fraction of the major-component power, set by cooling method.
+
+##### Component Template (`system_power.json`)
+
+The template below is to be codified into a `system_power.json` descriptor file accompanying the submission. The MLCommons checker auto-populates power values where a submitter does not provide them or where public information is lacking.
+
+| Field group | Fields | Fallback when public information is absent |
+|---|---|---|
+| **CPU** | `num_cpu`, `tdp_per_cpu`, link to public specification | MLCommons uses the architecture (x86 / ARM), core count, process, and memory channels declared in the system description to select the closest proxy. For **x86**, Intel and AMD CPUs are the default reference; for **ARM**, ARM AGI and Neoverse CPUs. A submitter may propose a proxy, but MLCommons may substitute a different one if it deems the proposal insufficient. |
+| **Accelerator** | `num_accelerator`, `tdp_per_accelerator`, link to public specification; where run below rated spec, public evidence of the alternative SKU/TDP rating plus verifiable instructions and evidence of the reduced power (e.g. `rocm-smi` / `nvidia-smi` output) | MLCommons relies on industry analysis and insights to estimate accelerator power for GPUs, ASICs, and similar. Under comprehensive testing the working group can guide the selection of appropriate values, and the target of the testing may volunteer better information provided it meets the public-and-verifiable requirement. Non-public information supplied by the submitter may be taken into consideration at the discretion of MLCommons or the working group. |
+| **Scale-up network** (intra-node and rack-level) | `num_switches`, `tdp_per_switch` | MLCommons uses the link protocol (NVLink, Ethernet, PCIe), bandwidth per switch, and pJ/bit, drawing on publicly available information or industry analysis. For **Ethernet**, Broadcom Tomahawk switches are the reference — for example the AMD MI455X Helios presentation stating 3.5 kW per switch at 10.8 TB/s per direction. For **NVLink**, Bill Dally's public talk on NVLink power. |
+| **Scale-out network** (optional) | `num_switches`, `tdp_per_switch` | Used only for multi-node submissions that employ a scale-out fabric. The Ethernet methodology applies. |
+| **Other components** | auto-calculated | `overhead_fraction × (CPU + Accelerator + Scale-up)`, with cooling estimated as a fraction of total power: **30%** for liquid-cooled, **50%** for air-cooled systems. |
+| **Total system power** | auto-calculated; used for normalization | `Major_components + Other_components`. |
+
+**Declaring provisioned power directly.** If the estimated total system power is higher than a submitter believes their system is rated at, they may instead provide a provisioned power number directly. That number is subject to the same verification and publication requirements as every other component. Where a published specification states a range for rack-level power, the **upper bound** is used — for example, a system rated at 132–140 kW is taken as 140 kW.
+
+These estimates are deliberately conservative. Submitters are encouraged to be as transparent as possible in order to obtain a more accurate power figure.
+
+> [!NOTE]
+> **Consistency across the pareto curve.** Provisioned power is a property of a *system*. Two systems that are identical but differ only in provisioned power — because of power capping, for example — are considered different systems, and all points on a single pareto curve MUST use the same provisioned power. See [Appendix A \[POWER-NORM\]](#power-norm-power-normalization-open-items) for open items.
 
 ---
 
@@ -1276,6 +1379,19 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 1. **Require residency.** Components present in the canonical checkpoint must be loaded into the serving process for all measurement points, whether or not they are used. Strongest comparability, but forces submitters to reserve memory for a module they have legitimately disabled under [§2.9.4](#294-speculative-decoding).
 2. **Require disclosure of the loaded component set.** Permit non-residency, but declare per measurement point which canonical components were loaded, alongside the existing drafter configuration fields. Preserves the engineering choice while making it visible to reviewers; would extend the disclosure table in [§2.9.6.6](#2966-disclosure).
 3. **Leave unconstrained.** Treat memory footprint as a legitimate configuration dimension, consistent with [§2.9.4](#294-speculative-decoding) already permitting speculation to be disabled at any or all measurement points.
+
+### \[POWER-NORM\] Power Normalization Open Items
+
+**Question:** What remains to be settled before [§4.4](#44-performance-normalization) can be enforced?
+
+**Context:** §4.4 adopts Tier 3 provisioned power for v1.0. Several inputs are unresolved:
+
+1. **Air-cooled overhead fraction.** The source one-pager gives **50%** in the component template but leaves the figure as a placeholder in the accompanying prose. §4.4.2 uses 50%; the working group must confirm it. The liquid-cooled figure of 30% is stated consistently and is not in question.
+2. **Tier 1 is undefined.** The roadmap runs from Tier 3 up to Tier 1, but only Tiers 3 and 2 are specified. The roadmap anticipates true measured power as an additional normalization option; whether that is Tier 1, and what it requires, is open.
+3. **The normalized metric itself is unnamed.** §4.4 defines how to compute total system power but not the name, units, or precision of the published normalized figure — `system_tps` per watt, per kilowatt, or otherwise — nor whether it appears as its own publication chart alongside those in [§4.2](#42-derived-and-presentation-metrics).
+4. **Partially utilized large-scale systems.** How provisioned power is apportioned when, for example, the power supply is rack-level but only a fraction of the rack's compute is used for a run — equivalently, a virtualized slice of a single system.
+5. **Normalization for cloud and managed endpoints.** §4.4 states that the factor need not be the same across deployment types and points at price per hour for cloud instances, but no methodology is defined for the Serviced division.
+6. **Estimate disclaimer.** What labelling should accompany a result whose power figure was estimated by MLCommons rather than supplied and verified by the submitter.
 
 ### Division and Scenario Open Items
 
