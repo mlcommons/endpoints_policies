@@ -655,14 +655,15 @@ Until v0.7, a point's metrics ([§4.1](#41-primary-metrics)) were averaged over 
 | **Change-point** | A confirmed step between two materially different, internally stable plateaus within one run; triggers the `anomaly` (staircase) verdict, where the first plateau is the reported steady state and the later shift is disclosed as likely degradation. |
 | **Steady-state window** | The contiguous issue-time interval — after warmup and residual-ramp crop, before the drain — over which the gating metrics are stable (Plateau). The official result is computed over this window when the steady-state condition holds. |
 | **`total` (whole-run) metrics** | Metrics averaged over the entire post-`TEST_STARTED` run (the pre-1.0 basis). Reported as supplementary alongside the steady-state result, and the official fallback where no steady state holds. |
-| **Coverage `status`** | Sample-count classification of a point — `windowable`, `insufficient_passes`, `partial_dataset` (see the status table below). |
+| **Coverage `status`** | Sample-count and duration classification of a point — `windowable`, `insufficient_duration`, `insufficient_passes`, `partial_dataset` (see the status table below). |
 | **Detected shape / verdict** | The detector's per-run classification of gating-metric behavior — `STEADY STATE`, `drifting_up`, `drifting_down`, `anomaly`, `not found` (see the shape table below). |
 
-Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total) **and** every gating metric — TTFT and TPOT at P50/P90 — is a **Plateau**, not **Drifting Up**. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix — by default one full dataset pass, unless the [benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Otherwise the point falls back by coverage `status`:
+Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total), every gating metric — TTFT and TPOT at P50/P90 — is a **Plateau**, not **Drifting Up**, **and** the window's **issue-time span meets the [§6.2](#62-minimum-run-duration) minimum run duration** for the point's concurrency region. The effective floor is therefore `max(4 super-passes, §6.2 minimum duration)` — at high concurrency the duration floor binds, since 4 super-passes can complete in well under the minimum. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix — by default one full dataset pass, unless the [benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Otherwise the point falls back by coverage `status`:
 
 | `status` | Condition | Official result |
 |---|---|---|
-| `windowable` | ≥ 4 super-pass steady window in Plateau | steady-state metrics; `total` supplementary |
+| `windowable` | ≥ 4 super-pass steady window in Plateau **and** window issue-time span ≥ [§6.2](#62-minimum-run-duration) minimum | steady-state metrics; `total` supplementary |
+| `insufficient_duration` | ≥ 4 super-passes in Plateau but window issue-time span < [§6.2](#62-minimum-run-duration) minimum | `total` (steady-state reported low-confidence, not official) |
 | `insufficient_passes` | ≥ 1 super-pass but window < 4 super-passes | `total` (steady-state reported low-confidence, not official) |
 | `partial_dataset` | < 1 super-pass | `total` only (no steady-state claim) |
 
@@ -676,7 +677,7 @@ Beyond the coverage `status` above (which gates on sample count), a point's offi
 | First plateau steps to a later, materially different plateau (change-point confirmed) | `anomaly` (staircase) | **First** plateau reported as the steady state; later shift flagged as `anomaly` (likely degradation) | ✅ Yes (first plateau); anomaly disclosed |
 | No contiguous run of super-passes is steady enough (drifts throughout, or too short) | `not found` | No steady-state claim; falls back to whole-run `total` | ❌ No — `total` only |
 
-**Scope.** Only `ConcurrencyScheduler` points ([§6.1](#61-load-pattern)) are in scope; `MaxThroughput`/`Poisson` and single-pass agentic workloads are handled only by the ad-hoc diagnostic tool. The minimum run duration ([§6.2](#62-minimum-run-duration)) must be met over the steady window, not wall-clock.
+**Scope.** Only `ConcurrencyScheduler` points ([§6.1](#61-load-pattern)) are in scope; `MaxThroughput`/`Poisson` and single-pass agentic workloads are handled only by the ad-hoc diagnostic tool. The minimum run duration ([§6.2](#62-minimum-run-duration)) is measured over the steady window's **issue-time span**, not wall-clock; a window shorter than the §6.2 minimum for its concurrency region is `insufficient_duration` and falls back to `total`.
 
 **Pending ratification.** Whether the super-pass floor is raised above 4, and whether a `not found` run is declared *invalid* versus *reported-with-flags* (the ⚠️/❌ rows assume the latter).
 
@@ -1133,7 +1134,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `dataset_name` | Display name of dataset, should be consistent across all external usages. |
 | `dataset_type` | Is the dataset used for "Accuracy", "Performance", or "Accuracy + Performance". |
 | `dataset_link` | Link to data used for submission e.g., via GitHub. |
-| `steady_state` | The reporting block of [§4.4](#44-reporting-basis-steady-state-window) — `status`, `window` (super-pass range, sample count, and the effective super-pass size used), per-metric `state` (`Plateau` / `Drifting Up` / `Drifting Down`), and `anomaly` (present only on a level shift); `total` metrics reported alongside as supplementary. |
+| `steady_state` | The reporting block of [§4.4](#44-reporting-basis-steady-state-window) — `status` (`windowable` / `insufficient_duration` / `insufficient_passes` / `partial_dataset`), `window` (super-pass range, sample count, the effective super-pass size used, and `duration_s` — the window's issue-time span, checked against the [§6.2](#62-minimum-run-duration) minimum), per-metric `state` (`Plateau` / `Drifting Up` / `Drifting Down`), and `anomaly` (present only on a level shift); `total` metrics reported alongside as supplementary. |
 
 ### 8.4 Software Disclosure
 
