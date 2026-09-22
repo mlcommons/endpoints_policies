@@ -757,12 +757,35 @@ The MLCommons checker auto-populates power values where a submitter does not pro
 
 These estimates are deliberately conservative. Submitters are encouraged to be as transparent as possible in order to obtain a more accurate power figure.
 
-**Partially provisioned systems.** Where a system is only partially populated — a rack with sleds unfilled, or a node with accelerator slots empty — provisioned power is established in one of two ways:
+**Partially provisioned systems.** Where a system is only partially populated — a rack with sleds unfilled, or a node with accelerator slots empty — provisioned power is established in one of three ways:
 
 1. **Verified, publicly available documentation** stating the power of the system as provisioned; or
-2. **The MLC formula above**, applied with the component counts limited to what is actually provisioned. `num_cpu` and `num_accelerator` reflect the populated configuration, not the maximum the chassis or rack could hold.
+2. **Rack-level node scaling** from published rack power, where the partial provisioning is a whole number of nodes ([§4.4.2.1](#4421-rack-level-node-scaling)); or
+3. **The MLC formula above**, applied with the component counts limited to what is actually provisioned. `num_cpu` and `num_accelerator` reflect the populated configuration, not the maximum the chassis or rack could hold.
 
 This describes how the system is *provisioned*, not how heavily it is *used* during a run. The counts are fixed for the submission, and the resulting provisioned power applies unchanged to every measurement point ([§4.4.3](#443-normalized-metric)).
+
+##### 4.4.2.1 Rack-Level Node Scaling
+
+A submitter who has published the power of a rack-scale system may scale that published figure down to a partial rack, rather than rebuilding the number from components. For a rack of `N` nodes with published total power `P_rack`, submitting `Y` nodes where `Y < N`:
+
+```
+provisioned_power(Y nodes) = P_rack × (Y / N)
+```
+
+`P_rack` is subject to the same verification and publication requirements as every other power value in this section, and where the published specification states a range, the upper bound is used.
+
+*Rationale:* at rack level, power scales linearly with the number of nodes — the per-node contribution of compute, scale-up switching, cooling, and power-delivery overhead is essentially constant across otherwise identical nodes. This path exists so that submitters who have already been transparent about rack power are not forced back onto component estimation when they submit a smaller configuration.
+
+**This path applies only at node granularity.** It MUST NOT be used for partial provisioning *within* a node. Node power is a function of the accelerator count plus a substantial fixed component — host CPU, memory, NICs, chassis, and power-supply overhead — that does not scale down with accelerator count, so linear scaling materially understates the power of a partly populated node.
+
+| Configuration | Path |
+|---|---|
+| `Y` of `N` whole nodes in a rack, nodes otherwise identical | Rack-level node scaling above, or published power for that configuration |
+| Partially populated node (some accelerator slots empty) | Published power for that specific configuration, or the MLC formula with component counts limited to what is populated |
+| Node or rack running under a TDP cap | Published power for that specific configuration, or the MLC formula using the capped values, with the evidence required for running below rated TDP |
+
+Vendor documentation describing the power provisioning of specific rack configurations is the preferred source for `P_rack` and `N`. For example, NVIDIA publishes per-configuration power-domain guidance for GB200 / GB300 NVL72 racks in its [Mission Control systems administration guide](https://docs.nvidia.com/mission-control/docs/systems-administration-guide/2.3.1/prs/faq.html#example-1-configuring-a-pd-for-a-gb200-gb300-nvl72-rack).
 
 **Estimated-power labelling.** Where power values are not provided by the submitter, or where the result arises from comprehensive testing, MLCommons populates the missing values via the fallback paths above and the published result is tagged **"MLC Estimated Power"**.
 
@@ -1424,7 +1447,7 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 |---|---|
 | Air-cooled overhead fraction | **50%**, as used in [§4.4.2](#442-proposed-endpoints-v10-normalization-methodology). Liquid-cooled remains 30%. |
 | Normalized metric | **`system_tps_per_kw`** = total system throughput ÷ provisioned power in kW, with provisioned power fixed per system ([§4.4.3](#443-normalized-metric)). |
-| Partially provisioned systems | Verified public documentation, or the MLC formula with component counts limited to what is provisioned ([§4.4.2](#442-proposed-endpoints-v10-normalization-methodology)). |
+| Partially provisioned systems | Verified public documentation; rack-level node scaling `P_rack × Y/N` for whole nodes ([§4.4.2.1](#4421-rack-level-node-scaling)); or the MLC formula with component counts limited to what is provisioned. Linear scaling does not apply within a node. |
 | Scope | All Standardized CoP and CoN submissions; Serviced deferred; RDI optional. |
 | Estimated-power labelling | Results tagged **"MLC Estimated Power"** where values were not supplied by the submitter or arise from comprehensive testing. |
 | Descriptor file | `system_power.json` is required for a valid submission and checked at automated compliance ([§9.1](#91-automated-checks)). |
