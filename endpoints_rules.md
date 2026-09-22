@@ -673,16 +673,16 @@ The Offline point ([§5.7](#57-offline-point)) appears on the curve as the throu
 
 #### Minimum Point Count
 
-Each submission must include a minimum of **8 measurement points**, structured as **1 + 3 + 3 + 1**:
+Each submission for a non-agentic benchmark must include a minimum of **8 measurement points**, structured as **1 + 3 + 3 + 1**. Agentic benchmarks require **7 points** (`1 + 3 + 3`), since the Offline point does not apply to them ([§5.7](#57-offline-point)):
 
 | Points | Placement |
 |---|---|
 | 1 mandatory point | One low-latency point in the [Ultra Low Concurrency region](#low-latency-region) (concurrency 1–32). |
 | 3 mandatory points | One point in each of the three [Concurrency regions](#concurrency-regions) (Low Concurrency, Medium Concurrency, High Concurrency). |
 | 3 submitter's-choice points | Any concurrency level in any of the three "concurrency" regions, at the submitter's discretion. |
-| 1 mandatory **Offline** point | The unconstrained-throughput point defined in [§5.7](#57-offline-point). Required for every submission. |
+| 1 mandatory **Offline** point | The unconstrained-throughput point defined in [§5.7](#57-offline-point). Required for every non-agentic submission; not applicable to agentic benchmarks. Where the submitter elects the $C_{max}$ point as the Offline result ([§5.7.2](#572-relationship-to-maximum-supported-concurrency)), no separate run is required and the minimum is 7. |
 
-Accuracy results are required at `N` points: the five mandatory points — one low-latency point in the Ultra Low Concurrency region, one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions, and the Offline point.
+Accuracy results are required at `N` points: the four mandatory concurrency points — one low-latency point in the Ultra Low Concurrency region and one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions — plus the Offline point for non-agentic benchmarks. `N` is therefore 5 for non-agentic benchmarks and 4 for agentic benchmarks.
 
 #### No Spacing Requirements
 
@@ -860,30 +860,53 @@ The Offline point ([§5.7](#57-offline-point)) counts toward this cap.
 > [!CAUTION]
 > **`[TENTATIVE — Pending working-group ratification]`** The Offline point is newly introduced for Endpoints v1.0.
 
-Every submission MUST include one **Offline** measurement point. It is the analogue of the **Offline scenario** in [MLPerf Inference](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc): all queries are available to the system under test at once, and the only question asked is how much total throughput the system can sustain when nothing constrains it.
+Every submission for a **non-agentic benchmark** MUST include one **Offline** measurement point. It is the analogue of the **Offline scenario** in [MLPerf Inference](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc): all queries are available to the system under test at once, and the only question asked is how much total throughput the system can sustain when nothing constrains it.
+
+> [!NOTE]
+> **Not applicable to agentic benchmarks.** Offline is out of scope for agentic workloads in Endpoints v1.0. An agentic submission neither requires nor may include an Offline point. Extending Offline to agentic workloads — including how "all queries at once" and the reported concurrency would be defined for multi-turn trajectories with tool-call dependencies between turns — is deferred to the working group for ratification in a later version.
 
 #### 5.7.1 Definition
 
 - **All queries are available at once.** The client makes the entire sample set available to the SUT at the start of the run rather than pacing issuance to hold a target concurrency. The SUT drains the queue at whatever rate it can.
-- **Throughput is the only metric of interest.** The Offline point reports `system_tps` and the resulting `concurrency`. It characterizes the system's peak aggregate capacity.
+- **Concurrency is the cardinality of the dataset.** Because the whole sample set is made available at once, the Offline point's reported `concurrency` is the **cardinality of the performance dataset** — the number of queries in one full pass over it. It is a property of the benchmark dataset rather than a value the submitter selects.
+- **Throughput is the only metric of interest.** The Offline point reports `system_tps`, together with the `concurrency` defined above. It characterizes the system's peak aggregate capacity.
 - **Latency metrics do not apply.** Because every query is queued at the start, a query at the back of the queue may wait arbitrarily long before its first token. **`ttft_p90_ms` is therefore unbounded in principle, is not required for the Offline point, and MUST NOT be used as a compliance criterion or an objection basis against it.**
+- **Reordering is permitted, but bounded by the dataset.** Having the whole sample set available lets the SUT reorder and batch queries as it sees fit — grouping by sequence length, for example. That freedom is the point of the scenario. **Reordering MUST NOT cross a dataset-pass boundary.** Where a run issues more than one pass over the performance dataset — [§6.4](#64-minimum-completed-queries) requires the total sample count to be a positive integer multiple of the dataset size — each pass is a separate reordering domain, and a query from one pass MUST NOT be batched with, or reordered against, a query from another.
+
+> [!IMPORTANT]
+> **Why reordering stops at the dataset boundary.** Sorting across the whole multi-pass query set would let a submitter gather the repeated instances of the same underlying sample into one batch — identical or near-identical prompts executed together, with shared prefixes and uniform sequence lengths. That is an artifact of replaying a finite dataset, not a property of the serving system, and it sits immediately adjacent to the prohibition on coalescing identical queries in [§2.2.1](#221-general-rules). Confining reordering to a single pass keeps every batch's composition representative of one dataset.
 
 #### 5.7.2 Relationship to Maximum Supported Concurrency
 
-The Offline point may or may not coincide with the point at maximum supported concurrency $C_{max}$. Where it does not, both of the following MUST hold:
+The Offline requirement is satisfied in one of two ways.
+
+**Option 1 — a dedicated Offline run.** The Offline point is its own run under the Offline load pattern ([§6.1](#61-load-pattern)). Such a run is not a fixed-concurrency point: it cannot serve as the $C_{max}$ point, and it does not satisfy any region-coverage requirement of [§5.3](#53-minimum-submission-requirements). Both of the following MUST hold between it and the $C_{max}$ point:
 
 | Quantity | Constraint |
 |---|---|
-| System throughput | `system_tps(Offline)` ≥ `system_tps` at the $C_{max}$ point |
+| System throughput | `system_tps(Offline)` ≥ 0.98 × `system_tps` at the $C_{max}$ point |
 | Concurrency | `concurrency(Offline)` ≥ $C_{max}$ |
 
-*Rationale:* Offline removes every pacing constraint on the load generator, so it is by construction an upper bound on what the fixed-concurrency points can achieve. An Offline result below the $C_{max}$ point indicates either that the run did not saturate the system or that the $C_{max}$ point was measured under conditions the Offline run did not reproduce. Either way the submission does not characterize its own ceiling, and the points are inconsistent.
+**On the 2% throughput margin.** The margin exists to absorb run-to-run variation between the two runs on the same system. It is a *tolerance, not a target*: Offline is expected to meet or exceed the $C_{max}$ point, and the margin only prevents ordinary measurement noise from failing an otherwise sound submission. It is tighter than the 5% same-system reproducibility margin of [Submission Rules §6.6](endpoints_submission_rules.md#reproducibility-expectations) because both runs come from the same submission, on the same configuration, close together in time.
+
+*Rationale:* Offline removes every pacing constraint on the load generator, so it is by construction an upper bound on what the fixed-concurrency points can achieve. An Offline result materially below the $C_{max}$ point indicates either that the run did not saturate the system or that the $C_{max}$ point was measured under conditions the Offline run did not reproduce. Either way the submission does not characterize its own ceiling, and the points are inconsistent.
 
 An Offline point that violates either constraint is flagged at automated compliance ([§9.1](#91-automated-checks)).
 
+**Option 2 — elect the $C_{max}$ point as the Offline result.** A submitter MAY instead **elect** their $C_{max}$ point as the Offline result, declaring that it is already the highest aggregate throughput their system achieves, irrespective of load pattern. Under this election:
+
+- The elected run **remains a fixed-concurrency pareto point** and keeps its role as the $C_{max}$ point. It is *additionally* reported as the Offline result. Its latency metrics remain defined and reported as for any other fixed-concurrency point — the [§5.7.1](#571-definition) exemptions for TTFT and the dataset-pass reordering bound apply to a dedicated Offline run, not to an elected point.
+- `system_tps(Offline)` and `concurrency(Offline)` are those of the $C_{max}$ point by definition. The constraints above are met with equality, and the 2% margin does not apply — there is no second run and therefore no run-to-run variation to absorb.
+- The election MUST be declared in the measurement point YAML ([§8.3](#83-measurement-point-yaml)), so that a reader can tell the Offline result was elected rather than measured under the Offline pattern.
+- The submission then contains one fewer distinct run. The [§5.3](#53-minimum-submission-requirements) minimum is met with **7 runs**, the $C_{max}$ point counting once as its region point and once as the Offline result.
+
+*Why this needs no verification:* electing can only understate the system. An unpaced Offline run is by construction an upper bound on what any fixed-concurrency point can achieve, so a submitter who elects forgoes whatever additional throughput a dedicated Offline run might have shown. The election is a conservative declaration against the submitter's own interest, not an optimization — which is why it is permitted on the submitter's word.
+
 #### 5.7.3 Presentation
 
-The Offline point is plotted on the pareto curve as the system's **throughput ceiling** — the highest `system_tps` the submission reports. It is labelled **"Offline"** and is visually distinguished from the fixed-concurrency points, because it is measured under a different load pattern and carries no meaningful latency coordinate.
+A **dedicated** Offline run is plotted on the pareto curve as the system's **throughput ceiling** — the highest `system_tps` the submission reports. It is labelled **"Offline"** and is visually distinguished from the fixed-concurrency points, because it is measured under a different load pattern and carries no meaningful latency coordinate.
+
+An **elected** Offline result adds no separate marker: the $C_{max}$ point is plotted as the fixed-concurrency point it is, and additionally labelled as the Offline result.
 
 All other run requirements of [§6](#6-run-requirements-per-measurement-point) — minimum duration, minimum completed queries, dataset handling, and the accuracy requirement — apply to the Offline point as they do to any other measurement point, except that the load pattern is the Offline pattern rather than the fixed-concurrency pattern ([§6.1](#61-load-pattern)).
 
@@ -1179,6 +1202,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `model_notes` | Submitter software notes to supplement other information, freeform field. |
 | `dataset_name` | Display name of dataset, should be consistent across all external usages. |
 | `dataset_type` | Is the dataset used for "Accuracy", "Performance", or "Accuracy + Performance". |
+| `offline` | Offline-point declaration ([§5.7](#57-offline-point)). One of: `dedicated` — this point is a dedicated Offline run; `elected` — this is the $C_{max}$ point, elected as the Offline result under [§5.7.2](#572-relationship-to-maximum-supported-concurrency); absent or `none` otherwise. Non-agentic benchmarks only. |
 | `dataset_link` | Link to data used for submission e.g., via GitHub. |
 
 ### 8.4 Software Disclosure
@@ -1229,8 +1253,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 |---|---|---|
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
 | **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
-| **Point count** | ≥ 8 total measurement points, including the Offline point. | Reject submission. |
-| **Offline point present** | Exactly one point is declared as the Offline point ([§5.7](#57-offline-point)). | Reject submission. |
+| **Point count** | ≥ 8 total measurement points including a dedicated Offline run (non-agentic); ≥ 7 where the $C_{max}$ point is elected as the Offline result, or for agentic benchmarks. | Reject submission. |
+| **Offline point present** | Exactly one point carries an `offline` declaration of `dedicated` or `elected` for non-agentic benchmarks; none is present for agentic benchmarks ([§5.7](#57-offline-point)). An `elected` declaration appears on the $C_{max}$ point. | Reject submission. |
 | **Ultra Low Concurrency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
 | **Low Concurrency coverage** | ≥ 1 point in the Low Concurrency region. | Reject submission. |
 | **Medium Concurrency coverage** | ≥ 1 point in the Medium Concurrency region. | Reject submission. |
@@ -1238,7 +1262,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Max concurrency declared** | $C_{max} > 32$; declared in `system_desc_id.json`. | Reject submission. |
 | **Point cap** | ≤ 32 total measurement points. | Reject points beyond 32. |
 | **Concurrency in range** | Each point's concurrency falls within a valid region (including the 10% High Concurrency margin), computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm). | Flag out-of-range points. |
-| **Offline ordering** | `system_tps(Offline)` ≥ `system_tps` at the $C_{max}$ point, and `concurrency(Offline)` ≥ $C_{max}$ ([§5.7.2](#572-relationship-to-maximum-supported-concurrency)). | Flag non-compliant submission. |
+| **Offline ordering** | For a `dedicated` Offline run: `system_tps(Offline)` ≥ 0.98 × `system_tps` at the $C_{max}$ point, and `concurrency(Offline)` ≥ $C_{max}$ ([§5.7.2](#572-relationship-to-maximum-supported-concurrency)). Not applicable to an `elected` point. | Flag non-compliant submission. |
 | **Load pattern** | All points except the Offline point used the benchmark-defined fixed-concurrency load pattern; the Offline point used the Offline pattern. | Reject non-conforming points. |
 | **Run duration** | Each point meets the minimum steady-state duration for its region (see [§6.2](#62-minimum-run-duration)). | Flag non-compliant points. |
 | **Minimum query count** | Each point meets the minimum completed queries for its region (see [§6.4](#64-minimum-completed-queries)). | Flag non-compliant points. |
@@ -1259,6 +1283,7 @@ Human reviewers should focus on aspects that automation cannot easily verify:
 - Whether metric distributions suggest artificial manipulation (e.g., suspiciously uniform TTFT values across very different concurrency levels).
 - Whether TTFT-triggering fragments are genuine parts of the model response rather than meaningless leading content emitted to stop the TTFT clock.
 - Whether content is duplicated across assistant-response fields or padded to inflate the official output-token count.
+- For the Offline point, whether query reordering stayed within dataset-pass boundaries ([§5.7.1](#571-definition)) — batches composed of repeated instances of the same underlying sample indicate sorting across passes.
 - Whether warmup requests drew on any sample from the performance dataset (prohibited under [§6.3.1](#631-prohibited-warmup-data)); reviewers may cross-check retained warmup logs against the performance dataset.
 - Whether the system description accurately reflects the hardware and software used.
 - Cross-submission consistency for the same hardware platform.
@@ -1321,6 +1346,16 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 1. **Require residency.** Components present in the canonical checkpoint must be loaded into the serving process for all measurement points, whether or not they are used. Strongest comparability, but forces submitters to reserve memory for a module they have legitimately disabled under [§2.9.4](#294-speculative-decoding).
 2. **Require disclosure of the loaded component set.** Permit non-residency, but declare per measurement point which canonical components were loaded, alongside the existing drafter configuration fields. Preserves the engineering choice while making it visible to reviewers; would extend the disclosure table in [§2.9.6.6](#2966-disclosure).
 3. **Leave unconstrained.** Treat memory footprint as a legitimate configuration dimension, consistent with [§2.9.4](#294-speculative-decoding) already permitting speculation to be disabled at any or all measurement points.
+
+### \\[OFFLINE\\] Offline Point Open Items
+
+**Question:** What remains to be settled for the Offline point ([§5.7](#57-offline-point))?
+
+1. **Agentic workloads.** Offline is out of scope for agentic benchmarks in v1.0. Defining it requires deciding what "all queries available at once" means for multi-turn trajectories whose later turns depend on earlier responses and on tool-call results, and what the reported concurrency would be when the query count is not known in advance. To be ratified by the working group for a later version.
+2. **Dataset cardinality below $C_{max}$.** The Offline concurrency is the cardinality of the performance dataset ([§5.7.1](#571-definition)), while [§5.7.2](#572-relationship-to-maximum-supported-concurrency) requires `concurrency(Offline)` ≥ $C_{max}$. A submitter whose declared $C_{max}$ exceeds the dataset cardinality cannot satisfy both. The working group should decide whether $C_{max}$ is capped at the dataset cardinality, whether the dataset is replayed to reach it, or whether the concurrency constraint is waived in that case.
+3. **Steady-state windowing.** The steady-state reporting basis arriving from `v1.0_rules_dev` scopes steady-state detection to fixed-concurrency points, which excludes the Offline point — so Offline would report whole-run `total` metrics. That follows from the scope wording rather than being stated anywhere, and should be made explicit once the two branches are merged.
+4. **Minimum run duration.** [§6.2](#62-minimum-run-duration) applies to the Offline point unchanged, but an Offline run ends when the queue drains rather than when a clock expires. Whether a separate duration rule is needed is open.
+5. **Enforcing the pass boundary.** [§5.7.1](#571-definition) bars reordering across dataset passes. The reference client should make pass boundaries explicit in the event log so the constraint is checkable after the fact rather than resting on attestation; today it is a manual review item ([§9.2](#92-manual-review-focus-areas)).
 
 ### Division and Scenario Open Items
 
