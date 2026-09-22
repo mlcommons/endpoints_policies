@@ -29,10 +29,11 @@
    - [4.1 Primary Metrics](#41-primary-metrics)
    - [4.2 Derived and Presentation Metrics](#42-derived-and-presentation-metrics)
    - [4.3 Accuracy Metric](#43-accuracy-metric)
-   - [4.4 Performance Normalization](#44-performance-normalization)
-     - [4.4.1 Power Normalization Roadmap and Rationale](#441-power-normalization-roadmap-and-rationale)
-     - [4.4.2 Proposed Endpoints v1.0 Normalization Methodology](#442-proposed-endpoints-v10-normalization-methodology)
-     - [4.4.3 Normalized Metric](#443-normalized-metric)
+   - [4.4 Reporting Basis (Steady-State Window)](#44-reporting-basis-steady-state-window)
+   - [4.5 Performance Normalization](#45-performance-normalization)
+     - [4.5.1 Power Normalization Roadmap and Rationale](#451-power-normalization-roadmap-and-rationale)
+     - [4.5.2 Proposed Endpoints v1.0 Normalization Methodology](#452-proposed-endpoints-v10-normalization-methodology)
+     - [4.5.3 Normalized Metric](#453-normalized-metric)
 5. [Pareto Collection Methodology](#5-pareto-collection-methodology)
    - [5.1 What Is Measured](#51-what-is-measured)
    - [5.2 Pareto Curve Representation](#52-pareto-curve-representation)
@@ -653,7 +654,53 @@ For both single-turn and multi-turn benchmarks, accuracy is required at the `N` 
 - **Single-turn (per-point):** Each of the `N` required accuracy results MUST meet the quality threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after the corresponding performance run.
 - **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn accuracy runs are time- and resource-intensive.
 
-### 4.4 Performance Normalization
+### 4.4 Reporting Basis (Steady-State Window)
+
+Until v0.7, a point's metrics ([§4.1](#41-primary-metrics)) were averaged over the whole post-`TEST_STARTED` run, which still included the load-dependent **ramp-up** (inflates the TTFT tail) and the **drain tail** (deflates throughput) that warmup period ([§6.3](#63-warmup-period)) did not remove. For 1.0 and beyond, the **official result is instead computed over the detected steady-state window**, with the whole-run (`total`) metrics kept as supplementary. The window is defined on **issue time** — excluding the drain from the throughput denominator with no end-crop — and the residual ramp is cropped from the data on top of the declared warmup. Detection is a post-processing step over the durable event log (`events.jsonl`, [§4.1](#41-primary-metrics)), off the measured path; methodology and default parameters: [`scripts/steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md).
+
+**Definitions.** The terms used throughout this section:
+
+| Term | Definition |
+|---|---|
+| **Super-pass** | A contiguous issue-order block of queries sized to one full pass over the dataset, unless the [benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Window length and the trend-test floor are measured in super-passes. |
+| **Ramp-up** | The load-dependent transient at the start of a run — after the declared warmup ([§6.3](#63-warmup-period)) — while in-flight concurrency and queue depth are still climbing to target; it inflates the TTFT tail. The residual ramp is cropped from the front of the data before detection. |
+| **Drain (drain tail)** | The transient at the end of a run during which no new queries are issued and in-flight queries complete; it deflates throughput. Excluded by defining the window on issue time (no end-crop required). |
+| **Gating metric** | The metrics whose stability decides whether a steady state holds: TPOT at P50 and P90. |
+| **Plateau** | A gating-metric state showing no significant trend across the super-passes (per the trend-test in [`steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md)) — i.e., stable. |
+| **Drifting Up / Drifting Down** | A gating-metric state showing a significant increasing / decreasing trend across the super-passes; reported as drift (range/slope), never as a point estimate. |
+| **Trend-test / `MIN_TREND_N`** | The per-metric trend test applied across super-passes; `MIN_TREND_N = 4` is its minimum-sample floor (≥ 4 super-passes). Exact test and parameters: [`steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md). |
+| **Change-point** | A confirmed step between two materially different, internally stable plateaus within one run; triggers the `anomaly` (staircase) verdict, where the first plateau is the reported steady state and the later shift is disclosed as likely degradation. |
+| **Steady-state window** | The contiguous issue-time interval — after warmup and residual-ramp crop, before the drain — over which the gating metrics are stable (Plateau). The official result is computed over this window when the steady-state condition holds. |
+| **`total` (whole-run) metrics** | Metrics averaged over the entire post-`TEST_STARTED` run (the pre-1.0 basis). Reported as supplementary alongside the steady-state result, and the official fallback where no steady state holds. |
+| **Coverage `status`** | Sample-count and duration classification of a point — `windowable`, `insufficient_duration`, `insufficient_passes`, `partial_dataset` (see the status table below). |
+| **Detected shape / verdict** | The detector's per-run classification of gating-metric behavior — `STEADY STATE`, `drifting_up`, `drifting_down`, `anomaly`, `not found` (see the shape table below). |
+
+Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total), every gating metric — TTFT and TPOT at P50/P90 — is a **Plateau**, not **Drifting Up**, **and** the window's **issue-time span meets the [§6.2](#62-minimum-run-duration) minimum run duration** for the point's concurrency region. The effective floor is therefore `max(4 super-passes, §6.2 minimum duration)` — at high concurrency the duration floor binds, since 4 super-passes can complete in well under the minimum. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix — by default one full dataset pass, unless the [benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Otherwise the point falls back by coverage `status`:
+
+| `status` | Condition | Official result |
+|---|---|---|
+| `windowable` | ≥ 4 super-pass steady window in Plateau **and** window issue-time span ≥ [§6.2](#62-minimum-run-duration) minimum | steady-state metrics; `total` supplementary |
+| `insufficient_duration` | ≥ 4 super-passes in Plateau but window issue-time span < [§6.2](#62-minimum-run-duration) minimum | `total` (steady-state reported low-confidence, not official) |
+| `insufficient_passes` | ≥ 1 super-pass but window < 4 super-passes | `total` (steady-state reported low-confidence, not official) |
+| `partial_dataset` | < 1 super-pass | `total` only (no steady-state claim) |
+
+Beyond the coverage `status` above (which gates on sample count), a point's official result depends on the **shape** the detector finds over the super-passes. The detector ([`steady_state_diagnostics`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md)) emits one verdict per run:
+
+| Detected shape | Verdict | What is reported | Accepted as steady-state? |
+|---|---|---|---|
+| All gated metrics stable across the window | `STEADY STATE` | Steady-state metrics over the window; `total` supplementary | ✅ Yes — the official result |
+| A gated metric keeps **climbing** over the super-passes after the window | `drifting_up` | That metric reported as **drift** (range/slope), never a point estimate; window flagged *local-plateau only* | ⚠️ Reported-with-flags — global steady state questionable |
+| A gated metric trends **down** over the tail | `drifting_down` | Reported as drift, not a point estimate | ⚠️ Reported-with-flags |
+| First plateau steps to a later, materially different plateau (change-point confirmed) | `anomaly` (staircase) | **First** plateau reported as the steady state; later shift flagged as `anomaly` (likely degradation) | ✅ Yes (first plateau); anomaly disclosed |
+| No contiguous run of super-passes is steady enough (drifts throughout, or too short) | `not found` | No steady-state claim; falls back to whole-run `total` | ❌ No — `total` only |
+
+**Scope.** Only `ConcurrencyScheduler` points ([§6.1](#61-load-pattern)) are in scope; `MaxThroughput`/`Poisson` and single-pass agentic workloads are handled only by the ad-hoc diagnostic tool. The minimum run duration ([§6.2](#62-minimum-run-duration)) is measured over the steady window's **issue-time span**, not wall-clock; a window shorter than the §6.2 minimum for its concurrency region is `insufficient_duration` and falls back to `total`.
+
+**Pending ratification.** Whether the super-pass floor is raised above 4, and whether a `not found` run is declared *invalid* versus *reported-with-flags* (the ⚠️/❌ rows assume the latter).
+
+---
+
+### 4.5 Performance Normalization
 
 > [!CAUTION]
 > **`[TENTATIVE — Pending working-group ratification]`** This section introduces power-based normalization for Endpoints v1.0. Tier definitions, overhead fractions, component references, and the name and units of the reported normalized metric are subject to change.
@@ -662,7 +709,7 @@ MLPerf Endpoints normalizes total system throughput by **provisioned power**, so
 
 **Scope.** Power normalization applies to **all Standardized division submissions, in both the Client on Prem (CoP) and Client over Network (CoN) scenarios** ([§2.1](#21-client-deployment-scenarios)). Normalization options for the **Serviced** division — managed endpoints, CSP-hosted services, and similar offerings, where provisioned power is not a property the submitter controls or discloses — will be introduced in a later version. RDI submissions MAY report normalized throughput but are not required to.
 
-#### 4.4.1 Power Normalization Roadmap and Rationale
+#### 4.5.1 Power Normalization Roadmap and Rationale
 
 **Goal.** MLPerf Endpoints will transition to mandatory provisioned-power-based normalization of performance (total system throughput) in Endpoints v1.0 and beyond. Toward this goal the benchmark adopts a phased approach of increasing provisioned-power fidelity, and will eventually add true measured power as an additional normalization option.
 
@@ -683,7 +730,7 @@ MLPerf Endpoints normalizes total system throughput by **provisioned power**, so
 |---|---|---|
 | **Tier 1** | Highest fidelity. Not yet defined; the roadmap anticipates true measured power as an additional normalization option. | Future |
 | **Tier 2** | The **nameplate power** of the system's power supplies, accounting for any software-managed power capping. Requires robust verification of system- and rack-level power provisioning. Any power capping must be validated by an MLCommons-defined methodology, which may include Redfish-based logging, independent third-party audit of datacenter deployments, or publicly available documentation of the system's deployment specifications published by the submitting organization. | Target. Requires a dedicated effort to define verification criteria and methodology before it can be rolled out. |
-| **Tier 3** | The **sum of the rated power of the key power-consuming components**, plus an assumed margin. Where publicly available and verifiable data is absent, MLCommons may substitute a proxy value for a component based on public data and analysis. | **In force for Endpoints v1.0** ([§4.4.2](#442-proposed-endpoints-v10-normalization-methodology)) |
+| **Tier 3** | The **sum of the rated power of the key power-consuming components**, plus an assumed margin. Where publicly available and verifiable data is absent, MLCommons may substitute a proxy value for a component based on public data and analysis. | **In force for Endpoints v1.0** ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)) |
 
 **What provisioned power must account for.** The goal is to capture the key power-consuming elements and the reasonable margins and buffers that vendors, OEMs, ODMs, and customers would themselves employ. Key components include computing elements (CPU, GPU, ASIC), switching, storage, networking, cooling, and any power-correction units.
 
@@ -692,7 +739,7 @@ MLPerf Endpoints normalizes total system throughput by **provisioned power**, so
 
 **Why Tier 3 first.** The component-sum definition is less precise than nameplate power, but it works well for comprehensive testing — where the claimed or rated power of the performance-determining devices (CPU, GPU, ASIC) is the information most readily found. It accommodates systems that are partially filled or racks that are not fully used, and it puts every submitter on the same methodology.
 
-#### 4.4.2 Proposed Endpoints v1.0 Normalization Methodology
+#### 4.5.2 Proposed Endpoints v1.0 Normalization Methodology
 
 The v1.0 approach normalizes by power using three elements:
 
@@ -760,12 +807,12 @@ These estimates are deliberately conservative. Submitters are encouraged to be a
 **Partially provisioned systems.** Where a system is only partially populated — a rack with sleds unfilled, or a node with accelerator slots empty — provisioned power is established in one of three ways:
 
 1. **Verified, publicly available documentation** stating the power of the system as provisioned; or
-2. **Rack-level node scaling** from published rack power, where the partial provisioning is a whole number of nodes ([§4.4.2.1](#4421-rack-level-node-scaling)); or
+2. **Rack-level node scaling** from published rack power, where the partial provisioning is a whole number of nodes ([§4.5.2.1](#4521-rack-level-node-scaling)); or
 3. **The MLC formula above**, applied with the component counts limited to what is actually provisioned. `num_cpu` and `num_accelerator` reflect the populated configuration, not the maximum the chassis or rack could hold.
 
-This describes how the system is *provisioned*, not how heavily it is *used* during a run. The counts are fixed for the submission, and the resulting provisioned power applies unchanged to every measurement point ([§4.4.3](#443-normalized-metric)).
+This describes how the system is *provisioned*, not how heavily it is *used* during a run. The counts are fixed for the submission, and the resulting provisioned power applies unchanged to every measurement point ([§4.5.3](#453-normalized-metric)).
 
-##### 4.4.2.1 Rack-Level Node Scaling
+##### 4.5.2.1 Rack-Level Node Scaling
 
 A submitter who has published the power of a rack-scale system may scale that published figure down to a partial rack, rather than rebuilding the number from components. For a rack of `N` nodes with published total power `P_rack`, submitting `Y` nodes where `Y < N`:
 
@@ -789,18 +836,18 @@ Vendor documentation describing the power provisioning of specific rack configur
 
 **Estimated-power labelling.** Where power values are not provided by the submitter, or where the result arises from comprehensive testing, MLCommons populates the missing values via the fallback paths above and the published result is tagged **"MLC Estimated Power"**.
 
-#### 4.4.3 Normalized Metric
+#### 4.5.3 Normalized Metric
 
 | Metric | Symbol | Definition |
 |---|---|---|
-| Total System Throughput per Kilowatt | `system_tps_per_kw` | `system_tps_per_kw = system_tps / provisioned_power_kw`, where `provisioned_power_kw` is the total system power of [§4.4.2](#442-proposed-endpoints-v10-normalization-methodology) expressed in kilowatts. |
+| Total System Throughput per Kilowatt | `system_tps_per_kw` | `system_tps_per_kw = system_tps / provisioned_power_kw`, where `provisioned_power_kw` is the total system power of [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) expressed in kilowatts. |
 
 **Provisioned power is fixed for a given system.** It does not vary with how many CPUs or accelerators were actually exercised at a measurement point. A low-concurrency point that leaves most of the system idle is normalized by the *full* provisioned power of the system, exactly as a high-concurrency point is. The denominator is therefore constant across a submission's entire pareto curve, and the normalized curve is the throughput curve scaled by a single constant.
 
 Two consequences follow:
 
 - Provisioned power is a property of a *system*. Two systems that are otherwise identical but differ in provisioned power — because of power capping, for example — are **different systems**, and all points on a single pareto curve MUST use the same provisioned power.
-- A submitter cannot improve `system_tps_per_kw` at low concurrency by attributing only the active fraction of the system to that point. Sizing the provisioned power down requires changing what the system *is* — capping it, or populating it less ([§4.4.2](#442-proposed-endpoints-v10-normalization-methodology)) — which applies to every point alike.
+- A submitter cannot improve `system_tps_per_kw` at low concurrency by attributing only the active fraction of the system to that point. Sizing the provisioned power down requires changing what the system *is* — capping it, or populating it less ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)) — which applies to every point alike.
 
 ---
 
@@ -1120,7 +1167,7 @@ An Endpoints submission must follow this directory structure:
       │
       └── results/
           └── <system>/                     # e.g. H200-SXM-141GBx8_TRT/
-              ├── system_power.json            # §4.4.2 — REQUIRED, one per system.
+              ├── system_power.json            # §4.5.2 — REQUIRED, one per system.
               │                                #   Provisioned power; fixed across all points.
               └── <model_name>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
                   └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
@@ -1292,6 +1339,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `dataset_name` | Display name of dataset, should be consistent across all external usages. |
 | `dataset_type` | Is the dataset used for "Accuracy", "Performance", or "Accuracy + Performance". |
 | `dataset_link` | Link to data used for submission e.g., via GitHub. |
+| `steady_state` | The reporting block of [§4.4](#44-reporting-basis-steady-state-window) — `status` (`windowable` / `insufficient_duration` / `insufficient_passes` / `partial_dataset`), `window` (super-pass range, sample count, the effective super-pass size used, and `duration_s` — the window's issue-time span, checked against the [§6.2](#62-minimum-run-duration) minimum), per-metric `state` (`Plateau` / `Drifting Up` / `Drifting Down`), and `anomaly` (present only on a level shift); `total` metrics reported alongside as supplementary. |
 
 ### 8.4 Software Disclosure
 
@@ -1341,7 +1389,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 |---|---|---|
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
 | **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
-| **Power descriptor** | A `system_power.json` conforming to the [§4.4.2](#442-proposed-endpoints-v10-normalization-methodology) template is present for each system. Required for all Standardized submissions, CoP and CoN. | Reject submission. |
+| **Power descriptor** | A `system_power.json` conforming to the [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) template is present for each system. Required for all Standardized submissions, CoP and CoN. | Reject submission. |
 | **Point count** | ≥ 7 total measurement points. | Reject submission. |
 | **Ultra Low Concurrency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
 | **Low Concurrency coverage** | ≥ 1 point in the Low Concurrency region. | Reject submission. |
@@ -1435,9 +1483,9 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 ### \[POWER-NORM\] Power Normalization Open Items
 
-**Question:** What remains to be settled in [§4.4](#44-performance-normalization)?
+**Question:** What remains to be settled in [§4.5](#45-performance-normalization)?
 
-**Open — Tier 1 definition.** The roadmap runs from Tier 3 up to Tier 1, but only Tiers 3 and 2 are specified ([§4.4.1](#441-power-normalization-roadmap-and-rationale)). The roadmap anticipates true measured power as an additional normalization option; whether that constitutes Tier 1, and what evidence and instrumentation it would require, is to be defined in a later version.
+**Open — Tier 1 definition.** The roadmap runs from Tier 3 up to Tier 1, but only Tiers 3 and 2 are specified ([§4.5.1](#451-power-normalization-roadmap-and-rationale)). The roadmap anticipates true measured power as an additional normalization option; whether that constitutes Tier 1, and what evidence and instrumentation it would require, is to be defined in a later version.
 
 **Open — Serviced division normalization.** Power normalization is mandatory for Standardized (CoP and CoN) and optional for RDI. Normalization options for Serviced — managed endpoints, CSP-hosted services, and similar — are deferred to a later version. Whether RDI should remain optional or be brought into line with Standardized is worth confirming.
 
@@ -1445,9 +1493,9 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 | Item | Resolution |
 |---|---|
-| Air-cooled overhead fraction | **50%**, as used in [§4.4.2](#442-proposed-endpoints-v10-normalization-methodology). Liquid-cooled remains 30%. |
-| Normalized metric | **`system_tps_per_kw`** = total system throughput ÷ provisioned power in kW, with provisioned power fixed per system ([§4.4.3](#443-normalized-metric)). |
-| Partially provisioned systems | Verified public documentation; rack-level node scaling `P_rack × Y/N` for whole nodes ([§4.4.2.1](#4421-rack-level-node-scaling)); or the MLC formula with component counts limited to what is provisioned. Linear scaling does not apply within a node. |
+| Air-cooled overhead fraction | **50%**, as used in [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology). Liquid-cooled remains 30%. |
+| Normalized metric | **`system_tps_per_kw`** = total system throughput ÷ provisioned power in kW, with provisioned power fixed per system ([§4.5.3](#453-normalized-metric)). |
+| Partially provisioned systems | Verified public documentation; rack-level node scaling `P_rack × Y/N` for whole nodes ([§4.5.2.1](#4521-rack-level-node-scaling)); or the MLC formula with component counts limited to what is provisioned. Linear scaling does not apply within a node. |
 | Scope | All Standardized CoP and CoN submissions; Serviced deferred; RDI optional. |
 | Estimated-power labelling | Results tagged **"MLC Estimated Power"** where values were not supplied by the submitter or arise from comprehensive testing. |
 | Descriptor file | `system_power.json` is required for a valid submission and checked at automated compliance ([§9.1](#91-automated-checks)). |
