@@ -52,7 +52,7 @@
 7. [Publication Status](#7-publication-status)
 8. [Submission Requirements](#8-submission-requirements)
    - [8.1 Directory Structure](#81-directory-structure)
-   - [8.2 System Description (system\_desc\_id.json)](#82-system-description-system_desc_idjson)
+   - [8.2 System Description (system\_desc.json)](#82-system-description-system_desc_idjson)
    - [8.3 Measurement Point YAML](#83-measurement-point-yaml)
    - [8.4 Software Disclosure](#84-software-disclosure)
    - [8.5 Result ID](#85-result-id)
@@ -682,7 +682,8 @@ The following metrics are derived from primary measurements and used in publicat
 
 Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
 
-Accuracy and performance runs MUST use the same server endpoint configuration, model weights, and software stack.
+
+One accuracy validation run is required for each of the 5 pareto regions. Accuracy and performance runs MUST use the same server endpoint configuration, model weights, and software stack.
 
 For both single-turn and multi-turn benchmarks, accuracy is required at the `N` points defined in [§5.3](#53-minimum-submission-requirements).
 
@@ -883,6 +884,7 @@ Two consequences follow:
 
 - Provisioned power is a property of a *system*. Two systems that are otherwise identical but differ in provisioned power — because of power capping, for example — are **different systems**, and all points on a single pareto curve MUST use the same provisioned power.
 - A submitter cannot improve `system_tps_per_kw` at low concurrency by attributing only the active fraction of the system to that point. Sizing the provisioned power down requires changing what the system *is* — capping it, or populating it less ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)) — which applies to every point alike.
+
 
 ---
 
@@ -1293,7 +1295,7 @@ Each point declares which shared content it used via the `shared_src` and `share
 its `point.yaml` (see [§8.3](#83-measurement-point-yaml)). A point whose pointers are missing or do
 not resolve to an existing directory is incomplete under [§9.1](#91-automated-checks).
 
-### 8.2 System Description (`system_desc_id.json`)
+### 8.2 System Description (`system_desc.json`)
 
 Endpoints submissions must include the following metadata:
 
@@ -1422,7 +1424,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | Field | Description |
 |---|---|
 | `concurrency` | The target concurrency level. |
-| `region` | The region this point satisfies (`low_latency`, `low_throughput`, `med_throughput`, `high_throughput`, or `submitters_choice`). |
+| `region` | The region this point satisfies (`low_latency`, `low_concurrency`, `med_concurrency`, `high_concurrency`, or `submitters_choice`). |
 | `runtime_settings` | The `RuntimeSettings` used for this run (load pattern, `min_duration_ms`, `min_sample_count`, `stream_all_chunks`, etc.). |
 | `dataset` | Dataset name and any `n_samples_from_dataset` override (if applicable). |
 | `warmup` | The warmup procedure declaration required by [§6.3.3](#633-documentation-requirements) — `duration_s`, `requests_issued`, `requests_completed`, `data_source` (description of the warmup data and its origin), `concurrency`, and `initialization_steps` (platform-specific setup completed before `TEST_STARTED`). |
@@ -1468,7 +1470,7 @@ The **result ID** identifies a single published result and is human-readable. A 
 | `major-version` | Major version of the MLPerf Endpoints rules under which the result was submitted (e.g., `1` for v1.0). |
 | `minor-version` | Minor version of the same (e.g., `0` for v1.0). |
 | `cohort-number` | Cohort Number for this submission (e.g., `0` for the first cohort of a given version, `1` for the second, etc.)
-| `model_id` | Benchmark model identifier from the round's supported model list ([§3.2](#32-supported-models)). Must match `benchmark_model` in `system_desc_id.json` ([§8.2](#82-system-description-system_desc_idjson)). |
+| `model_id` | Benchmark model identifier from the round's supported model list ([§3.2](#32-supported-models)). Must match `benchmark_model` in `system_desc.json` ([§8.2](#82-system-description-system_desc_idjson)). |
 | `dataset_id` | Identifier of the dataset used for the performance and accuracy runs, as named in the benchmark definition ([§3.1](#31-benchmark-definition)) and recorded in each point's `dataset` field ([§8.3](#83-measurement-point-yaml)). |
 | `entry-number` | Sequence number assigned at publication, unique within the preceding four components. |
 
