@@ -406,7 +406,10 @@ Statically removing weights that *do* participate in the forward pass for some i
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-10-12]`**
 
-**v1.0 change.** Speculative decoding is now governed by a **curated approved-drafter-list model, per benchmark**, rather than a single fixed drafter designated by the benchmark definition. Speculative decoding is permitted for any benchmark for which the benchmark task force has approved one or more drafters, following the process below. Benchmarks with no approved drafter continue to disallow speculative decoding entirely.
+**v1.0 change.** Speculative decoding is governed by a **curated approved-drafter-list model, per benchmark**, replacing the single fixed drafter designated by the benchmark definition in earlier versions. Speculative decoding is disallowed entirely for any benchmark with no approved drafter.
+
+> [!NOTE]
+> **One whitelist, by design.** The approved drafter list is the single deliberate exception to the disallowed-only formulation of [§2.2.1](#221-general-rules): *which* drafter may be used is a closed list, because a drafter is a third-party artifact whose provenance has to be established before it can be relied on. Every other rule in this section is stated as a prohibition — what disqualifies a drafter from the list, and what a submitter may not do at run time. Anything not prohibited is permitted.
 
 **Approved drafter list.** Each benchmark's set of eligible drafters (MTP head, EAGLE-style head, or analogous module) is a **curated, published list**, not a single fixed drafter:
 
@@ -422,29 +425,26 @@ Statically removing weights that *do* participate in the forward pass for some i
 - **Trained for benchmark performance.** A drafter trained, fine-tuned, or distilled specifically to perform well on this benchmark — including against benchmark-like traffic that reproduces its task mix, prompt style, or length distribution — even where the benchmark dataset itself was never used. A drafter published for general use, and adopted for the benchmark because it happens to suit it, does not disqualify.
 - **Undisclosed or QAT-style quantization.** Quantization-aware training, or post-training quantization without disclosure of the calibration set and methodology, per [§2.9.3](#293-model-weight-rules).
 
-Submitters select any drafter from the benchmark's approved list. Using a drafter **not on the approved list** is not permitted.
+Using a drafter that is **not on the benchmark's approved list** is not permitted.
 
-A list entry identifies a drafter in one of two ways:
-
-- **Weight-identified** — a distinct draft model or head, identified by its model ID and weight checksum.
-- **Configuration-identified** — a drafter that introduces no separate weights, such as a self-speculative or early-exit pass through a subset of the target's own layers. It is identified by the target checksum together with the exit-layer and any other configuration defining the draft pass. See [§2.9.9 Q7](#299-qa-model-equivalence-clarifications).
+A list entry identifies a drafter by whatever uniquely determines it: commonly a model ID and weight checksum for a distinct draft model or head, or — for a drafter that introduces no separate weights, such as a self-speculative or early-exit pass through a subset of the target's own layers — the target checksum together with the exit-layer and any other configuration defining the draft pass ([§2.9.9 Q7](#299-qa-model-equivalence-clarifications)). These are examples of identification, not an exhaustive set of permitted forms.
 
 The following are **also disallowed** at run time:
 
 - **Approximate speculative-decoding methods that alter the output distribution.** The verification step MUST NOT introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Outputs MUST be token-for-token identical to what the target model would generate without speculation.
 - **Approximating, skipping, or replacing the verification step**, including replacing the target with a secondary drafter for verification. The target model in the verification step MUST be the canonical model with the permitted transformations of [§2.9.3](#293-model-weight-rules) applied.
-- **Modifying an approved drafter.** Fine-tuning, LoRA, adapter layers, RLHF, continued pre-training, or any other gradient-based update to a drafter by the submitter. The drafter is used as published on the approved list; a modified drafter is no longer that drafter, and is therefore not on the list. Post-training quantization is the one permitted transformation — see *PTQ on drafter weights* below.
+- **Modifying an approved drafter.** Fine-tuning, LoRA, adapter layers, RLHF, continued pre-training, or any other gradient-based update to a drafter by the submitter. The drafter is used as published on the approved list; a modified drafter is no longer that drafter, and is therefore not on the list. This prohibition does not reach post-training quantization — see *Quantization of drafter weights* below.
 
 **Disclosure and run-time requirements:**
 
 - The drafter identity (name, version, source URL), precision, algorithm, and per-point configuration MUST be declared in the submission YAML.
-- All measurement points on a submission's pareto curve for a given benchmark MUST use the same drafter (same head, same algorithm). Different **configurations** of the same drafter (e.g., varying `speculative-num-steps` or `speculative-eagle-topk`) are permitted across pareto points, including disabling speculation entirely at some points. The drafter itself is fixed across the curve. The configuration values used at each point MUST be declared in the submission YAML, and any dynamic variation within a single point's run MUST be reported as a distribution.
+- All measurement points on a submission's pareto curve for a given benchmark MUST use the same drafter (same head, same algorithm). This constrains the drafter, not its configuration: configuration values (e.g. `speculative-num-steps`, `speculative-eagle-topk`) may differ across pareto points, and speculation may be disabled entirely at some points. The drafter itself is fixed across the curve. The configuration values used at each point MUST be declared in the submission YAML, and any dynamic variation within a single point's run MUST be reported as a distribution.
 
-**PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same conditions as the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, disclosed in the submission YAML, and subject to the accuracy gate. The drafter MUST NOT be modified in any other training-side sense — see *Drafter eligibility* above.
+**Quantization of drafter weights.** Quantization of a drafter is disqualifying only where it is QAT-style or undisclosed (see *Drafter eligibility* above). Post-training quantization carried out under the same conditions as the canonical model ([§2.9.3](#293-model-weight-rules)) — calibration-only, using only the published calibration set, no gradient updates, disclosed in the submission YAML, and subject to the accuracy gate — is therefore not caught by that bar. Every other training-side modification of the drafter remains prohibited, per *Modifying an approved drafter* above.
 
 **Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark has no approved drafter ([§2.9.1](#291-reference-implementation)), speculative decoding is not available for that benchmark at all — and a drafter shipped with the canonical checkpoint but absent from the approved list may not be used.
 
-**Model equivalence for drafters.** No drafter-specific equivalence standard applies. A speculative-decoding submission is model equivalent on the same two general tests as any other optimization:
+**Model equivalence for drafters.** No drafter-specific equivalence standard applies. A speculative-decoding submission is model equivalent on the same general tests that apply to any other optimization:
 
 - The **submission** must meet the accuracy quality target ([§2.9.8](#298-accuracy-gate)) with its speculative-decoding configuration in force. Because exact verification requires token-for-token identity with the unspeculated target, a compliant configuration does not move accuracy; a failure here indicates the verification requirement above was not met.
 - The drafter must be free of **input-based optimization**, per the eligibility criteria above and [§2.2.1](#221-general-rules).
