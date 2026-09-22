@@ -1349,7 +1349,6 @@ Endpoints submissions must include the following metadata:
 | `data_parallel` | Data parallel replication of the model for the run. DP=N means the model is replicated N times, and requests are distributed across the N replicas. DP=1 means no replication. |
 | `batch` | Maximum batch size. |
 | `config_summary_notes` | Free form field from the submitter to contain information not captured by other fields that concatenate into config_summary. |
-| `link_config` | Link to full configuration logs for the run (e.g., in GitHub). |
 | `tps_utilization` | reported_system_tps / (max of all reported_system_tps for all runs) |
 
 #### 8.2.1 Template Structure
