@@ -355,7 +355,7 @@ Each benchmark has a **reference implementation** published in the MLPerf Endpoi
 - The **dataset** used for performance and accuracy runs (Hugging Face dataset ID or download URL, plus the canonical split and any preprocessing recipe).
 - The **reference chat template** (Hugging Face chat-template string or the equivalent message-formatting spec). Submissions MUST use the reference chat template; alternative templates that produce different tokenized output are not permitted.
 - The **reference server / sampling parameters**: temperature, top-k, top-p, repetition penalty, greedy-vs-stochastic decoding flag, max output tokens, stop sequences. These MUST be set per the benchmark definition; submissions MUST NOT modify them.
-- The **speculative-decoding configuration** if the benchmark designates a drafter (drafter ID, precision, algorithm, default per-point configuration). See [§2.9.4](#294-speculative-decoding).
+- The **approved drafter list** for the benchmark, if any — one or more approved draft models/heads, each with its ID, precision, algorithm, and default per-point configuration. Submitters select any approved drafter; the list is published and versioned per submission round alongside the model list (see [§3.2](#32-supported-models)). See [§2.9.4](#294-speculative-decoding) for eligibility, approval, and verification requirements.
 - The accuracy evaluation methodology and quality target.
 - The endpoint API interface.
 - **Fixed configuration:** Configuration parameters explicitly designated as fixed by the reference implementation MUST NOT be modified by submitters.
@@ -412,22 +412,28 @@ Statically removing weights that *do* participate in the forward pass for some i
 
 - The benchmark task force seeds the list with ≥ 1 approved head/drafter per benchmark model where feasible.
 - Submitters (and any WG member) may propose additional drafters via a standing intake process. Proposal review is **WG review by default**; on escalation, the benchmark task force takes over the review and returns its recommendation to the WG for ratification.
-- A newly proposed drafter must be **approved at least 4 weeks (two submission cohorts) before the submission** it is first used in.
+- A newly approved drafter may first be used in a submission whose `target_cohort` is **at least two cohorts after** the cohort in which the drafter was approved. Approval is recorded against the cohort in which the updated list is published.
 - The approved list is published in the reference repository, versioned per submission round, alongside the model list (see [§3.2](#32-supported-models)).
 
 **Drafter eligibility.** The following disqualify a drafter from the approved list:
 
 - **Not open-weight.** The weights are not downloadable by anyone who agrees to the publisher's license terms — private hosting, or access requiring manual/discretionary approval, disqualifies. An automatic license click-through with the same terms and instant access for anyone (e.g., Meta's Llama license gate) does not disqualify.
-- **Input-based optimization ([§2.2.1](#221-general-rules)).** Build-time incorporation of the benchmark performance dataset's content — deliberate fine-tuning/distillation on it. (Incidental pretraining-corpus overlap does not disqualify; a corpus-disclosure or release-date test is not required of the proposer.)
-- **Post-approval modification.** Fine-tuning, LoRA, adapter layers, RLHF, continued pre-training, or any other gradient-based update by the submitter.
+- **Input-based optimization ([§2.2.1](#221-general-rules)).** Build-time incorporation of the benchmark performance dataset's content — deliberate fine-tuning or distillation on it. (Incidental pretraining-corpus overlap does not disqualify; a corpus-disclosure or release-date test is not required of the proposer.)
+- **Trained for benchmark performance.** A drafter trained, fine-tuned, or distilled specifically to perform well on this benchmark — including against benchmark-like traffic that reproduces its task mix, prompt style, or length distribution — even where the benchmark dataset itself was never used. A drafter published for general use, and adopted for the benchmark because it happens to suit it, does not disqualify.
 - **Undisclosed or QAT-style quantization.** Quantization-aware training, or post-training quantization without disclosure of the calibration set and methodology, per [§2.9.3](#293-model-weight-rules).
 
 Submitters select any drafter from the benchmark's approved list. Using a drafter **not on the approved list** is not permitted.
+
+A list entry identifies a drafter in one of two ways:
+
+- **Weight-identified** — a distinct draft model or head, identified by its model ID and weight checksum.
+- **Configuration-identified** — a drafter that introduces no separate weights, such as a self-speculative or early-exit pass through a subset of the target's own layers. It is identified by the target checksum together with the exit-layer and any other configuration defining the draft pass. See [§2.9.9 Q7](#299-qa-model-equivalence-clarifications).
 
 The following are **also disallowed** at run time:
 
 - **Approximate speculative-decoding methods that alter the output distribution.** The verification step MUST NOT introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Outputs MUST be token-for-token identical to what the target model would generate without speculation.
 - **Approximating, skipping, or replacing the verification step**, including replacing the target with a secondary drafter for verification. The target model in the verification step MUST be the canonical model with the permitted transformations of [§2.9.3](#293-model-weight-rules) applied.
+- **Modifying an approved drafter.** Fine-tuning, LoRA, adapter layers, RLHF, continued pre-training, or any other gradient-based update to a drafter by the submitter. The drafter is used as published on the approved list; a modified drafter is no longer that drafter, and is therefore not on the list. Post-training quantization is the one permitted transformation — see *PTQ on drafter weights* below.
 
 **Disclosure and run-time requirements:**
 
@@ -436,12 +442,12 @@ The following are **also disallowed** at run time:
 
 **PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same conditions as the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, disclosed in the submission YAML, and subject to the accuracy gate. The drafter MUST NOT be modified in any other training-side sense — see *Drafter eligibility* above.
 
-**Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark's reference implementation does not designate a drafter ([§2.9.1](#291-reference-implementation)), speculative decoding is not available for that benchmark at all — a drafter shipped with the model but not designated by the benchmark definition may not be used.
+**Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark has no approved drafter ([§2.9.1](#291-reference-implementation)), speculative decoding is not available for that benchmark at all — and a drafter shipped with the canonical checkpoint but absent from the approved list may not be used.
 
-**Model equivalence for drafters.** Disallowed:
+**Model equivalence for drafters.** No drafter-specific equivalence standard applies. A speculative-decoding submission is model equivalent on the same two general tests as any other optimization:
 
-- A drafter that does not meet the accuracy gate ([§2.9.8](#298-accuracy-gate)).
-- A drafter that incorporates input-based optimization ([§2.2.1](#221-general-rules)).
+- The **submission** must meet the accuracy quality target ([§2.9.8](#298-accuracy-gate)) with its speculative-decoding configuration in force. Because exact verification requires token-for-token identity with the unspeculated target, a compliant configuration does not move accuracy; a failure here indicates the verification requirement above was not met.
+- The drafter must be free of **input-based optimization**, per the eligibility criteria above and [§2.2.1](#221-general-rules).
 
 #### 2.9.5 KV Cache Rules
 
@@ -603,7 +609,7 @@ A: They were promoted into the operative rules and are no longer restated here: 
 A: Yes, as an implementation detail of the exact-verification requirement in [§2.9.4](#294-speculative-decoding) — not an exception to it. Any tree/DFlash-style verification attention is fine provided the target-output-distribution guarantee still holds (token-for-token identical to the unspeculated target).
 
 **Q7: Does a drafter implemented as a truncated forward pass through a subset of the target model's own layers (self-speculative / early-exit, no separate weights) satisfy the open-weight requirement in [§2.9.4](#294-speculative-decoding)?**
-A: Yes. There are no separate weights to disclose — the target model's own public checksum already establishes this.
+A: Yes. There are no separate weights to disclose — the target model's own public checksum already establishes this. It must still appear on the benchmark's approved drafter list, entered as a **configuration-identified** drafter: the target checksum together with the exit-layer and any other configuration that defines the draft pass, rather than a separate weight checksum. The approval process and eligibility criteria of [§2.9.4](#294-speculative-decoding) apply to it unchanged.
 
 ---
 
@@ -1504,9 +1510,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Accuracy** | Accuracy results are present for all points required by §5.3 and satisfy the applicable single-turn or multi-turn gate in §4.3. | Reject submission. |
 | **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |
-| **Approved drafter** | For points using speculative decoding, the disclosed drafter (checksum) matches an entry on the benchmark's published approved drafter list ([§2.9.4](#294-speculative-decoding)/[§3.2](#32-supported-models)). | Reject non-conforming points. |
-| **4-week approval** | The approved drafter used was approved ≥ 4 weeks (two submission cohorts) before the submission. | Reject non-conforming points. |
-| **Output-equivalence check** | Speculative-decoding points pass the output-equivalence verification procedure ([§2.9.4](#294-speculative-decoding)): token-for-token identical output to the unspeculated target under the ratified evidence standard. | Reject submission. |
+| **Approved drafter** | For points using speculative decoding, the disclosed drafter matches an entry on the benchmark's published approved drafter list — by weight checksum, or by target checksum plus configuration for a configuration-identified entry ([§2.9.4](#294-speculative-decoding)/[§3.2](#32-supported-models)). | Reject non-conforming points. |
+| **Drafter approval lead time** | The drafter used was approved at least two cohorts before the submission's `target_cohort` ([§2.9.4](#294-speculative-decoding)). | Reject non-conforming points. |
 
 ### 9.2 Manual Review Focus Areas
 
