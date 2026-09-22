@@ -510,7 +510,7 @@ Once that point passes the result is settled, and is no longer subject to late o
 
 Anchoring to finalization gives every submission the same exposure period. Anchoring to first publication would penalize submitters who opt in to provisional publication ([§6.2](#623-provisional-publication)), whose results appear weeks earlier and would therefore settle sooner than an otherwise identical confidential submission.
 
-The 90-day floor guarantees a minimum challenge period regardless of where in the audit-vote cycle a result lands, while the audit-vote ceiling keeps the period bounded. It matches the 90-day endpoint-accessibility requirement for Standardized CoN submissions ([§7.2.5](#725-division-specific-available-requirements)), so that the endpoint remains reachable for as long as the result can be challenged. A submitter's obligation to retain the benchmarked system and its configuration for a possible audit runs to the close of this window and no further.
+The 90-day floor guarantees a minimum challenge period regardless of where in the audit-vote cycle a result lands, while the audit-vote ceiling keeps the period bounded. It matches the 90-day endpoint-accessibility requirement for Standardized CoN submissions ([§7.2.5](#725-division-specific-available-requirements)), so that the endpoint remains reachable for as long as the result can be challenged. A submitter's obligation to retain the benchmarked system and its configuration for a possible audit runs to the close of this window and no further — except where the submission is nominated or selected for audit, in which case retention runs as set out in [§10.2](#102-audit-votes).
 
 > *Example:* A result finalized 10 days before an audit vote does not settle at that vote — 90 days have not elapsed — and settles on day 90. A result finalized 100 days before the next vote remains open until that vote.
 
@@ -955,7 +955,7 @@ Either party may appeal the review chair's decision to the Head of MLPerf within
 
 For audit process guidelines see the [MLPerf Endpoints Audit Guidelines](MLPerf_Endpoints_Audit_Guidelines.md).
 
-To ensure compliance and accuracy, audits are conducted on a regular cadence using a combination of random and targeted selections.
+To ensure compliance and accuracy, audits are conducted on a regular cadence, combining random selection with nomination by the review committee.
 
 ### 10.1 Audit Quota
 
@@ -963,11 +963,11 @@ Audit Quota
 * **Annual Cadence:** 8 audits per year.
 * **Quarterly Breakdown:** 2 audits per quarter, divided as:
   * 1 randomly selected audit.
-  * 1 outlier audit selected by vote.
+  * 1 nominated audit selected by vote.
 
 ### 10.2 Audit Votes
 
-The review committee holds an **audit vote** each quarter to select that quarter's **outlier audit** ([§10.1](#101-audit-quota)). The quarter's random audit is drawn separately under [§10.3](#103-random-audit-selection) and is not voted on.
+The review committee holds an **audit vote** each quarter to select that quarter's **nominated audit** ([§10.1](#101-audit-quota)). The quarter's random audit is drawn separately under [§10.3](#103-random-audit-selection) and is not voted on.
 
 **Nomination.** During the review process a GitHub issue is opened in which submissions may be nominated for audit. Each nomination must state a reason — new hardware or software, unusual or interesting features, performance outside expectations, or similar.
 
@@ -983,10 +983,7 @@ The review committee holds an **audit vote** each quarter to select that quarter
 
 A nomination filed within its window is considered at the next audit vote. Where the 90-day floor of §6.6 extends past that vote, an unselected reproducibility nomination remains open for any further vote falling inside the window; otherwise the result settles at the close of the window and the nomination lapses.
 
-**Hardware holding period.**
-
-- **Nominated submissions.** A submitter whose submission is nominated is committed to provide the hardware to the auditor. If the submission is not selected at the vote, the hardware may be released.
-- **Selected submissions.** A submitter whose submission is selected must provide the hardware until the audit is fully completed.
+**Hardware retention.** From nomination, the submitter must keep the benchmarked system in its submitted configuration and available to an auditor. If the vote passes without selecting it, the obligation ends; if it is selected, retention continues until the audit is complete ([§10.5](#105-audit-compliance-and-resolution-rules)).
 
 > [!NOTE]
 > **[WG Open Item]** — The **quorum** for an audit vote is undecided. The cadence (quarterly, per [§10.1](#101-audit-quota)), the voting rule (ranked choice, simple majority), and the chairs' authority to add new-accelerator systems are settled above.
@@ -1007,8 +1004,7 @@ Random Audit Selection
       * After a selection streak of length 3, there is budget for only one more random audit in the annual budget. The audit committee will make decision on how to proceed.
       * A non-selection streak has higher probability. After a non-selection streak of length 3, the audit committee will decide based on the available annual budget and the time left in the current year. The audit committee has the final authority on all the audit decisions.
 
-* **Hardware Holding Period:**
-  * The holding period begins immediately after random selection occurs (post-withdrawal deadline) and ends when the audit is officially completed.
+* **Hardware retention:** From selection until the audit is complete ([§10.5](#105-audit-compliance-and-resolution-rules)), on the same terms as [§10.2](#102-audit-votes).
 
 ### 10.4 Audit Nomination on Reproducibility Grounds
 
