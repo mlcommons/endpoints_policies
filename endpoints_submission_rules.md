@@ -70,8 +70,11 @@
    - [9.4 Appeal](#94-appeal)
    - [9.5 Status](#95-status)
 10. [Audit Process](#10-audit-process)
-    - [10.1 Audit Nomination on Reproducibility Grounds](#101-audit-nomination-on-reproducibility-grounds)
+    - [10.1 Audit Quota](#101-audit-quota)
     - [10.2 Audit Votes](#102-audit-votes)
+    - [10.3 Random Audit Selection](#103-random-audit-selection)
+    - [10.4 Audit Nomination on Reproducibility Grounds](#104-audit-nomination-on-reproducibility-grounds)
+    - [10.5 Audit Compliance and Resolution Rules](#105-audit-compliance-and-resolution-rules)
 11. [Appendices](#11-appendices)
 
 ---
@@ -136,7 +139,7 @@ Submitters or other review committee members may raise conflict of interest conc
 
 #### Neutral Members
 
-Several processes in these rules are staffed by **neutral members**: the dispute resolution panel ([§9.2](#92-escalation-path)), the objection review panel ([§8.5](#85-issues-discovered-after-publication)), and audit-nomination screening ([§10.1](#101-audit-nomination-on-reproducibility-grounds)).
+Several processes in these rules are staffed by **neutral members**: the dispute resolution panel ([§9.2](#92-escalation-path)), the objection review panel ([§8.5](#85-issues-discovered-after-publication)), and audit-nomination screening ([§10.4](#104-audit-nomination-on-reproducibility-grounds)).
 
 A neutral member is a person with **minimal conflict of interest in the matter at hand**, assessed against the criteria above: no direct financial interest in its outcome, no employment or equivalent relationship with either party, and no involvement in preparing or reviewing the submission in question. Consistent with the paragraph above, ordinary competitive relationships and CSP/OEM/ODM partnerships do **not** disqualify a person from serving as a neutral member.
 
@@ -438,7 +441,6 @@ Penalties are cumulative and non-reversible — responding after a penalty thres
 
 After compliance checks pass for a submission, submitters may only update run and submission metadata when requested by review committee. Updates are restricted to cases where insufficient information, code, or instructions was provided, or a material flaw is discovered that must be rectified. Any improvement to performance metrics must be justified and explained to the review committee. Submitters are encouraged to use the GitHub Web UI for making changes. Any and all changes are synced up with the database, and should shortly be viewable in the visualizer.
 
-
 ### 6.4 Objection Resolution (Weeks 4–6)
 
 From Week 4 through Week 6, all filed objections carried over from the peer review window must be resolved. All objections must reach resolution; escalation to dispute resolution is reserved for cases where the parties cannot agree on the facts or interpretation.
@@ -484,7 +486,7 @@ After Week 6, late objections may be raised only on the following grounds:
 - **Model equivalence** — the submission does not meet the model-equivalence rules of [Endpoints Rules §2.9](endpoints_rules.md#29-model-equivalence-rules-standardized-division): for example a prohibited weight transformation, an undisclosed approximation, or a drafter, sparsity, or KV-cache configuration that was never declared.
 - **Division rules** — the submission does not meet the requirements of the division under which it was published, or was published in the wrong division.
 
-Reproducibility remains **ineligible** as a late objection ground; reproducibility objections must be filed within the peer review window. A member with a reproducibility concern about a published result instead makes their case by **nominating the submission for audit** under [§10.1](#101-audit-nomination-on-reproducibility-grounds).
+Reproducibility remains **ineligible** as a late objection ground; reproducibility objections must be filed within the peer review window. A member with a reproducibility concern about a published result instead makes their case by **nominating the submission for audit** under [§10.4](#104-audit-nomination-on-reproducibility-grounds).
 
 > [!NOTE]
 > **Why these grounds extend past Week 6.** Model-equivalence and division-rule violations are frequently not discoverable during the review window. Under [§6.10](#610-visibility-of-results-during-review), code and submission artifacts are visible only to the review committee and other submitters until finalization, so for many parties the first opportunity to examine them arises after Week 6.
@@ -495,7 +497,7 @@ Late objections are handled through the dispute resolution process (see [§9](#9
 
 #### Scope and Standing for Late Concerns
 
-The limits in this subsection apply both to late objections under §6.6 and to audit nominations under [§10.1](#101-audit-nomination-on-reproducibility-grounds).
+The limits in this subsection apply both to late objections under §6.6 and to audit nominations under [§10.4](#104-audit-nomination-on-reproducibility-grounds).
 
 **Standing.** Only members of the review committee ([§2.1](#21-structure)) may raise a late objection or nominate a submission for audit. An organization that is not on the committee for the cohort in question may bring its concern to a committee member. [§8.5](#85-issues-discovered-after-publication) remains open to any MLCommons member, but only for allegations of direct fraud or misrepresentation.
 
@@ -508,7 +510,7 @@ Once that point passes the result is settled, and is no longer subject to late o
 
 Anchoring to finalization gives every submission the same exposure period. Anchoring to first publication would penalize submitters who opt in to provisional publication ([§6.2](#623-provisional-publication)), whose results appear weeks earlier and would therefore settle sooner than an otherwise identical confidential submission.
 
-The 90-day floor guarantees a minimum challenge period regardless of where in the audit-vote cycle a result lands, while the audit-vote ceiling keeps the period bounded. It matches the 90-day endpoint-accessibility requirement for Standardized CoN submissions ([§7.2.5](#725-division-specific-available-requirements)), so that the endpoint remains reachable for as long as the result can be challenged. A submitter's obligation to retain the benchmarked system and its configuration for a possible audit runs to the close of this window and no further.
+The 90-day floor guarantees a minimum challenge period regardless of where in the audit-vote cycle a result lands, while the audit-vote ceiling keeps the period bounded. It matches the 90-day endpoint-accessibility requirement for Standardized CoN submissions ([§7.2.5](#725-division-specific-available-requirements)), so that the endpoint remains reachable for as long as the result can be challenged. A submitter's obligation to retain the benchmarked system and its configuration for a possible audit runs to the close of this window and no further — except where the submission is nominated or selected for audit, in which case retention runs as set out in [§10.2](#102-audit-votes).
 
 > *Example:* A result finalized 10 days before an audit vote does not settle at that vote — 90 days have not elapsed — and settles on day 90. A result finalized 100 days before the next vote remains open until that vote.
 
@@ -563,7 +565,7 @@ Objections filed during peer review must be categorized as one of the following 
 |---|---|---|
 | **Compliance Failure** | Submission does not meet stated rules (point count, region coverage, run duration, load pattern, etc.). | High — may require withdrawal. |
 | **Methodology** | Disagreement with how the benchmark was configured or executed (e.g., dataset handling, warmup procedure). | High. |
-| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin for the metric in question (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)); the throughput margins do not apply to latency metrics, and an objection may not rest on latency alone until a method is ratified. Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window (through the end of Week 3) and are not eligible as late objections; after finalization, a reproducibility concern is pursued by nominating the submission for audit under [§10.1](#101-audit-nomination-on-reproducibility-grounds). | High — but must exceed the allowed variability margin to be actionable. |
+| **Reproducibility** | Results cannot be reproduced by an independent party or appear statistically implausible. A reproducibility objection must demonstrate deviation beyond the allowed variability margin for the metric in question (see [§6.6 Reproducibility Expectations](#reproducibility-expectations)); the throughput margins do not apply to latency metrics, and an objection may not rest on latency alone until a method is ratified. Minor deviations within the expected range are not grounds for blocking publication. Accuracy failures are always a valid reproducibility objection regardless of margin. Reproducibility objections must be filed during the peer review window (through the end of Week 3) and are not eligible as late objections; after finalization, a reproducibility concern is pursued by nominating the submission for audit under [§10.4](#104-audit-nomination-on-reproducibility-grounds). | High — but must exceed the allowed variability margin to be actionable. |
 | **Validity of Results** | Specific metric values appear incorrect, inconsistent, or incompatible with known hardware capabilities. | High. |
 | **Division Rules** | Submission placed in wrong division, or system does not meet division requirements (availability, API compliance, etc.). The review committee may allow the submitting organization to reclassify to the correct division rather than withdraw. | Medium. |
 | **Availability** | System claimed as Available or Preview does not meet the availability requirements at the stated date. The review committee may allow the submitting organization to reclassify (e.g., from Available to Preview or RDI) rather than withdraw. | Medium. |
@@ -699,7 +701,6 @@ The endpoint's **terms of service must permit benchmarking** by third parties. A
 
 **RDI division.** RDI division submissions carry RDI publication status and cannot qualify as Available or Preview. If the system subsequently becomes commercially available, the submitter must create a new Standardized or Serviced submission.
 
-
 ### 7.3 Preview
 
 A **Preview** system does not qualify as Available at the time of submission, but the submitter commits to making it Available within **180 days** of its first publication in MLPerf Endpoints, and commits to re-submitting as Available at that time.
@@ -828,7 +829,6 @@ Each results publication includes:
 
 ## 8. Post-Publication
 
-
 #### Versioning and Historical Record
 
 MLCommons maintains a complete historical record of all versions of every pareto curve. Each version corresponds to the state of the submission at a given cohort.
@@ -877,7 +877,7 @@ Any use of published results in connection with the MLPerf trademark must follow
 
 ### 8.4 Issues Discovered After Publication
 
-This section is limited to allegations of **direct fraud or misrepresentation** — a submission that knowingly reports results it did not achieve, materially misstates the system under test, or conceals a material fact from reviewers. Post-publication concerns that do not allege fraud are handled as late objections ([§6.6](#66-late-objections-post-week-6)) or audit nominations ([§10.1](#101-audit-nomination-on-reproducibility-grounds)), subject to the standing and time-window limits of [§6.6](#scope-and-standing-for-late-concerns). This section carries no time limit and is not subject to supersession by a later submission.
+This section is limited to allegations of **direct fraud or misrepresentation** — a submission that knowingly reports results it did not achieve, materially misstates the system under test, or conceals a material fact from reviewers. Post-publication concerns that do not allege fraud are handled as late objections ([§6.6](#66-late-objections-post-week-6)) or audit nominations ([§10.4](#104-audit-nomination-on-reproducibility-grounds)), subject to the standing and time-window limits of [§6.6](#scope-and-standing-for-late-concerns). This section carries no time limit and is not subject to supersession by a later submission.
 
 Any MLCommons member may raise a fraud or misrepresentation allegation via email to any MLCommons WG chair. An objection review panel — minimally the review chair plus two **neutral members** ([§2.4](#24-conflict-of-interest)) — will screen the allegation. If rejected at this stage, the chair will respond to the objector with the reasoning.
 
@@ -953,12 +953,60 @@ Either party may appeal the review chair's decision to the Head of MLPerf within
 
 ## 10. Audit Process
 
-> [!NOTE]
-> **[TBD]** — The audit process for MLPerf Endpoints, including audit selection criteria, audit procedures, and non-compliance remedies, will be defined in a separate document. The audit rules will account for the rolling submission model and the higher volume of measurement points per submission (up to 32 pareto points per benchmark model).
->
-> Current proposal (subject to WG ratification): up to **2 audits per quarter**, selected by the review chair. Audit selection criteria and procedures are not yet finalized.
+For audit process guidelines see the [MLPerf Endpoints Audit Guidelines](MLPerf_Endpoints_Audit_Guidelines.md).
 
-### 10.1 Audit Nomination on Reproducibility Grounds
+To ensure compliance and accuracy, audits are conducted on a regular cadence, combining random selection with nomination by the review committee.
+
+### 10.1 Audit Quota
+
+Audit Quota
+* **Annual Cadence:** 8 audits per year.
+* **Quarterly Breakdown:** 2 audits per quarter, divided as:
+  * 1 randomly selected audit.
+  * 1 nominated audit selected by vote.
+
+### 10.2 Audit Votes
+
+The review committee holds an **audit vote** each quarter to select that quarter's **nominated audit** ([§10.1](#101-audit-quota)). The quarter's random audit is drawn separately under [§10.3](#103-random-audit-selection) and is not voted on.
+
+**Nomination.** During the review process a GitHub issue is opened in which submissions may be nominated for audit. Each nomination must state a reason — new hardware or software, unusual or interesting features, performance outside expectations, or similar.
+
+- **Who may nominate.** Members of the review committee ([§2.1](#21-structure)) only, consistent with the standing rule of [§6.6](#scope-and-standing-for-late-concerns) and with reproducibility nominations under [§10.4](#104-audit-nomination-on-reproducibility-grounds).
+- **Window.** Nominations on these grounds are open for **4 weeks following publication** of the result.
+- Reproducibility nominations under [§10.4](#104-audit-nomination-on-reproducibility-grounds) reach the same vote, on their own grounds and within the [§6.6](#scope-and-standing-for-late-concerns) window.
+
+**Compiling the slate.** The review committee chairs evaluate the nominations and compile the list of candidate systems at the close of the nomination window. The chairs may add any system with a new accelerator that was not nominated.
+
+**The vote.** The committee selects one submission for audit by **ranked-choice voting, decided by simple majority**. An option "No Audit Selected This Quarter" may be added if a majority of the review committee requests it. Where no simple majority emerges, the chairs may select one candidate at random from the pool of nominations.
+
+**Schedule, and the late-concern window.** The review chair publishes the schedule of audit votes in advance. Audit votes fix one boundary of the late-concern window: a result settles at the later of the next audit vote following finalization or 90 days after finalization ([§6.6](#scope-and-standing-for-late-concerns)). The published schedule is therefore what lets submitters and committee members determine when a given result becomes settled.
+
+A nomination filed within its window is considered at the next audit vote. Where the 90-day floor of §6.6 extends past that vote, an unselected reproducibility nomination remains open for any further vote falling inside the window; otherwise the result settles at the close of the window and the nomination lapses.
+
+**Hardware retention.** From nomination, the submitter must keep the benchmarked system in its submitted configuration and available to an auditor. If the vote passes without selecting it, the obligation ends; if it is selected, retention continues until the audit is complete ([§10.5](#105-audit-compliance-and-resolution-rules)).
+
+> [!NOTE]
+> **[WG Open Item]** — The **quorum** for an audit vote is undecided. The cadence (quarterly, per [§10.1](#101-audit-quota)), the voting rule (ranked choice, simple majority), and the chairs' authority to add new-accelerator systems are settled above.
+
+### 10.3 Random Audit Selection
+
+Random Audit Selection
+* **Timing:** The audit selection process begins after the withdrawal deadline.
+* **Rules for Random Audit Exclusion:**
+* A submission is not a candidate for the randomly chosen audit if the system is equivalent to a system audited in the previous round. For the purposes of this rule, equivalent systems have the same CPU, NIC, accelerator, and accelerator count, with the same configuration of those components as per the system configuration JSON. The review committee may determine that additional systems are equivalent to those audited in a previous round and exempt them from random audit. As a guidance for this exemption, if an accelerator is audited in one of the previous rounds, then the systems using the same accelerator can be excluded from random audit, if the aggregate system performance and the performance per accelerator are not more than 10% from those submitted during last audit time. For systems with power metrics, in addition to the performance, power efficiency must also be within 10% from the last audit time to be eligible for an exclusion from random audit. If any new result like a new model, an additional non-inferred scenario measurement or a new power measurement is submitted from the last audit time, then the exclusion is not applicable unless the review committee decides otherwise.
+* **Selection Mechanism:**
+  * A round is randomly selected with a probability of 1/6 (e.g., rolling a 6-sided die).
+  * Once a round is chosen, a submission is selected from the corresponding cohort (the set of submissions in that round) using a uniform probability of selection.
+  * **Proposal: Avoiding streaks of round selection (Needs WG Approval)**
+    * Reroll-on-repeat: If consecutive round is selected, a six sided die will be rolled again.
+      * For a selection streak of length 2, a 6-sided die would be rolled twice and the result of the second die roll will be accepted.
+      * For a selection streak of length 3, a 6-sided die would be rolled thrice and the result of the third die roll will be accepted.
+      * After a selection streak of length 3, there is budget for only one more random audit in the annual budget. The audit committee will make decision on how to proceed.
+      * A non-selection streak has higher probability. After a non-selection streak of length 3, the audit committee will decide based on the available annual budget and the time left in the current year. The audit committee has the final authority on all the audit decisions.
+
+* **Hardware retention:** From selection until the audit is complete ([§10.5](#105-audit-compliance-and-resolution-rules)), on the same terms as [§10.2](#102-audit-votes).
+
+### 10.4 Audit Nomination on Reproducibility Grounds
 
 Reproducibility concerns arising after the peer review window are not eligible as late objections ([§6.6](#66-late-objections-post-week-6)). A member who cannot reproduce a published result instead makes their case by **nominating the submission for audit**.
 
@@ -976,16 +1024,29 @@ Where an audit substantiates the concern, remedies follow [§9.3](#93-remedies) 
 > [!NOTE]
 > **[WG Open Item]** — Two questions remain open: whether nominated audits count against the proposed 2-per-quarter capacity or are additional to chair-selected audits, and whether a nominating member bears any share of the audit cost. A nomination route with no capacity guarantee may in practice defer indefinitely.
 
-### 10.2 Audit Votes
+### 10.5 Audit Compliance and Resolution Rules
 
-The review committee holds an **audit vote** to decide which submissions are audited. At each vote the committee considers the nominations received since the previous vote ([§10.1](#101-audit-nomination-on-reproducibility-grounds)) together with any submissions the review chair has selected, and chooses those to audit, subject to the audit capacity then in force.
+Audit Compliance and Resolution Rules
 
-Audit votes also fix one boundary of the late-concern window: a result settles at the later of the next audit vote following finalization or 90 days after finalization ([§6.6](#scope-and-standing-for-late-concerns)). The review chair publishes the schedule of audit votes in advance, so that submitters and committee members can determine when a given result becomes settled.
+An audit is expected to be completed within a 60 day period. Audits failing to meet this timeline can be requested to be invalidated by the auditee. The final decision to accept such a request will be taken by the Working Group.
 
-A nomination filed within the window is considered at the next audit vote. Where the 90-day floor extends past that vote, an unselected nomination remains open for any further vote falling inside the window; otherwise the result settles at the close of the window and the nomination lapses.
+If a submitter chosen for an audit finds it unfair, they can appeal to the MLCommons Executive Director to ensure fairness.
 
-> [!NOTE]
-> **[WG Open Item]** — The cadence of audit votes (the current proposal of up to 2 audits per quarter implies a quarterly vote), the quorum and voting rule, and whether the review chair retains independent selection authority alongside committee nominations are all undecided. Because the vote cadence now also determines how long a published result remains open to challenge, setting it is a prerequisite for §6.6 as well as for §10.
+An auditor shall be chosen by the review committee who has no conflict of interest with the submitter. The process of auditor selection will take no more than 28 days from selection of the submitter.
+
+The burden is on the submitter to provide sufficient materials to demonstrate that the submission is compliant with the rules. Any such materials, including software, documentation, testing results and machine access will be provided to the auditor under NDA.
+
+The submitter shall provide two days of hardware access, at a time mutually agreed with the auditor. The first day will be used to run a pre-agreed list of tests, and to verify other system parameters if needed. The second day will allow the auditor to run additional tests based on outcome of the first day.
+
+The auditor shall write a report describing the work that was performed, a list of unresolved issues, and a recommendation on whether the submission is compliant.
+
+The submitter will provide the auditor an NDA within seven days of the auditor’s selection. The auditor and submitter will negotiate and execute the NDA within 14 days of the auditor’s selection.
+
+The auditor will submit their report to the submitter no more than thirty days after executing all relevant NDAs. The submitter will make any necessary redactions due to NDAs and forward the finalized report to the review committee within seven days. The auditor will confirm the accuracy of the forwarded report.
+
+Submissions that fail the audit at a material level will be moved to the RDI division or removed, by review committee decision. If a submission failed an audit that was delayed past publication, then any published material concerning the invalidated result is subject to the MLCommons rules for Violation Determination, Remedies and Penalties for remedial action.
+
+MLCommons shall retain a library of past audit reports and send copies to MLCommons members, auditors, and potential auditors by request. Audit reports will not be further distributed without permission from the audited submitter.
 
 ---
 
