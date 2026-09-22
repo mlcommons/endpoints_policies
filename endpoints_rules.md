@@ -71,7 +71,7 @@ These rules define the technical requirements for MLPerf Endpoints benchmark sub
 The submission, review, and publication *process* are defined separately in the companion [MLPerf Endpoints Submission Rules](endpoints_submission_rules.md) document.
 
 > [!NOTE]
-> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-26**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-26]`** are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones) for the full milestone table.
+> **Rule Stability.** These rules are *tentative* until the **v1.0** submission round opens on **2026-10-12**, after which rolling submission begins. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-10-12]`** are the most likely to evolve, based on submitter feedback from the v0.7 round (which closed on 2026-06-26) and on working-group discussion. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones) for the full milestone table.
 
 MLPerf Endpoints measures the performance of *inference endpoints* serving generative AI models. Unlike traditional MLPerf Inference benchmarks — which measure latency or throughput at a single operating point — MLPerf Endpoints characterizes the full performance *envelope* of a serving system as a Pareto curve across a range of concurrency levels.
 
@@ -141,7 +141,7 @@ The Standardized division is the primary benchmark division, requiring strict ad
 #### 2.2.1 General Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** This section ports the MLPerf Inference optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed entries below may be revised after v0.7 submitter feedback.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section ports the MLPerf Inference optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed entries below may be revised after v0.7 submitter feedback.
 
 **Inheritance.** Standardized division submissions inherit the model-equivalence and optimization rules of [MLPerf Inference §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). **This document is the source of truth and overrides upstream wherever the two conflict.** Where upstream uses a non-exhaustive list of allowed examples followed by a disallowed list, Endpoints uses a single **disallowed-only** formulation: anything not listed below and not in conflict with the [§2.9 Model Equivalence Rules](#29-model-equivalence-rules-standardized-division) is permitted. See [§2.9.6 Sparsity and Approximate Computation](#296-sparsity-and-approximate-computation) for the treatment of sparse and approximate execution, and [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) for clarifying examples.
 
@@ -157,6 +157,7 @@ The Standardized division is the primary benchmark division, requiring strict ad
 - Discarding non-zero weight elements (pruning), except where the operation is *mathematically equivalent* to the dense reference (see [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision)).
 - Knowledge distillation to a different architecture.
 - Retraining, fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update — applied to the canonical model or to any draft model used in speculative decoding (see [§2.9.4](#294-speculative-decoding)).
+- **Speculative decoding** using a drafter or algorithm other than one approved for the benchmark — governed by the approval process and eligibility requirements in [§2.9.4](#294-speculative-decoding). (Per-point *configuration* of an approved drafter may vary; see §2.9.4.)
 - Response caching: returning a cached response *verbatim* to a request that matches a previous request, bypassing the forward pass. Every request must execute the forward pass. (Note: this is distinct from cross-query KV-cache reuse, which still executes the forward pass on a per-query, salt-uniquified token stream — see [§2.9.5 KV Cache Rules](#295-kv-cache-rules) for the operative rule.)
 - Coalescing identical queries (deduplicating duplicate queries in flight to amortize work across them).
 - Modifying weights during the timed portion of an inference run (online learning).
@@ -337,7 +338,7 @@ The assistant-payload token count excludes empty chat-template framing. The refe
 ### 2.9 Model Equivalence Rules (Standardized Division)
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas (most notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules), dynamic approximate sparsity in [§2.9.6.4](#2964-dynamic-approximate-sparsity), and drafter PTQ in [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas (most notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules), dynamic approximate sparsity in [§2.9.6.4](#2964-dynamic-approximate-sparsity), and drafter PTQ in [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
 
 These rules define what it means for a Standardized division submission to be "model equivalent" to the reference implementation. The subsections below define which implementation choices are permitted; the accuracy quality target (§4.3) then determines whether a permitted approximation is acceptable in a given submission. Passing the accuracy gate is necessary but not sufficient — see [§2.9.8](#298-accuracy-gate).
 
@@ -354,7 +355,7 @@ Each benchmark has a **reference implementation** published in the MLPerf Endpoi
 - The **dataset** used for performance and accuracy runs (Hugging Face dataset ID or download URL, plus the canonical split and any preprocessing recipe).
 - The **reference chat template** (Hugging Face chat-template string or the equivalent message-formatting spec). Submissions MUST use the reference chat template; alternative templates that produce different tokenized output are not permitted.
 - The **reference server / sampling parameters**: temperature, top-k, top-p, repetition penalty, greedy-vs-stochastic decoding flag, max output tokens, stop sequences. These MUST be set per the benchmark definition; submissions MUST NOT modify them.
-- The **speculative-decoding configuration** if the benchmark designates a drafter (drafter ID, precision, algorithm, default per-point configuration). See [§2.9.4](#294-speculative-decoding).
+- The **approved drafter list** for the benchmark, if any — one or more approved draft models/heads, each with its ID, precision, algorithm, and default per-point configuration. Submitters select any approved drafter; the list is published and versioned per submission round alongside the model list (see [§3.2](#32-supported-models)). See [§2.9.4](#294-speculative-decoding) for eligibility, approval, and verification requirements.
 - The accuracy evaluation methodology and quality target.
 - The endpoint API interface.
 - **Fixed configuration:** Configuration parameters explicitly designated as fixed by the reference implementation MUST NOT be modified by submitters.
@@ -375,7 +376,7 @@ The server-side processing of each incoming request — both input pre-processin
 #### 2.9.3 Model Weight Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`**
+> **`[TENTATIVE — Subject to change after 2026-10-12]`**
 
 All Standardized division submissions must begin from the **canonical model weights** specified in the benchmark definition (identified by Hugging Face model ID or a published checksum).
 
@@ -403,33 +404,55 @@ Statically removing weights that *do* participate in the forward pass for some i
 #### 2.9.4 Speculative Decoding
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`**
+> **`[TENTATIVE — Subject to change after 2026-10-12]`**
 
-Speculative decoding is permitted for any benchmark whose definition designates a drafter (MTP head, EAGLE-style head, or analogous module). The drafter is treated as part of the canonical reference and is **frozen** in the training sense. The following transformations of the drafter are **disallowed**:
+**v1.0 change.** Speculative decoding is now governed by a **curated approved-drafter-list model, per benchmark**, rather than a single fixed drafter designated by the benchmark definition. Speculative decoding is permitted for any benchmark for which the benchmark task force has approved one or more drafters, following the process below. Benchmarks with no approved drafter continue to disallow speculative decoding entirely.
 
-- **Fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update** to the drafter.
-- **Continued pre-training or retraining** of the drafter.
-- **Swapping the drafter** for a different model — including a different checkpoint of the same family, a smaller checkpoint, or a model trained specifically for benchmark performance.
-- **Replacing the speculative-decoding algorithm** with one that differs from the reference (e.g., swapping EAGLE for Medusa).
+**Approved drafter list.** Each benchmark's set of eligible drafters (MTP head, EAGLE-style head, or analogous module) is a **curated, published list**, not a single fixed drafter:
+
+- The benchmark task force seeds the list with ≥ 1 approved head/drafter per benchmark model where feasible.
+- Submitters (and any WG member) may propose additional drafters via a standing intake process. Proposal review is **WG review by default**; on escalation, the benchmark task force takes over the review and returns its recommendation to the WG for ratification.
+- A newly approved drafter may first be used in a submission whose `target_cohort` is **at least two cohorts after** the cohort in which the drafter was approved. Approval is recorded against the cohort in which the updated list is published.
+- The approved list is published in the reference repository, versioned per submission round, alongside the model list (see [§3.2](#32-supported-models)).
+
+**Drafter eligibility.** The following disqualify a drafter from the approved list:
+
+- **Not open-weight.** The weights are not downloadable by anyone who agrees to the publisher's license terms — private hosting, or access requiring manual/discretionary approval, disqualifies. An automatic license click-through with the same terms and instant access for anyone (e.g., Meta's Llama license gate) does not disqualify.
+- **Input-based optimization ([§2.2.1](#221-general-rules)).** Build-time incorporation of the benchmark performance dataset's content — deliberate fine-tuning or distillation on it. (Incidental pretraining-corpus overlap does not disqualify; a corpus-disclosure or release-date test is not required of the proposer.)
+- **Trained for benchmark performance.** A drafter trained, fine-tuned, or distilled specifically to perform well on this benchmark — including against benchmark-like traffic that reproduces its task mix, prompt style, or length distribution — even where the benchmark dataset itself was never used. A drafter published for general use, and adopted for the benchmark because it happens to suit it, does not disqualify.
+- **Undisclosed or QAT-style quantization.** Quantization-aware training, or post-training quantization without disclosure of the calibration set and methodology, per [§2.9.3](#293-model-weight-rules).
+
+Submitters select any drafter from the benchmark's approved list. Using a drafter **not on the approved list** is not permitted.
+
+A list entry identifies a drafter in one of two ways:
+
+- **Weight-identified** — a distinct draft model or head, identified by its model ID and weight checksum.
+- **Configuration-identified** — a drafter that introduces no separate weights, such as a self-speculative or early-exit pass through a subset of the target's own layers. It is identified by the target checksum together with the exit-layer and any other configuration defining the draft pass. See [§2.9.9 Q7](#299-qa-model-equivalence-clarifications).
 
 The following are **also disallowed** at run time:
 
 - **Approximate speculative-decoding methods that alter the output distribution.** The verification step MUST NOT introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Outputs MUST be token-for-token identical to what the target model would generate without speculation.
 - **Approximating, skipping, or replacing the verification step**, including replacing the target with a secondary drafter for verification. The target model in the verification step MUST be the canonical model with the permitted transformations of [§2.9.3](#293-model-weight-rules) applied.
+- **Modifying an approved drafter.** Fine-tuning, LoRA, adapter layers, RLHF, continued pre-training, or any other gradient-based update to a drafter by the submitter. The drafter is used as published on the approved list; a modified drafter is no longer that drafter, and is therefore not on the list. Post-training quantization is the one permitted transformation — see *PTQ on drafter weights* below.
 
 **Disclosure and run-time requirements:**
 
 - The drafter identity (name, version, source URL), precision, algorithm, and per-point configuration MUST be declared in the submission YAML.
 - All measurement points on a submission's pareto curve for a given benchmark MUST use the same drafter (same head, same algorithm). Different **configurations** of the same drafter (e.g., varying `speculative-num-steps` or `speculative-eagle-topk`) are permitted across pareto points, including disabling speculation entirely at some points. The drafter itself is fixed across the curve. The configuration values used at each point MUST be declared in the submission YAML, and any dynamic variation within a single point's run MUST be reported as a distribution.
 
-**PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same conditions as the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, disclosed in the submission YAML, and subject to the accuracy gate. The drafter remains *frozen* in every other training-side sense.
+**PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same conditions as the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, disclosed in the submission YAML, and subject to the accuracy gate. The drafter MUST NOT be modified in any other training-side sense — see *Drafter eligibility* above.
 
-**Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark's reference implementation does not designate a drafter ([§2.9.1](#291-reference-implementation)), speculative decoding is not available for that benchmark at all — a drafter shipped with the model but not designated by the benchmark definition may not be used.
+**Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark has no approved drafter ([§2.9.1](#291-reference-implementation)), speculative decoding is not available for that benchmark at all — and a drafter shipped with the canonical checkpoint but absent from the approved list may not be used.
+
+**Model equivalence for drafters.** No drafter-specific equivalence standard applies. A speculative-decoding submission is model equivalent on the same two general tests as any other optimization:
+
+- The **submission** must meet the accuracy quality target ([§2.9.8](#298-accuracy-gate)) with its speculative-decoding configuration in force. Because exact verification requires token-for-token identity with the unspeculated target, a compliant configuration does not move accuracy; a failure here indicates the verification requirement above was not met.
+- The drafter must be free of **input-based optimization**, per the eligibility criteria above and [§2.2.1](#221-general-rules).
 
 #### 2.9.5 KV Cache Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** This section **intentionally diverges from MLPerf Inference §KV-Cache**, which prohibits cross-query KV reuse. Endpoints targets agentic-style workloads where a shared system prompt across queries is the norm; prohibiting cross-query reuse would force submitters to artificially cripple production-style serving stacks. The salt mechanism in [§2.9.5.1](#2951-salting-mechanism) preserves measurement validity by ensuring caches cannot leak context beyond the system-prompt prefix.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section **intentionally diverges from MLPerf Inference §KV-Cache**, which prohibits cross-query KV reuse. Endpoints targets agentic-style workloads where a shared system prompt across queries is the norm; prohibiting cross-query reuse would force submitters to artificially cripple production-style serving stacks. The salt mechanism in [§2.9.5.1](#2951-salting-mechanism) preserves measurement validity by ensuring caches cannot leak context beyond the system-prompt prefix.
 
 Per [§2.2.1](#221-general-rules), KV-cache management is governed by the inherited MLPerf Inference rules with the Endpoints-specific cross-query-reuse delta described below. The following KV-cache techniques are **disallowed**:
 
@@ -469,7 +492,7 @@ The operative requirement is that the token stream actually seen by the SUT cont
 #### 2.9.6 Sparsity and Approximate Computation
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** This section consolidates the Endpoints treatment of sparse execution, softmax elision, and runtime approximation. It **intentionally diverges from MLPerf Inference**, which admits only mathematically equivalent sparse operations: [§2.9.6.4](#2964-dynamic-approximate-sparsity) permits bounded runtime approximation under the accuracy gate.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section consolidates the Endpoints treatment of sparse execution, softmax elision, and runtime approximation. It **intentionally diverges from MLPerf Inference**, which admits only mathematically equivalent sparse operations: [§2.9.6.4](#2964-dynamic-approximate-sparsity) permits bounded runtime approximation under the accuracy gate.
 
 ##### 2.9.6.1 Scope and Operative Test
 
@@ -564,7 +587,7 @@ The accuracy quality target and tolerance relative to the reference score are sp
 #### 2.9.9 Q&A: Model Equivalence Clarifications
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** Q&A entries are interpretive guidance. If a Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and the Q&A entry will be revised.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** Q&A entries are interpretive guidance. If a Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and the Q&A entry will be revised.
 
 **Q1: Is response or query caching allowed?**
 A: No. Returning a cached response verbatim to a request that matches a previous request is prohibited. Every request must go through the forward pass. KV-cache reuse (within or across queries) is a *serving optimization* governed by [§2.9.5](#295-kv-cache-rules), **not** response caching — the distinction is that KV-cache reuse still executes the forward pass on per-query tokens (which include a unique salt; see [§2.9.5.1](#2951-salting-mechanism)), whereas response caching skips compute entirely.
@@ -581,6 +604,12 @@ A: See [§2.9.5 KV Cache Rules](#295-kv-cache-rules) and [§2.9.5.1 Salting Mech
 
 **Q5: Where did the previous Q&A entries on quantization, sparsity, and softmax elision go?**
 A: They were promoted into the operative rules and are no longer restated here: PTQ and unused checkpoint components are in [§2.9.3](#293-model-weight-rules); drafter PTQ is in [§2.9.4](#294-speculative-decoding); pre-tokenizing clients and the salt are in [§2.9.5.1](#2951-salting-mechanism); sparse execution, attention patterns, softmax elision, hardware sparsity, and expert removal are all in [§2.9.6](#296-sparsity-and-approximate-computation).
+
+**Q6: Is tree-structured verification attention permitted for speculative decoding?**
+A: Yes, as an implementation detail of the exact-verification requirement in [§2.9.4](#294-speculative-decoding) — not an exception to it. Any tree/DFlash-style verification attention is fine provided the target-output-distribution guarantee still holds (token-for-token identical to the unspeculated target).
+
+**Q7: Does a drafter implemented as a truncated forward pass through a subset of the target model's own layers (self-speculative / early-exit, no separate weights) satisfy the open-weight requirement in [§2.9.4](#294-speculative-decoding)?**
+A: Yes. There are no separate weights to disclose — the target model's own public checksum already establishes this. It must still appear on the benchmark's approved drafter list, entered as a **configuration-identified** drafter: the target checksum together with the exit-layer and any other configuration that defines the draft pass, rather than a separate weight checksum. The approval process and eligibility criteria of [§2.9.4](#294-speculative-decoding) apply to it unchanged.
 
 ---
 
@@ -600,6 +629,8 @@ The set of supported benchmark models is defined per submission round and mainta
 > [!NOTE]
 > The model list for each submission round is published in the MLPerf Endpoints reference repository at least 6 weeks before the submission round opens. New models may be proposed to the working group per the benchmark roadmap process defined in the MLPerf General Submission Rules §4.3.
 
+**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding).
+
 ### 3.3 Weight Transformations
 
 Submitters may apply quantization, format conversion, or other weight transformations to the reference weights, subject to the accuracy quality target. All transformations must be documented in the submission. For the Standardized division, the full set of permitted and prohibited transformations is defined in [§2.9.3 Model Weight Rules](#293-model-weight-rules).
@@ -611,7 +642,7 @@ Submitters may apply quantization, format conversion, or other weight transforma
 ### 4.1 Primary Metrics
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`** TTFT framing — see note below the table on percentile selection.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** TTFT framing — see note below the table on percentile selection.
 
 Each measurement point on the pareto curve captures the following metrics at a specific concurrency level:
 
@@ -635,7 +666,7 @@ Each measurement point on the pareto curve captures the following metrics at a s
 ### 4.2 Derived and Presentation Metrics
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-06-26]`**
+> **`[TENTATIVE — Subject to change after 2026-10-12]`**
 
 The following metrics are derived from primary measurements and used in publication charts. All charts use the percentile metric defined in [§4.1](#41-primary-metrics):
 
@@ -1407,6 +1438,7 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `offline` | Offline-point declaration ([§5.7](#57-offline-point)). One of: `dedicated` — this point is a dedicated Offline run; `elected` — this is the $C_{max}$ point, elected as the Offline result under [§5.7.2](#572-relationship-to-maximum-supported-concurrency); absent or `none` otherwise. Non-agentic benchmarks only. |
 | `dataset_link` | Link to data used for submission e.g., via GitHub. |
 | `steady_state` | The reporting block of [§4.4](#44-reporting-basis-steady-state-window) — `status` (`windowable` / `insufficient_duration` / `insufficient_passes` / `partial_dataset`), `window` (super-pass range, sample count, the effective super-pass size used, and `duration_s` — the window's issue-time span, checked against the [§6.2](#62-minimum-run-duration) minimum), per-metric `state` (`Plateau` / `Drifting Up` / `Drifting Down`), and `anomaly` (present only on a level shift); `total` metrics reported alongside as supplementary. |
+| `speculative_decoding` | If used for this point: drafter model ID/checksum, precision, public release date, a link to the drafter's model card or technical report, and tokenizer-compatibility notes for the drafter/target pair. (Algorithm and per-point configuration are already covered by [§2.9.4](#294-speculative-decoding)'s disclosure requirements.) |
 
 ### 8.4 Software Disclosure
 
@@ -1478,6 +1510,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Accuracy** | Accuracy results are present for all points required by §5.3 and satisfy the applicable single-turn or multi-turn gate in §4.3. | Reject submission. |
 | **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |
+| **Approved drafter** | For points using speculative decoding, the disclosed drafter matches an entry on the benchmark's published approved drafter list — by weight checksum, or by target checksum plus configuration for a configuration-identified entry ([§2.9.4](#294-speculative-decoding)/[§3.2](#32-supported-models)). | Reject non-conforming points. |
+| **Drafter approval lead time** | The drafter used was approved at least two cohorts before the submission's `target_cohort` ([§2.9.4](#294-speculative-decoding)). | Reject non-conforming points. |
 
 ### 9.2 Manual Review Focus Areas
 
@@ -1493,6 +1527,7 @@ Human reviewers should focus on aspects that automation cannot easily verify:
 - Cross-submission consistency for the same hardware platform.
 - Division eligibility (especially Serviced division API compliance and availability status).
 - Whether post-submission updates are consistent with the original submission's system configuration.
+- For speculative-decoding submissions: whether the disclosed drafter/algorithm is consistent with the benchmark's approved list — informs a Methodology objection under [Submission Rules §6.8](endpoints_submission_rules.md#68-types-of-objections), not a SpecDec-specific check.
 
 ---
 

@@ -85,7 +85,7 @@ Where this document conflicts with the MLPerf General Submission Rules, this doc
 Technical requirements — including benchmarks, metrics, the pareto collection methodology, and division-specific rules — are defined in the companion [MLPerf Endpoints Rules](endpoints_rules.md) document. Publication status categories and availability criteria are defined in [§7](#7-publication) of this document.
 
 > [!NOTE]
-> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-26**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-26]`** in either this document or in [`endpoints_rules.md`](endpoints_rules.md) are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [§4.0 Submission Milestones](#40-submission-milestones) for the full milestone table.
+> **Rule Stability.** These rules are *tentative* until the **v1.0** submission round opens on **2026-10-12**, after which rolling submission begins. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-10-12]`** in either this document or in [`endpoints_rules.md`](endpoints_rules.md) are the most likely to evolve, based on submitter feedback from the v0.7 round (which closed on 2026-06-26) and on working-group discussion. See [§4.0 Submission Milestones](#40-submission-milestones) for the full milestone table.
 
 The review process is designed to:
 
@@ -200,15 +200,15 @@ The role of the review process is to ensure fairness of submissions, not to liti
 ### 4.0 Submission Milestones
 
 > [!NOTE]
-> **Rule Stability** (cross-reference [§1 Basics](#1-basics)). These rules are *tentative* until v0.7 closes. Submitters should expect rules — particularly sections marked `[TENTATIVE — Subject to change after 2026-06-26]` in [`endpoints_rules.md`](endpoints_rules.md) — to evolve between v0.7 and v1.0 based on submitter feedback.
+> **Rule Stability** (cross-reference [§1 Basics](#1-basics)). These rules are *tentative* until the v1.0 round opens. Submitters should expect rules — particularly sections marked `[TENTATIVE — Subject to change after 2026-10-12]` in [`endpoints_rules.md`](endpoints_rules.md) — to evolve up to that point, based on submitter feedback from v0.7.
 
 | Date | Milestone | Notes |
 |---|---|---|
 | **2026-06-26** | MLPerf Endpoints **v0.7** submission deadline (Submission Round 1) | First endpoint submission round. Rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) apply. |
 | **2026-07-31** | MLPerf Inference **v6.1** submission deadline | Traditional MLPerf Inference round (separate process, governed by [inference_rules.adoc](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc) and the [General Submission Rules](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc)). Endpoints does **not** gate on this date; it is listed here for awareness. |
-| **2026-09-01** *(tentative)* | MLPerf Endpoints **v1.0** submission deadline (Submission Round 2) + start of rolling submission | Date is tentative and subject to working-group confirmation. After v0.7 closes, rules are revised based on submitter feedback. Rolling submission ([§4.1](#41-rolling-submission-model)) begins on this date for v1.0 and beyond. |
+| **2026-10-12** | MLPerf Endpoints **v1.0** submission round opens (Submission Round 2) + start of rolling submission | Opening of the v1.0 round. Rules were revised after v0.7 closed, based on submitter feedback. Rolling submission ([§4.1](#41-rolling-submission-model)) begins on this date for v1.0 and beyond. |
 
-Until the v0.7 deadline, the rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) may be revised by working-group consensus or by the operating-principles 2/3 vote (inherited from [General Submission Rules §3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#operating-principles)). After v0.7 closes, rule revisions targeting v1.0 follow the same process. The sections most likely to change are those marked `[TENTATIVE — Subject to change after 2026-06-26]`.
+Until the v1.0 round opens, the rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) may be revised by working-group consensus or by the operating-principles 2/3 vote (inherited from [General Submission Rules §3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#operating-principles)). Rule revisions targeting v1.0 follow the same process. The sections most likely to change are those marked `[TENTATIVE — Subject to change after 2026-10-12]`.
 
 ### 4.1 Rolling Submission Model
 
