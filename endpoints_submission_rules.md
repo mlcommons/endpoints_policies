@@ -40,7 +40,7 @@
    - [5.8 Compliance Testing](#58-compliance-testing)
 6. [Review](#6-review)
    - [6.1 Automated Compliance (Week 0)](#61-automated-compliance-week-0)
-   - [6.2 Provisional Publication](#62-provisional-publication)
+   - [6.2 Publication Modes](#62-publication-modes)
    - [6.3 Peer Review (Weeks 1–3)](#63-peer-review-weeks-13)
    - [6.4 Objection Resolution (Weeks 4–6)](#64-objection-resolution-weeks-46)
    - [6.5 Review Timeline Summary](#65-review-timeline-summary)
@@ -85,7 +85,7 @@ Where this document conflicts with the MLPerf General Submission Rules, this doc
 Technical requirements — including benchmarks, metrics, the pareto collection methodology, and division-specific rules — are defined in the companion [MLPerf Endpoints Rules](endpoints_rules.md) document. Publication status categories and availability criteria are defined in [§7](#7-publication) of this document.
 
 > [!NOTE]
-> **Rule Stability.** These rules are *tentative* until the first MLPerf Endpoints submission round (v0.7) closes on **2026-06-26**. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-06-26]`** in either this document or in [`endpoints_rules.md`](endpoints_rules.md) are most likely to evolve between v0.7 and **v1.0** (next submission tentatively **2026-09-01**, after which rolling submission begins) based on submitter feedback and working-group discussion. The traditional MLPerf Inference v6.1 round on **2026-07-31** runs in parallel and is unaffected by Endpoints rule changes. See [§4.0 Submission Milestones](#40-submission-milestones) for the full milestone table.
+> **Rule Stability.** These rules are *tentative* until the **v1.0** submission round opens on **2026-10-12**, after which rolling submission begins. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-10-12]`** in either this document or in [`endpoints_rules.md`](endpoints_rules.md) are the most likely to evolve, based on submitter feedback from the v0.7 round (which closed on 2026-06-26) and on working-group discussion. See [§4.0 Submission Milestones](#40-submission-milestones) for the full milestone table.
 
 The review process is designed to:
 
@@ -200,15 +200,15 @@ The role of the review process is to ensure fairness of submissions, not to liti
 ### 4.0 Submission Milestones
 
 > [!NOTE]
-> **Rule Stability** (cross-reference [§1 Basics](#1-basics)). These rules are *tentative* until v0.7 closes. Submitters should expect rules — particularly sections marked `[TENTATIVE — Subject to change after 2026-06-26]` in [`endpoints_rules.md`](endpoints_rules.md) — to evolve between v0.7 and v1.0 based on submitter feedback.
+> **Rule Stability** (cross-reference [§1 Basics](#1-basics)). These rules are *tentative* until the v1.0 round opens. Submitters should expect rules — particularly sections marked `[TENTATIVE — Subject to change after 2026-10-12]` in [`endpoints_rules.md`](endpoints_rules.md) — to evolve up to that point, based on submitter feedback from v0.7.
 
 | Date | Milestone | Notes |
 |---|---|---|
 | **2026-06-26** | MLPerf Endpoints **v0.7** submission deadline (Submission Round 1) | First endpoint submission round. Rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) apply. |
 | **2026-07-31** | MLPerf Inference **v6.1** submission deadline | Traditional MLPerf Inference round (separate process, governed by [inference_rules.adoc](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc) and the [General Submission Rules](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc)). Endpoints does **not** gate on this date; it is listed here for awareness. |
-| **2026-09-01** *(tentative)* | MLPerf Endpoints **v1.0** submission deadline (Submission Round 2) + start of rolling submission | Date is tentative and subject to working-group confirmation. After v0.7 closes, rules are revised based on submitter feedback. Rolling submission ([§4.1](#41-rolling-submission-model)) begins on this date for v1.0 and beyond. |
+| **2026-10-12** | MLPerf Endpoints **v1.0** submission round opens (Submission Round 2) + start of rolling submission | Opening of the v1.0 round. Rules were revised after v0.7 closed, based on submitter feedback. Rolling submission ([§4.1](#41-rolling-submission-model)) begins on this date for v1.0 and beyond. |
 
-Until the v0.7 deadline, the rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) may be revised by working-group consensus or by the operating-principles 2/3 vote (inherited from [General Submission Rules §3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#operating-principles)). After v0.7 closes, rule revisions targeting v1.0 follow the same process. The sections most likely to change are those marked `[TENTATIVE — Subject to change after 2026-06-26]`.
+Until the v1.0 round opens, the rules in this document and in [`endpoints_rules.md`](endpoints_rules.md) may be revised by working-group consensus or by the operating-principles 2/3 vote (inherited from [General Submission Rules §3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#operating-principles)). Rule revisions targeting v1.0 follow the same process. The sections most likely to change are those marked `[TENTATIVE — Subject to change after 2026-10-12]`.
 
 ### 4.1 Rolling Submission Model
 
@@ -231,13 +231,13 @@ Each cohort is identified as:
 
 Submitters may request that MLCommons hold publication of their results until a specific embargo date, declared at the time of submission.
 
-- **For standard (confidential) submissions:** results are not public until review is complete. The embargo date delays public release of finalized results. Results may be embargoed for **up to 60 days after the completion of review**.
-- **For provisional publication submissions** (see [§6.2](#62-provisional-publication)): the embargo date delays when the "peer review pending" result first becomes publicly visible, and may be set to any date before finalization of results.
+- **Confidential review with embargoed publication** ([§6.2.2](#622-confidential-review-with-embargoed-publication)): results are not public until review is complete. The embargo date delays public release of the finalized result, and may be up to **60 days after the completion of review**. Review itself is unaffected.
+- **Provisional publication** ([§6.2.3](#623-provisional-publication)): the embargo date delays when the "peer review pending" result first becomes publicly visible, and may be set to any date before finalization of results. Because peer review begins at provisional publication, this embargo also defers the start of review.
 
 Rules for embargoed submissions:
 
 - The embargo date must be declared in the submission metadata.
-- The full review process (automated compliance, peer review, objection resolution) proceeds normally under the embargo — the embargo only delays public release.
+- Under [§6.2.2](#622-confidential-review-with-embargoed-publication) the full review process proceeds normally under the embargo — the embargo delays only public release. Under [§6.2.3](#623-provisional-publication) the embargo additionally defers the start of peer review, since review begins at provisional publication.
 - The embargo date **may be changed after submission**, but any change must be broadcast immediately to all review committee members.
 - All review committee members are informed of the embargo date.
 - Results under embargo are published on the requested embargo date and are not tied to the regular cohort schedule.
@@ -254,15 +254,20 @@ All review timelines, update windows, and objection deadlines are anchored to th
 
 ### 4.5 Review Cycle Example
 
-The figure below illustrates three representative scenarios for a submission made on **August 10, 2026** (Monday). It shows how automated checks, peer review, objection resolution, provisional publication, and cohort publication all interact across calendar time.
+The figure below traces four submissions entering the pipeline shortly after the rolling submission window opens on **Monday 12 October 2026**, one in each publication mode of [§6.2](#62-publication-modes). It shows how automated compliance, peer review, objection resolution, provisional publication, embargo, dispute resolution, and cohort publication interact across calendar time. The relevant cohorts are `2026-10-C1` (21 Oct), `2026-11-C0` (4 Nov), `2026-11-C1` (18 Nov), `2026-12-C0` (2 Dec), `2026-12-C1` (16 Dec), `2027-01-C0` (6 Jan) and `2027-01-C1` (20 Jan).
 
 ![MLPerf Endpoints Submission and Review Cycle](review_cycle.svg)
 
-**Scenario 1 — Fails automated checks:** The submission is found non-compliant during Week 0 and is rejected. The submitter may correct and resubmit.
+**Scenario A — confidential review, no objections.** A submitter files on 12 October, the day the window opens. Automated compliance passes on 13 October and peer review begins ([§6.1](#61-automated-compliance-week-0)). No objections are filed, so at the close of Week 3 on 3 November the submission qualifies for early finalization ([§6.3](#63-peer-review-weeks-13)) and publishes in the **2026-11-C0** cohort on 4 November. Nothing was publicly visible before that date.
 
-**Scenario 2 — Objections resolved in peer review:** Automated checks pass on August 12. An objection is filed August 21, responded to August 26, and fully resolved August 28 — before peer review closes on September 2. Early finalization applies; results publish in the **2026-09-C0** cohort.
+**Scenario B — provisional publication under embargo ([§6.2.3](#623-provisional-publication)).** A submitter files on 22 October, opts in to provisional publication, and declares an embargo through 30 October. Automated compliance passes on 23 October, but **peer review does not begin there**: under this mode review starts at provisional publication, so the embargo holds both. On 30 October the embargo lifts, the "peer review pending" result becomes publicly visible, and Week 1 begins. An objection is filed on 5 November; the submitter responds within three business days on 10 November. Peer review closes on 20 November and the objection is resolved on 25 November, inside the Week 4–6 window. The result is finalized and published in the **2026-12-C0** cohort on 2 December, at which point the pending tag is removed.
 
-**Scenario 3 — Provisional publication; objections carry into resolution:** The submitter opts in to provisional publication. Automated checks pass August 12; the "peer review pending" result becomes visible at the **2026-08-C1** cohort (August 19), running in parallel with peer review. An objection filed August 27 carries into the objection resolution window. The objector provides a validation schedule; resolution is confirmed September 9. Results are finalized in the **2026-09-C1** cohort (September 16), at which point the "peer review pending" tag is removed.
+**Scenario C — unresolved at Week 6, escalation to dispute resolution.** A submitter files on 26 October. An objection filed on 10 November is still open when the objection resolution window closes on 8 December, so escalation is automatic ([§9.2](#92-escalation-path)). The chair certifies the open objection and names the panel on 10 December, written statements are due on 24 December, the panel convenes by 31 December, and a binding decision issues on 14 January. The submission does not finalize while the dispute is open; it publishes in the **2027-01-C1** cohort on 20 January. Had the process not concluded, the 8-week backstop would have required the chair to decide on the record by 2 February.
+
+**Scenario D — confidential review with embargoed publication ([§6.2.2](#622-confidential-review-with-embargoed-publication)).** A submitter files on 19 October under confidential review and declares a publication embargo through 8 December. Automated compliance passes on 20 October and peer review begins immediately — the embargo does not defer review in this mode. No objections are filed, so the submission reaches early finalization on 10 November. The finalized result is then **held**: it is not published at the next cohort, and it is never publicly visible carrying a "peer review pending" tag. It is released on the embargo date, 8 December, which is 28 days after review completed and so within the 60-day limit of [§4.2](#42-publication-cohorts-and-embargo).
+
+> [!NOTE]
+> **[WG Open Item — embargo versus cohort cadence]** Scenarios B and D both publish on a date that is not a cohort date, which [§4.2](#42-publication-cohorts-and-embargo) permits: embargoed results "are published on the requested embargo date and are not tied to the regular cohort schedule". In Scenario B the effect is more than off-cadence — a submission clearing compliance on 23 October would not otherwise reach a cohort until 4 November, so an embargo to 30 October makes the result public *earlier* than it could have been without one. The working group should decide whether an embargo date may precede the submission's next eligible cohort, and whether off-cadence publication is intended for one, both, or neither mode.
 
 ### 4.6 Seed Rotation
 
@@ -362,24 +367,42 @@ Automated compliance checks are executed immediately after submission. The check
 
 The full list of automated checks is defined in [MLPerf Endpoints Rules §9](endpoints_rules.md#9-compliance-validation).
 
-**If a submission fails any automated check by the end of Week 0, it is rejected.** The submitter is notified of the specific failures and may correct the issues and resubmit as a new submission. Rejected submissions do not enter the peer review phase. The peer review period begins as soon as all automated checks have passed.
+**If a submission fails any automated check by the end of Week 0, it is rejected.** The submitter is notified of the specific failures and may correct the issues and resubmit as a new submission. Rejected submissions do not enter the peer review phase. The peer review period begins as soon as all automated checks have passed — except for submissions using provisional publication, where it begins at provisional publication (see [§6.2](#62-publication-modes)).
 
-### 6.2 Provisional Publication
+### 6.2 Publication Modes
 
-By default, submissions enter a **fully confidential review cycle**: results and artifacts are visible to the review committee and other submitters, but are not published publicly until the review is complete (all objections resolved, no pending objections remaining). Results are published in the first cohort after finalization.
+Every submission declares one of three publication modes at submission time. The choice is **irrevocable after submission**.
 
-#### Opting In to Provisional Publication
+| Mode | Public before finalization | Peer review begins | Finalized results published |
+|---|---|---|---|
+| **A. Confidential review** *(default)* | No | When automated checks pass | First cohort after finalization |
+| **B. Confidential review, embargoed publication** | No | When automated checks pass | On the declared embargo date |
+| **C. Provisional publication** | Yes — tagged "peer review pending" | At provisional publication | Tag removed at finalization |
+
+#### 6.2.1 Confidential Review (default)
+
+Results and artifacts are visible to the review committee and to other submitters, but are not published publicly until review is complete — all objections resolved, none pending. Results are published in the first cohort after finalization. Peer review begins as soon as automated compliance passes ([§6.1](#61-automated-compliance-week-0)).
+
+#### 6.2.2 Confidential Review with Embargoed Publication
+
+A submitter who does not want provisional publication, but does want to control the date on which finalized results become public, may declare a **publication embargo**. Review is unaffected by the embargo: it is confidential and it begins and runs exactly as in [§6.2.1](#621-confidential-review-default). Only the public release of the **finalized** result is held.
+
+- The embargo date is declared at submission and may be up to **60 days after the completion of review** ([§4.2](#42-publication-cohorts-and-embargo)).
+- No result is ever publicly visible carrying a "peer review pending" tag under this mode.
+- If review completes before the embargo date, the result is finalized on schedule and held, then published on the embargo date.
+- If review is still running when the embargo date passes, the embargo has no further effect and the result is published at the first cohort after finalization.
+
+This mode suits a submitter aligning publication to a launch, conference or earnings date who does not want preliminary numbers in public beforehand.
+
+#### 6.2.3 Provisional Publication
 
 Submitters may **opt in** to provisional publication at the time of submission. If a submitter opts in:
 
 - Results are published before peer review completes, carrying a **"peer review pending"** tag. This allows submitters to reference new results in time-sensitive contexts — such as keynote presentations, product launches, and press briefings — without waiting for the full review cycle.
 - The review committee is informed of the opt-in at the start of the review cycle.
+- **Peer review begins at provisional publication**, not when automated compliance passes. Reviewers and the public see the result at the same time.
 
-The opt-in choice is irrevocable after submission. Submitters who do not opt in may not subsequently request provisional publication of those results.
-
-#### Embargo for Provisional Publication
-
-Submitters who opt in to provisional publication may additionally declare an **embargo date** — a hold on when the "peer review pending" result first becomes publicly visible. The embargo date may be any date before the finalization of results. See [§4.2](#42-publication-cohorts-and-embargo) for general embargo rules, including how to change the embargo date after submission.
+**Embargo under provisional publication.** A submitter who opts in may additionally declare an **embargo date** — a hold on when the "peer review pending" result first becomes publicly visible. The embargo date may be any date before the finalization of results. Because peer review begins at provisional publication, an embargo under this mode **also defers the start of peer review**, and therefore defers finalization by the same amount. See [§4.2](#42-publication-cohorts-and-embargo) for general embargo rules, including how to change the embargo date after submission.
 
 > [!IMPORTANT]
 > Any reference to results carrying the "peer review pending" tag — by MLCommons, submitters, press, or third parties — must include the standard MLCommons footnote stating that results are **preliminary and subject to change** pending peer review. The exact footnote text is defined in the MLPerf Results Messaging Guidelines.
@@ -483,7 +506,7 @@ The limits in this subsection apply both to late objections under §6.6 and to a
 
 Once that point passes the result is settled, and is no longer subject to late objection or audit nomination.
 
-Anchoring to finalization gives every submission the same exposure period. Anchoring to first publication would penalize submitters who opt in to provisional publication ([§6.2](#62-provisional-publication)), whose results appear weeks earlier and would therefore settle sooner than an otherwise identical confidential submission.
+Anchoring to finalization gives every submission the same exposure period. Anchoring to first publication would penalize submitters who opt in to provisional publication ([§6.2](#623-provisional-publication)), whose results appear weeks earlier and would therefore settle sooner than an otherwise identical confidential submission.
 
 The 90-day floor guarantees a minimum challenge period regardless of where in the audit-vote cycle a result lands, while the audit-vote ceiling keeps the period bounded. It matches the 90-day endpoint-accessibility requirement for Standardized CoN submissions ([§7.2.5](#725-division-specific-available-requirements)), so that the endpoint remains reachable for as long as the result can be challenged. A submitter's obligation to retain the benchmarked system and its configuration for a possible audit runs to the close of this window and no further.
 
@@ -567,7 +590,7 @@ Meeting requests must include a written agenda and specific questions to be addr
 | Submitters | All results, all code, all run artifacts. | All results, all code, all run artifacts. |
 | Public | Results carrying the "peer review pending" tag only (for submissions that have opted in to provisional publication, once any declared embargo has lifted). No access to code or submission artifacts. | All results, all code, all submission artifacts. |
 
-For submissions that have not opted in to provisional publication (see [§6.2](#62-provisional-publication)), the public has no visibility until results are finalized.
+For submissions that have not opted in to provisional publication (see [§6.2](#623-provisional-publication)), the public has no visibility until results are finalized.
 
 ### 6.11 Withdrawing Results
 
