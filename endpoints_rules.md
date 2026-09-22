@@ -636,7 +636,7 @@ The following metrics are derived from primary measurements and used in publicat
 
 Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
 
-One accuracy validation run is required for each of the 4 pareto regions. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
+One accuracy validation run is required for each of the 5 pareto regions. The same endpoint configuration, model weights, and software stack used for performance runs must be used for the accuracy run.
 
 ---
 
