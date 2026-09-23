@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1110" viewBox="0 0 1500 1110">
 <rect x="0.0" y="0.0" width="1500.0" height="1110.0" rx="0" fill="#F5F7FA"/>
 <text x="26.0" y="42.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="23" fill="#1F2933" font-weight="bold" text-anchor="start">MLPerf Endpoints — Rolling Submission, Review and Publication</text>
-<text x="26.0" y="66.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="13.5" fill="#7B8794" font-weight="normal" text-anchor="start">Four submissions entering the pipeline after the rolling window opens on Monday 12 October 2026. Cohorts publish on the 1st and 3rd Wednesday at 08:00 PT.</text>
+<text x="26.0" y="66.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="13.5" fill="#7B8794" font-weight="normal" text-anchor="start">Four submissions entering the pipeline after the rolling window opens on Monday 12 October 2026. Results publish on the 1st and 3rd Wednesday at 08:00 PT.</text>
 <rect x="214.0" y="104.0" width="191.3" height="24.0" rx="4" fill="#1F2933"/>
 <text x="310.7" y="120.5" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="bold" text-anchor="middle">OCTOBER 2026</text>
 <rect x="407.3" y="104.0" width="288.0" height="24.0" rx="4" fill="#2B3945"/>
@@ -184,7 +184,7 @@
 <text x="1256.0" y="428.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10.5" fill="#3E4C59" font-weight="normal" text-anchor="start">Not public</text>
 <line x1="1234.0" y1="458.0" x2="1448.0" y2="458.0" stroke="#D3DAE1" stroke-width="1"/>
 <text x="1234.0" y="482.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10" fill="#7B8794" font-weight="normal" text-anchor="start">Dashed verticals mark publication</text>
-<text x="1234.0" y="496.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10" fill="#7B8794" font-weight="normal" text-anchor="start">cohorts (1st and 3rd Wednesday).</text>
+<text x="1234.0" y="496.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10" fill="#7B8794" font-weight="normal" text-anchor="start">dates (1st and 3rd Wednesday).</text>
 <text x="1234.0" y="524.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10" fill="#7B8794" font-weight="normal" text-anchor="start">Numbered markers key to the</text>
 <text x="1234.0" y="538.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10" fill="#7B8794" font-weight="normal" text-anchor="start">scenario panels below.</text>
 <text x="1234.0" y="566.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10" fill="#7B8794" font-weight="normal" text-anchor="start">Modes:  A §6.2.1   B §6.2.3</text>
@@ -207,7 +207,7 @@
 <circle cx="50.0" cy="894.0" r="8" fill="#2C7A6B" fill-opacity="0.16"/>
 <text x="50.0" y="897.4" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.5" fill="#2C7A6B" font-weight="bold" text-anchor="middle">3</text>
 <text x="66.0" y="898.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10.5" fill="#2C7A6B" font-weight="bold" text-anchor="start">4 Nov</text>
-<text x="66.0" y="912.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">Published in 2026-11-C0; nothing</text>
+<text x="66.0" y="912.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">Published 2026-11-C0; nothing</text>
 <text x="66.0" y="924.5" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">was public before this date</text>
 <rect x="392.0" y="748.0" width="350.0" height="340.0" rx="8" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
 <rect x="392.0" y="748.0" width="350.0" height="4.0" rx="2" fill="#C77D12"/>
@@ -242,7 +242,7 @@
 <circle cx="416.0" cy="1029.0" r="8" fill="#C77D12" fill-opacity="0.16"/>
 <text x="416.0" y="1032.4" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.5" fill="#C77D12" font-weight="bold" text-anchor="middle">6</text>
 <text x="432.0" y="1033.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10.5" fill="#C77D12" font-weight="bold" text-anchor="start">2 Dec</text>
-<text x="432.0" y="1047.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">Finalized in 2026-12-C0;</text>
+<text x="432.0" y="1047.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">Finalized 2026-12-C0;</text>
 <text x="432.0" y="1059.5" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">the pending tag is removed</text>
 <rect x="758.0" y="748.0" width="350.0" height="340.0" rx="8" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
 <rect x="758.0" y="748.0" width="350.0" height="4.0" rx="2" fill="#3B6FA0"/>
@@ -277,7 +277,7 @@
 <circle cx="782.0" cy="1029.0" r="8" fill="#3B6FA0" fill-opacity="0.16"/>
 <text x="782.0" y="1032.4" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.5" fill="#3B6FA0" font-weight="bold" text-anchor="middle">6</text>
 <text x="798.0" y="1033.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10.5" fill="#3B6FA0" font-weight="bold" text-anchor="start">20 Jan</text>
-<text x="798.0" y="1047.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">Published in 2027-01-C1 once</text>
+<text x="798.0" y="1047.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">Published 2027-01-C1 once</text>
 <text x="798.0" y="1059.5" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">the dispute concludes</text>
 <rect x="1124.0" y="748.0" width="350.0" height="340.0" rx="8" fill="#FFFFFF" stroke="#D3DAE1" stroke-width="1"/>
 <rect x="1124.0" y="748.0" width="350.0" height="4.0" rx="2" fill="#7A5CA8"/>
@@ -298,5 +298,5 @@
 <text x="1148.0" y="897.4" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.5" fill="#7A5CA8" font-weight="bold" text-anchor="middle">3</text>
 <text x="1164.0" y="898.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="10.5" fill="#7A5CA8" font-weight="bold" text-anchor="start">8 Dec</text>
 <text x="1164.0" y="912.0" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">Published on the embargo date, off the</text>
-<text x="1164.0" y="924.5" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">cohort cadence. Never tagged pending</text>
+<text x="1164.0" y="924.5" font-family="'Segoe UI',Calibri,'Helvetica Neue',Arial,sans-serif" font-size="9.8" fill="#3E4C59" font-weight="normal" text-anchor="start">publication cadence. Never tagged pending</text>
 </svg>

@@ -24,7 +24,7 @@
 4. [Schedule](#4-schedule)
    - [4.0 Submission Milestones](#40-submission-milestones)
    - [4.1 Rolling Submission Model](#41-rolling-submission-model)
-   - [4.2 Publication Cohorts and Embargo](#42-publication-cohorts-and-embargo)
+   - [4.2 Publication Dates, Cohorts, and Embargo](#42-publication-dates-cohorts-and-embargo)
    - [4.3 Submission-to-Publication Alignment](#43-submission-to-publication-alignment)
    - [4.4 Benchmark Roadmap](#44-benchmark-roadmap)
    - [4.5 Review Cycle Example](#45-review-cycle-example)
@@ -104,11 +104,11 @@ The review process is designed to:
 
 ### 2.1 Structure
 
-The review committee for a given cohort consists of representatives from organizations that have participated in MLPerf Endpoints within the preceding **6 months or 12 cohorts, whichever is longer**, counting backward from the first day of the publication month.
+The review committee for a given cohort consists of representatives from organizations that have participated in MLPerf Endpoints within the preceding **6 months or 12 cohorts, whichever is longer**, counting backward from the first day of the month containing the cohort's publication date ([§4.2](#42-publication-dates-cohorts-and-embargo)).
 
 "Participated" means the organization has at least one MLPerf Endpoints result that has completed the full review process and been published without a "peer review pending" tag (i.e., finalized results). Results that were published but are still carrying the "peer review pending" tag do not count toward participation eligibility. Organizations whose only finalized results within the lookback period were subsequently withdrawn are not eligible for committee membership.
 
-> **Example:** A submission published in the 2026-12-C1 cohort draws its review committee from organizations that submitted results published on or after 2026-06-01.
+> **Example:** A submission in the 2026-12-C1 cohort draws its review committee from organizations that submitted results published on or after 2026-06-01.
 
 ### 2.2 Review Chair
 
@@ -219,16 +219,22 @@ MLPerf Endpoints uses a **rolling submission model**. Submitters may submit on a
 
 This section replaces the batch submission schedule defined in the MLPerf General Submission Rules §4 for MLPerf Endpoints submissions.
 
-### 4.2 Publication Cohorts and Embargo
+### 4.2 Publication Dates, Cohorts, and Embargo
 
-MLCommons publishes results on a bi-weekly cadence, on the **1st and 3rd Wednesday of each month at 8:00 AM Pacific Time**.
+#### Publication Dates
 
-Each cohort is identified as:
+MLCommons publishes results on a bi-weekly cadence, on the **1st and 3rd Wednesday of each month at 8:00 AM Pacific Time**. Each publication date is identified as:
 
-- `YYYY-MM-C0` — published on the 1st Wednesday of the month at 8:00 AM PT.
-- `YYYY-MM-C1` — published on the 3rd Wednesday of the month at 8:00 AM PT.
+- `YYYY-MM-C0` — the 1st Wednesday of the month at 8:00 AM PT.
+- `YYYY-MM-C1` — the 3rd Wednesday of the month at 8:00 AM PT.
 
-> **Example:** A submission received on a Monday could appear in the next Wednesday's cohort at the earliest, subject to passing automated compliance checks and the 1 business-day alignment window (see [§4.3](#43-submission-to-publication-alignment)).
+#### Cohorts
+
+A **cohort** is the set of submissions **submitted** between two consecutive publication dates. A submission belongs to the cohort of the **first publication date after it is submitted**: every submission received after 8:00 AM PT on one publication date, up to and including 8:00 AM PT on the next, belongs to the cohort identified by that next publication date. The cohort ID uses the same `YYYY-MM-C0` / `YYYY-MM-C1` form as the publication date it is named for.
+
+A submission's cohort is fixed at submission time. It does not change if the submission is published on a later publication date — for example because it does not clear automated compliance in time ([§4.3](#43-submission-to-publication-alignment)), is held by review, or is under embargo.
+
+> **Example:** A submission received on Monday 12 October 2026 belongs to cohort `2026-10-C1`, named for the publication date of Wednesday 21 October. It may be published on 21 October at the earliest, subject to passing automated compliance checks and the 1 business-day alignment window (see [§4.3](#43-submission-to-publication-alignment)); if it is published later, it remains in cohort `2026-10-C1`.
 
 #### Publication Embargo
 
@@ -243,13 +249,15 @@ Rules for embargoed submissions:
 - Under [§6.2.2](#622-confidential-review-with-embargoed-publication) the full review process proceeds normally under the embargo — the embargo delays only public release. Under [§6.2.3](#623-provisional-publication) the embargo additionally defers the start of peer review, since review begins at provisional publication.
 - The embargo date **may be changed after submission**, but any change must be broadcast immediately to all review committee members.
 - All review committee members are informed of the embargo date.
-- Results under embargo are published on the requested embargo date and are not tied to the regular cohort schedule.
+- Results under embargo are published on the requested embargo date and are not tied to the regular publication schedule.
 
 ### 4.3 Submission-to-Publication Alignment
 
-A submission is eligible for the next cohort if it passes automated compliance checks (see [§6.1 Automated Compliance](#61-automated-compliance-week-1)) at least 1 business day before the Wednesday publication date. Submissions that do not clear automated checks in time roll to the following cohort.
+A submission is eligible for publication on its cohort's publication date if it passes automated compliance checks (see [§6.1 Automated Compliance](#61-automated-compliance-week-0)) at least 1 business day before that Wednesday. Submissions that do not clear automated checks in time roll to the following publication date; their cohort does not change.
 
-All review timelines, update windows, and objection deadlines are anchored to the **cohort in which a submission first appears** — not the raw submission date.
+All review timelines, update windows, and objection deadlines are anchored to the submission's **cohort** ([§4.2](#42-publication-dates-cohorts-and-embargo)) — not the raw submission timestamp and not the date on which the result is eventually published.
+
+**Target publication date.** Each submission declares a `target_publication_date` ([`endpoints_rules.md` §8.3](endpoints_rules.md#83-measurement-point-yaml)): the regular publication date on which the submitter intends the result to be published. It MUST be a 1st- or 3rd-Wednesday publication date on or after the submission's cohort date. The target publication date records the submitter's intent only; it does not override the review, finalization, or embargo rules, which determine when the result is actually published, and it does not change the submission's cohort. Embargo dates are declared separately ([§4.2](#42-publication-dates-cohorts-and-embargo)).
 
 ### 4.4 Benchmark Roadmap
 
@@ -257,32 +265,32 @@ All review timelines, update windows, and objection deadlines are anchored to th
 
 ### 4.5 Review Cycle Example
 
-The figure below traces four submissions entering the pipeline shortly after the rolling submission window opens on **Monday 12 October 2026**, one in each publication mode of [§6.2](#62-publication-modes). It shows how automated compliance, peer review, objection resolution, provisional publication, embargo, dispute resolution, and cohort publication interact across calendar time. The relevant cohorts are `2026-10-C1` (21 Oct), `2026-11-C0` (4 Nov), `2026-11-C1` (18 Nov), `2026-12-C0` (2 Dec), `2026-12-C1` (16 Dec), `2027-01-C0` (6 Jan) and `2027-01-C1` (20 Jan).
+The figure below traces four submissions entering the pipeline shortly after the rolling submission window opens on **Monday 12 October 2026**, one in each publication mode of [§6.2](#62-publication-modes). It shows how automated compliance, peer review, objection resolution, provisional publication, embargo, dispute resolution, and regular publication interact across calendar time. The relevant publication dates are `2026-10-C1` (21 Oct), `2026-11-C0` (4 Nov), `2026-11-C1` (18 Nov), `2026-12-C0` (2 Dec), `2026-12-C1` (16 Dec), `2027-01-C0` (6 Jan) and `2027-01-C1` (20 Jan). Scenarios A and D belong to cohort `2026-10-C1`; Scenarios B and C belong to cohort `2026-11-C0`.
 
 ![MLPerf Endpoints Submission and Review Cycle](review_cycle.svg)
 
-**Scenario A — confidential review, no objections.** A submitter files on 12 October, the day the window opens. Automated compliance passes on 13 October and peer review begins ([§6.1](#61-automated-compliance-week-0)). No objections are filed, so at the close of Week 3 on 3 November the submission qualifies for early finalization ([§6.3](#63-peer-review-weeks-13)) and publishes in the **2026-11-C0** cohort on 4 November. Nothing was publicly visible before that date.
+**Scenario A — confidential review, no objections.** A submitter files on 12 October, the day the window opens, so the submission belongs to cohort `2026-10-C1`. Automated compliance passes on 13 October and peer review begins ([§6.1](#61-automated-compliance-week-0)). No objections are filed, so at the close of Week 3 on 3 November the submission qualifies for early finalization ([§6.3](#63-peer-review-weeks-13)) and publishes on the **2026-11-C0** publication date, 4 November — still as a member of cohort `2026-10-C1`. Nothing was publicly visible before that date.
 
-**Scenario B — provisional publication under embargo ([§6.2.3](#623-provisional-publication)).** A submitter files on 22 October, opts in to provisional publication, and declares an embargo through 30 October. Automated compliance passes on 23 October, but **peer review does not begin there**: under this mode review starts at provisional publication, so the embargo holds both. On 30 October the embargo lifts, the "peer review pending" result becomes publicly visible, and Week 1 begins. An objection is filed on 5 November; the submitter responds within three business days on 10 November. Peer review closes on 20 November and the objection is resolved on 25 November, inside the Week 4–6 window. The result is finalized and published in the **2026-12-C0** cohort on 2 December, at which point the pending tag is removed.
+**Scenario B — provisional publication under embargo ([§6.2.3](#623-provisional-publication)).** A submitter files on 22 October (cohort `2026-11-C0`), opts in to provisional publication, and declares an embargo through 30 October. Automated compliance passes on 23 October, but **peer review does not begin there**: under this mode review starts at provisional publication, so the embargo holds both. On 30 October the embargo lifts, the "peer review pending" result becomes publicly visible, and Week 1 begins. An objection is filed on 5 November; the submitter responds within three business days on 10 November. Peer review closes on 20 November and the objection is resolved on 25 November, inside the Week 4–6 window. The result is finalized and published on the **2026-12-C0** publication date, 2 December, at which point the pending tag is removed.
 
-**Scenario C — unresolved at Week 6, escalation to dispute resolution.** A submitter files on 26 October. An objection filed on 10 November is still open when the objection resolution window closes on 8 December, so escalation is automatic ([§9.2](#92-escalation-path)). The chair certifies the open objection and names the panel on 10 December, written statements are due on 24 December, the panel convenes by 31 December, and a binding decision issues on 14 January. The submission does not finalize while the dispute is open; it publishes in the **2027-01-C1** cohort on 20 January. Had the process not concluded, the 8-week backstop would have required the chair to decide on the record by 2 February.
+**Scenario C — unresolved at Week 6, escalation to dispute resolution.** A submitter files on 26 October (cohort `2026-11-C0`). An objection filed on 10 November is still open when the objection resolution window closes on 8 December, so escalation is automatic ([§9.2](#92-escalation-path)). The chair certifies the open objection and names the panel on 10 December, written statements are due on 24 December, the panel convenes by 31 December, and a binding decision issues on 14 January. The submission does not finalize while the dispute is open; it publishes on the **2027-01-C1** publication date, 20 January. Had the process not concluded, the 8-week backstop would have required the chair to decide on the record by 2 February.
 
-**Scenario D — confidential review with embargoed publication ([§6.2.2](#622-confidential-review-with-embargoed-publication)).** A submitter files on 19 October under confidential review and declares a publication embargo through 8 December. Automated compliance passes on 20 October and peer review begins immediately — the embargo does not defer review in this mode. No objections are filed, so the submission reaches early finalization on 10 November. The finalized result is then **held**: it is not published at the next cohort, and it is never publicly visible carrying a "peer review pending" tag. It is released on the embargo date, 8 December, which is 28 days after review completed and so within the 60-day limit of [§4.2](#42-publication-cohorts-and-embargo).
+**Scenario D — confidential review with embargoed publication ([§6.2.2](#622-confidential-review-with-embargoed-publication)).** A submitter files on 19 October (cohort `2026-10-C1`) under confidential review and declares a publication embargo through 8 December. Automated compliance passes on 20 October and peer review begins immediately — the embargo does not defer review in this mode. No objections are filed, so the submission reaches early finalization on 10 November. The finalized result is then **held**: it is not published on the next publication date, and it is never publicly visible carrying a "peer review pending" tag. It is released on the embargo date, 8 December, which is 28 days after review completed and so within the 60-day limit of [§4.2](#42-publication-dates-cohorts-and-embargo).
 
 > [!NOTE]
-> **[WG Open Item — embargo versus cohort cadence]** Scenarios B and D both publish on a date that is not a cohort date, which [§4.2](#42-publication-cohorts-and-embargo) permits: embargoed results "are published on the requested embargo date and are not tied to the regular cohort schedule". In Scenario B the effect is more than off-cadence — a submission clearing compliance on 23 October would not otherwise reach a cohort until 4 November, so an embargo to 30 October makes the result public *earlier* than it could have been without one. The working group should decide whether an embargo date may precede the submission's next eligible cohort, and whether off-cadence publication is intended for one, both, or neither mode.
+> **[WG Open Item — embargo versus publication cadence]** Scenarios B and D both publish on a date that is not a regular publication date, which [§4.2](#42-publication-dates-cohorts-and-embargo) permits: embargoed results "are published on the requested embargo date and are not tied to the regular publication schedule". In Scenario B the effect is more than off-cadence — a submission in cohort `2026-11-C0` would not otherwise be published until 4 November, so an embargo to 30 October makes the result public *earlier* than it could have been without one. The working group should decide whether an embargo date may precede the submission's cohort publication date, and whether off-cadence publication is intended for one, both, or neither mode.
 
 ### 4.6 Seed Rotation
 
 A **seed set** is the collection of seeds published by MLCommons that control the reference client's sources of run-to-run non-determinism for a cohort. These seeds drive the random number generators the client uses for benchmarking (request-issue / sample order, and the per-query salt). The seed set is an *extensible collection* — additional seeds may be introduced in future versions without changing this rule. This mirrors MLPerf Inference, where MLCommons rotates the LoadGen seeds (`qsl_rng_seed`, `sample_index_rng_seed`, `schedule_rng_seed`) every submission round.
 
-MLCommons refreshes the seed set **once every two publication cohorts**. Its relationship to the cohort has two distinct parts — a window during which a *new* submission may **adopt** a set, and the lifetime for which a submission stays **bound** to the set it adopted. Keeping these separate is what lets a rolling submission keep growing without seed rotation ever cutting it short.
+MLCommons refreshes the seed set **once every two cohorts**. Its relationship to the cohort has two distinct parts — a window during which a *new* submission may **adopt** a set, and the lifetime for which a submission stays **bound** to the set it adopted. Keeping these separate is what lets a rolling submission keep growing without seed rotation ever cutting it short.
 
-- **Publication and adoption window.** MLCommons publishes a new seed set every two publication cohorts ([§4.2](#42-publication-cohorts-and-embargo)), keyed by the cohort ID (`YYYY-MM-C0` / `YYYY-MM-C1`) in which it is published. Each published seed set is available for **adoption by new submissions for four consecutive cohorts** — its publication cohort and the following three cohorts — and is then dropped from the sets available for adoption. Because refresh occurs every two cohorts and each set remains adoptable for four, **two seed sets are normally available for adoption**. For example, a set published in cohort `N` is adoptable in cohorts `N` through `N+3`; the next set is published in `N+2`, and the first set is dropped when cohort `N+4` begins. The adoption window governs only which set a *new* submission may bind to; it does **not** expire the seed set of a submission already in flight (see *Binding lifetime* below).
+- **Publication and adoption window.** MLCommons publishes a new seed set every two cohorts ([§4.2](#42-publication-dates-cohorts-and-embargo)), keyed by the cohort ID (`YYYY-MM-C0` / `YYYY-MM-C1`) of the first cohort that may adopt it. Each published seed set is available for **adoption by new submissions in four consecutive cohorts** — the cohort it is keyed to and the following three cohorts — and is then dropped from the sets available for adoption. Because refresh occurs every two cohorts and each set remains adoptable for four, **two seed sets are normally available for adoption**. For example, a set keyed to cohort `N` may be adopted by submissions in cohorts `N` through `N+3`; the next set is keyed to `N+2`, and the first set is dropped once cohort `N+4` opens to submissions. Adoption eligibility depends only on the submission's cohort — that is, on when it was submitted — not on when it is published. The adoption window governs only which set a *new* submission may bind to; it does **not** expire the seed set of a submission already in flight (see *Binding lifetime* below).
 
-- **Binding at first submission.** A submission binds to exactly **one** seed set when it first appears, chosen from the sets in its adoption window. The adopted seed set and the targeted cohort MUST be recorded in the submission ([`endpoints_rules.md` §8.3](endpoints_rules.md#83-measurement-point-yaml)) so a reviewer or auditor can reproduce the run and the seeded-RNG integrity check ([`endpoints_rules.md` §2.1.1](endpoints_rules.md#211-client-on-prem-cop)) can confirm the client used the published seeds without modification.
+- **Binding at first submission.** A submission binds to exactly **one** seed set when it is first submitted, chosen from the sets available for adoption in its cohort. The adopted seed set, the submission's cohort ID, and its `target_publication_date` ([§4.3](#43-submission-to-publication-alignment)) MUST be recorded in the submission ([`endpoints_rules.md` §8.3](endpoints_rules.md#83-measurement-point-yaml)) so a reviewer or auditor can reproduce the run and the seeded-RNG integrity check ([`endpoints_rules.md` §2.1.1](endpoints_rules.md#211-client-on-prem-cop)) can confirm the client used the published seeds without modification.
 
-- **Binding lifetime.** Once a submission binds to a seed set, that set stays valid **for that submission for the full applicable Pareto-update window** ([§8.1](#81-pareto-updates)), even after the set's adoption window has closed and newer sets have been published. Every measurement point added later MUST use the bound seed set. Because the binding is fixed at first submission and does not expire with rotation, seed rotation never forces an in-flight run to be re-executed, an embargo of up to 60 days ([§4.2](#42-publication-cohorts-and-embargo)) never invalidates a submission, and changing the length of the Pareto-update window does not change seed-set adoption or binding. A *new* submission (as distinct from an update to an existing one) must always adopt a set within its current adoption window — an expired set may not be adopted afresh — but that set remains valid for every submission already bound to it.
+- **Binding lifetime.** Once a submission binds to a seed set, that set stays valid **for that submission for the full applicable Pareto-update window** ([§8.1](#81-pareto-updates)), even after the set's adoption window has closed and newer sets have been published. Every measurement point added later MUST use the bound seed set. Because the binding is fixed at first submission and does not expire with rotation, seed rotation never forces an in-flight run to be re-executed, an embargo of up to 60 days ([§4.2](#42-publication-dates-cohorts-and-embargo)) never invalidates a submission, and changing the length of the Pareto-update window does not change seed-set adoption or binding. A *new* submission (as distinct from an update to an existing one) must always adopt a set within its current adoption window — an expired set may not be adopted afresh — but that set remains valid for every submission already bound to it.
 
 - **Comparability.** All submissions bound to the same seed set are directly comparable. Because a submission keeps its seed set for its full update window, two submissions being compared may hold different seed sets; such comparison is permitted on the assumption that seed choice has a negligible effect on measured performance.
 
@@ -378,22 +386,22 @@ Every submission declares one of three publication modes at submission time. The
 
 | Mode | Public before finalization | Peer review begins | Finalized results published |
 |---|---|---|---|
-| **A. Confidential review** *(default)* | No | When automated checks pass | First cohort after finalization |
+| **A. Confidential review** *(default)* | No | When automated checks pass | First publication date after finalization |
 | **B. Confidential review, embargoed publication** | No | When automated checks pass | On the declared embargo date |
 | **C. Provisional publication** | Yes — tagged "peer review pending" | At provisional publication | Tag removed at finalization |
 
 #### 6.2.1 Confidential Review (default)
 
-Results and artifacts are visible to the review committee and to other submitters, but are not published publicly until review is complete — all objections resolved, none pending. Results are published in the first cohort after finalization. Peer review begins as soon as automated compliance passes ([§6.1](#61-automated-compliance-week-0)).
+Results and artifacts are visible to the review committee and to other submitters, but are not published publicly until review is complete — all objections resolved, none pending. Results are published on the first publication date after finalization. Peer review begins as soon as automated compliance passes ([§6.1](#61-automated-compliance-week-0)).
 
 #### 6.2.2 Confidential Review with Embargoed Publication
 
 A submitter who does not want provisional publication, but does want to control the date on which finalized results become public, may declare a **publication embargo**. Review is unaffected by the embargo: it is confidential and it begins and runs exactly as in [§6.2.1](#621-confidential-review-default). Only the public release of the **finalized** result is held.
 
-- The embargo date is declared at submission and may be up to **60 days after the completion of review** ([§4.2](#42-publication-cohorts-and-embargo)).
+- The embargo date is declared at submission and may be up to **60 days after the completion of review** ([§4.2](#42-publication-dates-cohorts-and-embargo)).
 - No result is ever publicly visible carrying a "peer review pending" tag under this mode.
 - If review completes before the embargo date, the result is finalized on schedule and held, then published on the embargo date.
-- If review is still running when the embargo date passes, the embargo has no further effect and the result is published at the first cohort after finalization.
+- If review is still running when the embargo date passes, the embargo has no further effect and the result is published on the first publication date after finalization.
 
 This mode suits a submitter aligning publication to a launch, conference or earnings date who does not want preliminary numbers in public beforehand.
 
@@ -405,7 +413,7 @@ Submitters may **opt in** to provisional publication at the time of submission. 
 - The review committee is informed of the opt-in at the start of the review cycle.
 - **Peer review begins at provisional publication**, not when automated compliance passes. Reviewers and the public see the result at the same time.
 
-**Embargo under provisional publication.** A submitter who opts in may additionally declare an **embargo date** — a hold on when the "peer review pending" result first becomes publicly visible. The embargo date may be any date before the finalization of results. Because peer review begins at provisional publication, an embargo under this mode **also defers the start of peer review**, and therefore defers finalization by the same amount. See [§4.2](#42-publication-cohorts-and-embargo) for general embargo rules, including how to change the embargo date after submission.
+**Embargo under provisional publication.** A submitter who opts in may additionally declare an **embargo date** — a hold on when the "peer review pending" result first becomes publicly visible. The embargo date may be any date before the finalization of results. Because peer review begins at provisional publication, an embargo under this mode **also defers the start of peer review**, and therefore defers finalization by the same amount. See [§4.2](#42-publication-dates-cohorts-and-embargo) for general embargo rules, including how to change the embargo date after submission.
 
 > [!IMPORTANT]
 > Any reference to results carrying the "peer review pending" tag — by MLCommons, submitters, press, or third parties — must include the standard MLCommons footnote stating that results are **preliminary and subject to change** pending peer review. The exact footnote text is defined in the MLPerf Results Messaging Guidelines.
@@ -429,13 +437,13 @@ Once automated compliance checks pass, the submission enters the peer review pha
 
 | Business days elapsed without submitter response | Penalty |
 |---|---|
-| 3 business days | Results finalization is automatically delayed by **1 publication cohort**. |
-| 6 business days | Delay increases to **2 publication cohorts**. |
+| 3 business days | Results finalization is automatically delayed by **1 publication date**. |
+| 6 business days | Delay increases to **2 publication dates**. |
 | 10 business days | The submission is **withdrawn**. The submitter may correct the issues and resubmit as a new submission. |
 
 Penalties are cumulative and non-reversible — responding after a penalty threshold has been crossed does not remove the penalty, though subsequent response may prevent further escalation. The review chair must notify the submitter and all review committee members when a penalty threshold is crossed.
 
-**Early finalization.** Objections may be fully resolved during the peer review window. If all objections are resolved or retracted before the end of Week 3, the submission is eligible for **early finalization** — it does not need to wait for the close of the objection resolution window. The review chair certifies early finalization and the submission is queued for the next available cohort.
+**Early finalization.** Objections may be fully resolved during the peer review window. If all objections are resolved or retracted before the end of Week 3, the submission is eligible for **early finalization** — it does not need to wait for the close of the objection resolution window. The review chair certifies early finalization and the submission is queued for the next available publication date.
 
 #### Updating submissions during peer review
 
@@ -469,7 +477,7 @@ Once all objections are resolved or retracted, the "peer review pending" tag is 
 | Phase | Window | Key Actions |
 |---|---|---|
 | Automated Compliance | Week 0 (up to 1 week; may complete in as little as 1 day) | Automated checks run. Pass → advances to peer review immediately. Fail by end of Week 0 → **rejected**; submitter may resubmit. Results remain confidential by default; provisional publication if submitter opted in (subject to embargo). |
-| Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 cohort at 3 biz days, +2 cohorts at 6, withdrawn at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
+| Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 publication date at 3 biz days, +2 publication dates at 6, withdrawn at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
 | Objection Resolution | Weeks 4–6 | Open objections must be resolved; same non-response penalty schedule applies; objector has 2 business days to explain insufficiency or provide validation schedule (silence = objection retracted after 3 days); chairs may call meeting if objection is 12+ biz days old or entering Week 5; submission finalized or escalated to dispute resolution. |
 | Dispute Resolution | From end of Week 6, ~5 weeks | Escalation is automatic for objections still open at Week 6; the submission does not finalize. Chair certifies and names a panel within 2 business days; written statements within 10; panel convenes within 15; recommendation +5; binding decision +5. One investigation extension. 8-week backstop, after which the chair decides on the record. Appeal within 14 days. |
 | Late Objections ⚠️ | Post Week 6 | Availability, validity, model-equivalence, and division-rule objections only, via the dispute resolution process. Reproducibility is not eligible. **[WIP — pending WG approval]** |
@@ -602,7 +610,7 @@ A submission may be withdrawn at any time up until finalization. Post-finalizati
 
 ## 7. Publication
 
-MLCommons publishes all results per the bi-weekly cadence defined in [§4.2 Publication Cohorts and Embargo](#42-publication-cohorts-and-embargo). After publication, code and results are public and free for use under the MLPerf Terms of Use.
+MLCommons publishes all results per the bi-weekly cadence defined in [§4.2 Publication Dates, Cohorts, and Embargo](#42-publication-dates-cohorts-and-embargo). After publication, code and results are public and free for use under the MLPerf Terms of Use.
 
 ### 7.1 Results Categories
 
@@ -616,7 +624,7 @@ Results are divided into three publication status categories based on the availa
 | **Preview** | Does not yet qualify as Available; submitter commits to Available status within 180 days. | Available except software supporting substantially new hardware. |
 | **RDI** (Research, Development, or Internal) | Does not meet Available or Preview requirements. | Does not meet Available or Preview requirements. |
 
-An RDI component may not be submitted as Available or Preview until the cohort after next, or **221 days** after first publication as RDI, whichever is longer.
+An RDI component may not be submitted as Available or Preview in a cohort less than two cohorts after the RDI submission's cohort, or less than **221 days** after first publication as RDI, whichever is later.
 
 ### 7.2 Available
 
@@ -709,7 +717,7 @@ Preview results are published with a **"Preview — Available by [date]"** tag. 
 
 #### 7.3.1 Preview Window and Clock
 
-- **Clock start:** The date of the cohort in which the result *first appears* — not the raw submission date.
+- **Clock start:** The first publication date on which the result appears — not the raw submission date or the submission's cohort.
 - **Clock duration:** 180 calendar days from the clock start.
 - **Clock anchor:** Anchored to the first publication date. Pareto updates, corrections, or system description amendments do not reset the clock.
 
@@ -717,7 +725,7 @@ Preview results are published with a **"Preview — Available by [date]"** tag. 
 
 #### 7.3.2 Software Waiver for Preview
 
-The Available software stack requirement (§7.2.3) is waived for software components necessary to support **newly developed hardware** that substantially determines ML performance (e.g., a new ML accelerator). "Newly developed" means the hardware was not Available as of the previous cohort and was not submitted as Preview in that cohort. All other software stack components must still meet the Available requirements.
+The Available software stack requirement (§7.2.3) is waived for software components necessary to support **newly developed hardware** that substantially determines ML performance (e.g., a new ML accelerator). "Newly developed" means the hardware was not Available as of the previous publication date and was not published as Preview on that publication date. All other software stack components must still meet the Available requirements.
 
 #### 7.3.3 Performance Continuity Requirement
 
@@ -740,12 +748,12 @@ Submitters claiming Preview status must, at submission time:
 
 #### 7.3.5 Preview Tracker and Expiration
 
-MLCommons maintains a **Preview Availability Tracker** — a public document listing all active Preview results, their first publication dates, target availability dates, and days remaining. It is updated with each cohort.
+MLCommons maintains a **Preview Availability Tracker** — a public document listing all active Preview results, their first publication dates, target availability dates, and days remaining. It is updated on each publication date.
 
 At expiration of the 180-day window:
 
 - **Available re-submission published:** Preview result is superseded by the Available result.
-- **No re-submission, no extension:** Preview result is **invalidated** and removed at the next cohort. Invalidated results are not archived — they are removed.
+- **No re-submission, no extension:** Preview result is **invalidated** and removed on the next publication date. Invalidated results are not archived — they are removed.
 - **Approved extension in force:** Result remains under Preview status for the extended period.
 
 #### 7.3.6 Extensions
@@ -783,7 +791,7 @@ An **RDI** system contains one or more components that do not meet the Available
 
 An RDI component may not be submitted as Available or Preview until the later of:
 
-- The cohort after next (i.e., at least two cohorts after the RDI submission), or
+- A cohort at least two cohorts after the RDI submission's cohort, or
 - **221 days** after first publication as RDI.
 
 This cooling-off period prevents misuse of RDI status to pre-publish results on unavailable hardware and then immediately reclassify as Available.
@@ -831,12 +839,12 @@ Each results publication includes:
 
 #### Versioning and Historical Record
 
-MLCommons maintains a complete historical record of all versions of every pareto curve. Each version corresponds to the state of the submission at a given cohort.
+MLCommons maintains a complete historical record of all versions of every pareto curve. Each version corresponds to the state of the submission at a given publication date.
 
 - The **active results page** always displays the latest finalized version of each pareto curve.
 - **Older versions** of the pareto (prior to a point being superseded by a newer measurement) remain accessible and can be displayed on request, allowing users to compare performance across time.
-- All historical versions are aligned to cohorts: the record shows which points were active in each `YYYY-MM-C0` / `YYYY-MM-C1` cohort.
-- Superseded points are clearly labeled in the historical view with the cohort in which they were replaced.
+- All historical versions are aligned to publication dates: the record shows which points were active on each `YYYY-MM-C0` / `YYYY-MM-C1` publication date.
+- Superseded points are clearly labeled in the historical view with the publication date on which they were replaced.
 
 ### 8.1 Corrections
 
@@ -929,7 +937,7 @@ Where the recommendation is to investigate further, the chair appoints an invest
 
 **Backstop.** If the process has not concluded within **8 weeks** of escalation, the chair decides on the record then available. A dispute may not remain open indefinitely, and a party's failure to produce evidence is not grounds for extension beyond the single investigation extension above.
 
-**After the decision.** Remedies are applied per [§9.3](#93-remedies). A submission that survives the dispute finalizes and is published in the next cohort for which it clears the alignment window of [§4.3](#43-submission-to-publication-alignment); one that does not is reclassified or withdrawn as the remedy directs. The late-concern window of [§6.6](#scope-and-standing-for-late-concerns) runs from that finalization, so time spent in dispute does not consume it.
+**After the decision.** Remedies are applied per [§9.3](#93-remedies). A submission that survives the dispute finalizes and is published on the next publication date for which it clears the alignment window of [§4.3](#43-submission-to-publication-alignment); one that does not is reclassified or withdrawn as the remedy directs. The late-concern window of [§6.6](#scope-and-standing-for-late-concerns) runs from that finalization, so time spent in dispute does not consume it.
 
 ### 9.3 Remedies
 
