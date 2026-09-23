@@ -62,6 +62,7 @@
 - [Appendix A: Open Questions and Working Group Items](#appendix-a-open-questions-and-working-group-items)
 - [Appendix B: Quick-Reference Region Boundary Table](#appendix-b-quick-reference-region-boundary-table)
 - [Appendix C: Worked Power Normalization Examples](#appendix-c-worked-power-normalization-examples)
+- [Appendix D: MLCommons Default Power Reference Values](#appendix-d-mlcommons-default-power-reference-values)
 
 ---
 
@@ -842,14 +843,20 @@ The template below is codified into a `system_power.json` descriptor file accomp
 
 The MLCommons checker auto-populates power values where a submitter does not provide them or where public information is lacking.
 
+**Citation requirement.** Every value in `system_power.json` MUST carry a reference to a public, verifiable source meeting the criteria above — **unless** it is an MLCommons default reference value from [Appendix D](#appendix-d-mlcommons-default-power-reference-values), which is its own reference and needs no further citation. **Self-declaration is not sufficient.** A figure asserted by a submitter without a public source is treated as no value at all: the MLCommons default applies, and the result is tagged "MLC Estimated Power".
+
+A submitter's own verifiable public reference **overrides** the corresponding MLCommons default. The defaults exist so that a submission is always computable, not to cap what a submitter may evidence.
+
 | Field group | Fields | Fallback when public information is absent |
 |---|---|---|
-| **CPU** | `num_cpu`, `tdp_per_cpu`, link to public specification | MLCommons uses the architecture (x86 / ARM), core count, process, and memory channels declared in the system description to select the closest proxy. For **x86**, Intel and AMD CPUs are the default reference; for **ARM**, ARM AGI and Neoverse CPUs. A submitter may propose a proxy, but MLCommons may substitute a different one if it deems the proposal insufficient. |
-| **Accelerator** | `num_accelerator`, `tdp_per_accelerator`, link to public specification; where run below rated spec, public evidence of the alternative SKU/TDP rating plus verifiable instructions and evidence of the reduced power (e.g. `rocm-smi` / `nvidia-smi` output) | MLCommons relies on industry analysis and insights to estimate accelerator power for GPUs, ASICs, and similar. Under comprehensive testing the working group can guide the selection of appropriate values, and the target of the testing may volunteer better information provided it meets the public-and-verifiable requirement. Non-public information supplied by the submitter may be taken into consideration at the discretion of MLCommons or the working group. |
-| **Scale-up network** (intra-node and rack-level) | `num_switches`, `tdp_per_switch` | MLCommons uses the link protocol (NVLink, Ethernet, PCIe), bandwidth per switch, and pJ/bit, drawing on publicly available information or industry analysis. For **Ethernet**, Broadcom Tomahawk switches are the reference — for example the AMD MI455X Helios presentation stating 3.5 kW per switch at 10.8 TB/s per direction. For **NVLink**, Bill Dally's public talk on NVLink power. |
+| **CPU** | `num_cpu`, `tdp_per_cpu`, link to public specification | MLCommons uses the architecture (x86 / ARM), core count, process, and memory channels declared in the system description to select the closest proxy. Default TDP values by architecture and core count are in [Appendix D.2](#d2-processors). A submitter may propose a proxy, but MLCommons may substitute a different one if it deems the proposal insufficient. |
+| **Accelerator** | `num_accelerator`, `tdp_per_accelerator`, link to public specification; where run below rated spec, public evidence of the alternative SKU/TDP rating plus verifiable instructions and evidence of the reduced power (e.g. `rocm-smi` / `nvidia-smi` output) | Default TDP values for common accelerators are in [Appendix D.3](#d3-accelerators); beyond those, MLCommons relies on industry analysis and insights to estimate accelerator power for GPUs, ASICs, and similar. Under comprehensive testing the working group can guide the selection of appropriate values, and the target of the testing may volunteer better information provided it meets the public-and-verifiable requirement. Non-public information supplied by the submitter may be taken into consideration at the discretion of MLCommons or the working group. |
+| **Scale-up network** (intra-node and rack-level) | `num_switches`, `tdp_per_switch` | MLCommons uses the link protocol (NVLink, Ethernet, PCIe), bandwidth per switch, and pJ/bit, drawing on publicly available information or industry analysis. Default reference points for NVLink- and Ethernet-based fabrics are in [Appendix D.1](#d1-scale-up-network). |
 | **Scale-out network** (optional) | `num_switches`, `tdp_per_switch` | Used only for multi-node submissions that employ a scale-out fabric. The Ethernet methodology applies. |
 | **Other components and Cooling** | auto-calculated | `overhead_fraction × (CPU + Accelerator + Scale-up)`, with cooling estimated as a fraction of total power: **30%** for liquid-cooled, **50%** for air-cooled systems. |
 | **Total system power** | auto-calculated; used for normalization | `Major_components + Other_components`. |
+
+**A published power figure is specific to the vendor and SKU that published it.** A rack or system power rating applies only to that vendor's implementation of that configuration. Two vendors shipping the same accelerator in the same rack topology may provision differently — power supplies, cooling, redundancy, and integration all differ — so one vendor's published rating MUST NOT be used by another. Each submitter cites a figure published for their own system.
 
 **Declaring provisioned power directly.** If the estimated total system power is higher than a submitter believes their system is rated at, they may instead provide a provisioned power number directly. That number is subject to the same verification and publication requirements as every other component. Where a published specification states a range for rack-level power, the **upper bound** is used — for example, a system rated at 132–140 kW is taken as 140 kW.
 
@@ -1793,3 +1800,197 @@ proportionally:
 
 The reference point used, and the source it came from, are declared in `system_power.json` alongside
 the resulting figure.
+
+
+### C.8 Real system: air-cooled NVIDIA DGX B300
+
+An 8-accelerator air-cooled node, with every component figure taken from a public source.
+
+| Component | Count | Per-unit | Source | Subtotal |
+|---|---|---|---|---|
+| CPU — Intel Xeon 6776P | 2 | 350 W | [Intel](https://www.intel.com/content/www/us/en/products/sku/243691/intel-xeon-6776p-processor-336m-cache-2-30-ghz/specifications.html) | 700 W |
+| Accelerator — NVIDIA B300 | 8 | 1,100 W | [NVIDIA Blackwell Ultra datasheet](https://resources.nvidia.com/en-us-blackwell-architecture/blackwell-ultra-datasheet) | 8,800 W |
+| Scale-up — NVSwitch, 14.4 TB/s aggregate | 2 | — | [D.1](#d1-scale-up-network), 5 pJ/bit | 576 W |
+| **Major** | | | | **10,076 W** |
+| Other (air-cooled, × 0.50) | | | | 5,038 W |
+| **Formula total** | | | | **15,114 W = 15.11 kW** |
+
+Scale-up power is derived per [C.7](#c7-estimating-switch-power-when-tdp-is-not-published) from the
+node's **aggregate** NVLink bandwidth — 14.4 TB/s across both switches, not a per-switch figure:
+
+```
+14.4 × 10¹² B/s × 8 = 1.152 × 10¹⁴ bit/s ,  at 5 pJ/bit  →  576 W
+```
+
+> [!IMPORTANT]
+> **Use the aggregate bandwidth of the fabric being costed, once.** A rack-level aggregate figure —
+> NVL72's 130 TB/s, for example — is not a per-switch number and must not be multiplied by the switch
+> count. Applying 130 TB/s per switch here yields 10.4 kW of switch power in a node whose entire
+> published draw is 14.5 kW, which is self-evidently wrong.
+
+**Published figure, and the override.** NVIDIA publishes the DGX B300 system power as **14.5 kW**
+([NVIDIA DGX B300 user guide](https://docs.nvidia.com/dgx/dgxb300-user-guide/introduction-to-dgxb300.html)).
+The formula's 15.11 kW is **4.2% above** that — the conservative margin the method is designed to
+produce. Because the published figure is lower and is itself a verifiable public source, the
+submitter may declare it directly under
+[§4.5.2](#452-proposed-endpoints-v10-normalization-methodology):
+
+```
+provisioned_power_kw = 14.50
+```
+
+This is the ordinary case for a system with a published rating: the component sum acts as a sanity
+check, and a published figure within a few percent of it is adopted. A component sum that diverges
+*materially* from a published rating is a signal that an input is wrong — see the caution above.
+
+
+### C.9 Real system: liquid-cooled Lenovo GB300 NVL72
+
+A rack-scale liquid-cooled system. Every figure is taken from a public source, and the rack rating is
+**Lenovo's** — see the caution below.
+
+| Component | Count | Per-unit | Source | Subtotal |
+|---|---|---|---|---|
+| CPU — NVIDIA Grace | 36 | 300 W | [Lenovo LP2357](https://lenovopress.lenovo.com/lp2357.pdf?ref=wheresyoured.at); [D.2](#d2-processors) ARM ≤ 128 cores | 10,800 W |
+| Accelerator — Blackwell Ultra | 72 | 1,400 W | [NVIDIA Blackwell Ultra datasheet](https://resources.nvidia.com/en-us-blackwell-architecture/blackwell-ultra-datasheet) | 100,800 W |
+| Scale-up — 18 × NVSwitch, 130 TB/s aggregate | — | — | [D.1](#d1-scale-up-network), 5 pJ/bit | 5,200 W |
+| **Major** | | | | **116,800 W** |
+| Other (liquid-cooled, × 0.30) | | | | 35,040 W |
+| **Formula total** | | | | **151,840 W = 151.84 kW** |
+
+The scale-up term uses the rack's **aggregate** NVLink bandwidth once, across all 18 switches — not
+130 TB/s per switch ([C.8](#c8-real-system-air-cooled-nvidia-dgx-b300)):
+
+```
+130 × 10¹² B/s × 8 = 1.04 × 10¹⁵ bit/s ,  at 5 pJ/bit  →  5,200 W   (≈ 289 W per switch)
+```
+
+**Published figure, and the override.** Lenovo publishes rack power for this system as **135 kW**
+([LP2357](https://lenovopress.lenovo.com/lp2357.pdf?ref=wheresyoured.at)). The formula's 151.84 kW is
+**12.5% above** that. The published figure is lower and verifiable, so the submitter declares it:
+
+```
+provisioned_power_kw = 135.00
+```
+
+> [!IMPORTANT]
+> **This 135 kW belongs to Lenovo's system, not to GB300 NVL72 in general.** Another vendor
+> submitting a GB300 NVL72 rack must cite a rating published for *their* system, or fall back to the
+> component sum. Published provisioned power is a property of a vendor's integration — power
+> supplies, cooling loop, redundancy — not of the accelerator or the rack topology
+> ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)).
+
+> [!NOTE]
+> **CPU count.** This example takes the NVL72 configuration as **36** Grace CPUs (2 per compute tray
+> across 18 trays) paired with 72 Blackwell GPUs. If a submitter's configuration differs, the count
+> changes the result materially: 72 Grace would give 165.88 kW (+22.9% over published) and 144 would
+> give 193.96 kW (+43.7%). A component sum that diverges this far from a published rating is a signal
+> that an input is wrong.
+
+
+### C.10 No published rating: liquid-cooled AMD MI455X Helios rack
+
+A rack-scale liquid-cooled system with **no published rack power figure**. This is the case the
+MLCommons defaults exist for, and the one that carries the estimated-power tag.
+
+| Component | Count | Per-unit | Source | Subtotal |
+|---|---|---|---|---|
+| CPU — AMD Venice, 256 cores | 18 | 500 W | [D.2](#d2-processors) default, x86 > 64 cores | 9,000 W |
+| Accelerator — AMD MI455X | 72 | 2,500 W | [D.3](#d3-accelerators) default | 180,000 W |
+| Scale-up — switch trays | 6 | 7,000 W | [AMD MI400 System Architecture, Hot Chips 2026](https://hc2026.hotchips.org/assets/program/conference/day1/FINAL_AMD%20MI400_System_Arch_Hot_Chips_2026.pdf) | 42,000 W |
+| **Major** | | | | **231,000 W** |
+| Other (liquid-cooled, × 0.30) | | | | 69,300 W |
+| **Total system power** | | | | **300,300 W = 300.30 kW** |
+
+```
+provisioned_power_kw = 300.30
+```
+
+There is no published rack rating to declare instead, so the component sum stands as the provisioned
+power. This is the ordinary outcome where a vendor has not published a system-level figure.
+
+> [!IMPORTANT]
+> **An expected figure is not a usable one.** AMD's Helios rack is widely expected to be around
+> **245 kW**, which would put the component sum **22.6% above** it. No official AMD reference for that
+> figure could be found, so under [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) it
+> is an *unverified source* and cannot be declared as provisioned power — the 300.30 kW component sum
+> governs regardless.
+>
+> This is the incentive the methodology is built on, seen from the submitter's side: a vendor who has
+> not published a system-level rating is normalized against a deliberately conservative estimate, and
+> the only remedy is to publish. Should AMD publish 245 kW, a submitter may declare it and the
+> estimated-power tag falls away for that component.
+
+**Two of the three inputs are MLCommons defaults.** The Venice TDP is not published, so
+[D.2](#d2-processors)'s x86 default for more than 64 cores applies; the MI455X figure comes from
+[D.3](#d3-accelerators). Only the switch-tray power is submitter-evidenced, from a public AMD
+presentation. Because defaults were used, the published result is tagged **"MLC Estimated Power"**
+([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Supplying verifiable public
+figures for the CPU and accelerator would remove the tag and replace the defaults.
+
+> [!NOTE]
+> The 7 kW switch-tray figure is consistent with [D.1](#d1-scale-up-network)'s Ethernet reference of
+> 3.5 kW per switch — two switches per tray. Where a submitter has a directly published tray or
+> switch power, as here, that figure is used and the pJ/bit path of
+> [C.7](#c7-estimating-switch-power-when-tdp-is-not-published) is not needed.
+
+
+---
+
+## Appendix D: MLCommons Default Power Reference Values
+
+These are the MLCommons **default reference values** used where a submitter does not supply a
+publicly verifiable figure for a component. A default is its own reference and needs no further
+citation in `system_power.json`.
+
+A submitter's own **verifiable public reference overrides** the default for that component
+([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Self-declaration does not:
+a figure asserted without a public source is treated as absent, the default applies, and the result
+is tagged "MLC Estimated Power".
+
+### D.1 Scale-up network
+
+| Interconnect | Default reference | Source |
+|---|---|---|
+| **NVLink-based** | **5 pJ/bit** | [IEEE ComSoc CTN — *Data Deluge: Powering and Straining AI*](https://www.comsoc.org/publications/ctn/data-deluge-powering-and-straining-ai) |
+| **Ethernet-based** | **3.5 kW per switch at 10.8 TB/s per direction** | [AMD MI400 System Architecture, Hot Chips 2026](https://hc2026.hotchips.org/assets/program/conference/day1/FINAL_AMD%20MI400_System_Arch_Hot_Chips_2026.pdf) |
+
+The two defaults are expressed in different forms because they are applied differently. The NVLink
+default is an **energy-per-bit** figure, applied as `bandwidth × 5 pJ/bit`. The Ethernet default is a
+**power-at-a-stated-bandwidth** point, applied proportionally to the switch's actual bandwidth.
+
+### D.2 Processors
+
+| Architecture | Core count | Default TDP | Source |
+|---|---|---|---|
+| **x86** | ≤ 64 | **350 W** | [Intel Xeon 696x](https://www.intel.com/content/www/us/en/products/sku/243860/intel-xeon-696x-processor-336m-cache-2-40-ghz/specifications.html) |
+| **x86** | > 64 | **500 W** | [Intel Xeon 6980P](https://www.intel.com/content/www/us/en/products/sku/240777/intel-xeon-6980p-processor-504m-cache-2-00-ghz/specifications.html) |
+| **ARM** | ≤ 128 | **300 W** | [Arm AGI CPU product brief](https://www.arm.com/static/az/pdf/product-brief/arm-agi-cpu-product-brief.pdf) |
+| **ARM** | > 128 | *not yet defined* | — |
+
+> [!NOTE]
+> **[WG Open Item]** — No default exists for ARM CPUs above 128 cores. Until one is set, such a CPU
+> has no fallback and the submitter must supply a verifiable public figure.
+
+### D.3 Accelerators
+
+| Accelerator | Default TDP |
+|---|---|
+| NVIDIA B300 | 1,100 W |
+| NVIDIA B200 | 1,000 W |
+| NVIDIA GB300 | 1,400 W |
+| NVIDIA GB200 | 1,200 W |
+| AMD MI455X | 2,500 W |
+| AMD MI355X | 1,400 W |
+| AMD MI350X | 1,000 W |
+| Google TPU v7 | 1,000 W |
+| AWS Trainium Tn3 | 700 W |
+
+Accelerators not listed have no default; MLCommons estimates them from industry analysis under
+[§4.5.2](#452-proposed-endpoints-v10-normalization-methodology), and a submitter may always supply a
+verifiable public figure instead.
+
+> [!NOTE]
+> **[WG Open Item]** — Unlike D.1 and D.2, these values carry no citation. Sources should be attached
+> before v1.0 publishes, since a submitter disputing a default has nothing to argue against. The
+> designation "AWS Trainium Tn3" should also be confirmed against the vendor's own SKU naming.
