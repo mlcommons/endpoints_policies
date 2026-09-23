@@ -61,6 +61,7 @@
    - [9.2 Manual Review Focus Areas](#92-manual-review-focus-areas)
 - [Appendix A: Open Questions and Working Group Items](#appendix-a-open-questions-and-working-group-items)
 - [Appendix B: Quick-Reference Region Boundary Table](#appendix-b-quick-reference-region-boundary-table)
+- [Appendix C: Worked Power Normalization Examples](#appendix-c-worked-power-normalization-examples)
 
 ---
 
@@ -760,6 +761,15 @@ MLPerf Endpoints normalizes total system throughput by **provisioned power**, so
 - Modern systems have **configurable power capping**, which lets OEMs and buyers limit consumption — and lets provisioned power be sized correctly for partially populated systems.
 - Provisioned power is **more feasible to obtain or estimate for systems that have not been submitted** to MLPerf, which matters for comprehensive testing.
 
+**Normalization factor by system type.** Provisioned power is the factor for systems whose power a submitter provisions and can evidence. Other deployment types are expected to normalize differently, and are deferred to a later version:
+
+| System type | Normalizing factor | Status |
+|---|---|---|
+| **On-prem** | Provisioned power | In force for v1.0 |
+| **IaaS** (rented instances) | Provisioned power, optionally price | Deferred. Pricing is trivially observable by a buyer, but the terms must be pinned — for example 1-year reserved-instance rates. |
+| **IaaS-C** (committed capacity) | Provisioned power, optionally price | Deferred |
+| **Managed endpoint** | Cost per token | Deferred |
+
 **Phased tiers.** Provisioned power definition, calculation, and methodology advance through three tiers of increasing fidelity, accuracy, and quality. Endpoints begins at Tier 3 and works upward.
 
 | Tier | Definition | Status |
@@ -817,6 +827,11 @@ overhead_fraction = 0.30   liquid-cooled systems
 - In some systems CPU and accelerator power are published as a **single combined value**. That is a valid alternative formulation.
 - **`Network_scale_up_power`** — power for the high-bandwidth network connecting the accelerators, such as NVIDIA NVLink, the TPU Inter-Chip Interconnect, or UALink over Ethernet. The scale-up network accounts for the majority of networking power. Calculated as `number of switches × TDP per switch`; where switch power is not disclosed it may be estimated as `total switch bandwidth × energy per bit`. In systems with no switches this term is zero.
 - **`Other_components`** — scale-out networking, storage, power-supply overhead, and cooling. Individually these may not be substantial; in aggregate they are significant and must be accounted for. They are estimated as a fixed fraction of the major-component power, set by cooling method.
+
+**Units and rounding.** Component power is declared in **watts**. `provisioned_power_kw` is the total system power in kilowatts — total watts ÷ 1000 — rounded to **two decimal places**, and `system_tps_per_kw` is reported to **one decimal place**. Rounding is applied once, to the final figures; intermediate sums are not rounded.
+
+> [!NOTE]
+> Worked examples of the complete calculation — air-cooled and liquid-cooled, full and partial systems, rack-level node scaling, and the declared-provisioned-power override — are in [Appendix C](#appendix-c-worked-power-normalization-examples).
 
 ##### Component Template (`system_power.json`)
 
@@ -1658,3 +1673,123 @@ Pre-computed region boundaries for common combinations of Minimum Concurrency ($
 *All boundaries computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm) with banker's rounding. The Low Latency point is a single point at the declared $C_{min}$ value (in the Ultra Low Concurrency region); all concurrency regions and their boundaries are submission-specific and depend on both $C_{min}$ and $C_{max}$.*
 
 </details>
+
+
+---
+
+## Appendix C: Worked Power Normalization Examples
+
+> [!NOTE]
+> **All values below are illustrative.** They are chosen to be round, so the arithmetic of
+> [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) is easy to follow. They are not
+> vendor specifications and must not be cited as such. A submitter's own figures come from the
+> verified sources of §4.5.2.
+
+Recalling the model:
+
+```
+Major  = CPU_power + Accelerator_power + Network_scale_up_power
+Other  = overhead_fraction × Major          (0.30 liquid-cooled, 0.50 air-cooled)
+Total  = Major + Other
+```
+
+### C.1 Air-cooled single node, no scale-up switch
+
+A standalone 8-accelerator node. There is no rack-level scale-up fabric, so that term is zero.
+
+| Component | Count | Per-unit | Subtotal |
+|---|---|---|---|
+| CPU | 2 | 350 W | 700 W |
+| Accelerator | 8 | 1,000 W | 8,000 W |
+| Scale-up switch | 0 | — | 0 W |
+| **Major** | | | **8,700 W** |
+| Other (air-cooled, × 0.50) | | | 4,350 W |
+| **Total system power** | | | **13,050 W = 13.05 kW** |
+
+If this node reports `system_tps` = 26,100 at a measurement point, then
+`system_tps_per_kw` = 26,100 ÷ 13.05 = **2,000.0**.
+
+### C.2 Liquid-cooled rack-scale system
+
+An 18-node rack, each node carrying 2 CPUs and 4 accelerators, with 9 rack-level scale-up switches.
+
+| Component | Count | Per-unit | Subtotal |
+|---|---|---|---|
+| CPU | 36 | 350 W | 12,600 W |
+| Accelerator | 72 | 1,200 W | 86,400 W |
+| Scale-up switch | 9 | 2,000 W | 18,000 W |
+| **Major** | | | **117,000 W** |
+| Other (liquid-cooled, × 0.30) | | | 35,100 W |
+| **Total system power** | | | **152,100 W = 152.10 kW** |
+
+### C.3 The denominator is fixed across the pareto
+
+Using the rack of C.2, every measurement point divides by the same 152.10 kW — the figure does not
+shrink at low concurrency just because less of the rack is busy ([§4.5.3](#453-normalized-metric)):
+
+| Concurrency | `system_tps` | `system_tps_per_kw` |
+|---|---|---|
+| 32 | 12,000 | 78.9 |
+| 512 | 60,000 | 394.5 |
+| 4,096 | 91,260 | 600.0 |
+
+The normalized curve is therefore the throughput curve scaled by a single constant.
+
+### C.4 Partially populated node — why intra-node scaling is barred
+
+The C.1 chassis with only **4** of its 8 accelerator slots populated. Apply the formula with the
+counts limited to what is provisioned ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology), path 3):
+
+| Component | Count | Per-unit | Subtotal |
+|---|---|---|---|
+| CPU | 2 | 350 W | 700 W |
+| Accelerator | 4 | 1,000 W | 4,000 W |
+| **Major** | | | **4,700 W** |
+| Other (air-cooled, × 0.50) | | | 2,350 W |
+| **Total system power** | | | **7,050 W = 7.05 kW** |
+
+Scaling C.1 linearly by accelerator count would instead give 13.05 × 4/8 = **6.53 kW** — about **7%
+low**, because the two CPUs and the fixed chassis overhead do not halve when half the accelerators
+are removed. This is why [§4.5.2.1](#4521-rack-level-node-scaling) permits linear scaling only at
+**node** granularity, never within a node.
+
+### C.5 Partial rack by node scaling
+
+A submitter has published a rack power of **140 kW** for a rack of **N = 18** nodes, and is
+submitting **Y = 6** of those nodes:
+
+```
+provisioned_power = 140 kW × (6 / 18) = 46.67 kW
+```
+
+Two rules apply to the published figure:
+
+- Where the published specification states a **range**, the upper bound is used. A rack published at
+  132–140 kW is taken as **140 kW**, not 132.
+- The nodes must be otherwise identical. Scaling is by whole nodes only — a partial rack containing
+  a partly populated node falls back to C.4's treatment for that node.
+
+### C.6 Declaring provisioned power directly
+
+Where the formula produces a figure higher than the submitter's system is actually rated at, the
+submitter may declare provisioned power directly instead. Taking C.2: if the rack is published at
+**140 kW** while the component sum gives **152.10 kW**, the submitter may declare 140 kW, subject to
+the same verification and publication requirements as every other value.
+
+This lowers the denominator and therefore raises `system_tps_per_kw`, which is precisely why the
+declared figure must be publicly verifiable — it is the one path where a submitter's own number
+improves their result.
+
+### C.7 Estimating switch power when TDP is not published
+
+Where a scale-up switch's power is not disclosed, it may be estimated from bandwidth and energy per
+bit ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Using the Ethernet reference
+point of **3.5 kW at 10.8 TB/s per direction**, a switch of half that bandwidth is estimated
+proportionally:
+
+```
+5.4 TB/s/dir × (3.5 kW ÷ 10.8 TB/s/dir) ≈ 1.75 kW per switch
+```
+
+The reference point used, and the source it came from, are declared in `system_power.json` alongside
+the resulting figure.
