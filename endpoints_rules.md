@@ -1305,6 +1305,8 @@ Endpoints submissions must include the following metadata:
 | `system_name` | Submitter selected string to describe the system under test (SUT). |
 | `shortened_system_name` |  Shortened `system_name` that's at most 20 characters. |
 | `system_availability_status` | `Available` , `Preview`, or `RDI` (not available for purchase soon) at submission time. |
+| `availability_url` | URL of a public product or ordering page for the system. Required when `system_availability_status` is `Available` ([Submission Rules §7.3.7](endpoints_submission_rules.md#737-transition-to-available)). |
+| `target_availability_date` | Expected availability date as an ISO 8601 date. Required when `system_availability_status` is `Preview` ([Submission Rules §7.3.4](endpoints_submission_rules.md#734-declaration-requirements)). |
 | `system_size` | Number of accelerators per node type, e.g. "72 accelerators + 144 accelerators" for a system comprising two types of nodes with 72 accelerators in the first node type and 144 accelerators in the second node type. |
 | `system_node_ensemble_count` | How many unique combinations of Hardware and Software are part of the SUT. |
 | `system_node_ensemble_total` | Total number of nodes in the SUT, equal to the sum of all number_of_nodes.|
@@ -1361,6 +1363,8 @@ Endpoints submissions must include the following metadata:
   "system_name": "",
   "shortened_system_name": "",
   "system_availability_status": "",
+  "availability_url": "",
+  "target_availability_date": "",
   "system_size": "",
   "system_node_ensemble_count": 0,
   "system_node_ensemble_total": 0,

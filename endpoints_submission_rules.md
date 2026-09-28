@@ -734,7 +734,7 @@ When a Preview submission transitions to Available, the re-submitted result must
 
 Submitters claiming Preview status must, at submission time:
 
-1. Set `"availability_status": "preview"` in the system description.
+1. Set `"system_availability_status": "Preview"` in the system description.
 2. State a `"target_availability_date"` within the 180-day window as an ISO 8601 date.
 3. Identify **with specificity** which components are not yet available — e.g., *"The X100 GPU is expected to begin customer shipments in Q3 2026."* Vague statements such as *"targeting H2 2026"* are not sufficient.
 
@@ -761,7 +761,7 @@ A **one-time extension of up to 60 calendar days** may be granted by the review 
 When a Preview system achieves commercial availability:
 
 1. The submitter notifies the review committee via a GitHub issue on the submission thread.
-2. The submitter makes a new Available submission with updated system description (`"availability_status": "available"`, `"availability_url"` pointing to a public product or ordering page).
+2. The submitter makes a new Available submission with updated system description (`"system_availability_status": "Available"`, `"availability_url"` pointing to a public product or ordering page).
 3. The new submission follows the standard automated compliance and peer review process.
 4. If the hardware or software configuration changed materially between Preview and GA, the submitter must re-run the benchmarks. Relabeling an existing Preview result as Available without re-running is not permitted if the configuration changed.
 5. Upon successful review, the Available result is published in the next cycle and the Preview result is retired.
