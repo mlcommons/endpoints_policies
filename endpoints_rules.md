@@ -52,7 +52,7 @@
 7. [Publication Status](#7-publication-status)
 8. [Submission Requirements](#8-submission-requirements)
    - [8.1 Directory Structure](#81-directory-structure)
-   - [8.2 System Description (system\_desc.json)](#82-system-description-system_desc_idjson)
+   - [8.2 System Description (system\_desc.json)](#82-system-description-system_descjson)
    - [8.3 Measurement Point YAML](#83-measurement-point-yaml)
    - [8.4 Software Disclosure](#84-software-disclosure)
    - [8.5 Result ID](#85-result-id)
@@ -1353,7 +1353,7 @@ Endpoints submissions must include the following metadata:
 
 #### 8.2.1 Template Structure
 
-`systems/<system_desc_id>.json` contains the fields defined in the table above.
+`results/<system>/<model_name>/r<N>/system_desc.json` contains the fields defined in the table above.
 
 ```json
 {
@@ -1496,7 +1496,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Low Concurrency coverage** | ≥ 1 point in the Low Concurrency region. | Reject submission. |
 | **Medium Concurrency coverage** | ≥ 1 point in the Medium Concurrency region. | Reject submission. |
 | **High Concurrency coverage** | ≥ 1 point in the High Concurrency region. | Reject submission. |
-| **Max concurrency declared** | $C_{max} > 32$; declared in `system_desc_id.json`. | Reject submission. |
+| **Max concurrency declared** | $C_{max} > 32$; declared in `system_desc.json`. | Reject submission. |
 | **Point cap** | ≤ 32 total measurement points. | Reject points beyond 32. |
 | **Concurrency in range** | Each point's concurrency falls within a valid region (including the 10% High Concurrency margin), computed using the reference algorithm in [§5.5](#55-region-boundary-reference-algorithm). | Flag out-of-range points. |
 | **Offline ordering** | For a `dedicated` Offline run: `system_tps(Offline)` ≥ 0.98 × `system_tps` at the $C_{max}$ point, and `concurrency(Offline)` ≥ $C_{max}$ ([§5.7.2](#572-relationship-to-maximum-supported-concurrency)). Not applicable to an `elected` point. | Flag non-compliant submission. |
