@@ -1333,7 +1333,6 @@ Endpoints submissions must include the following metadata:
 | `inference_backend` | Inference backend used for submission, e.g., vendor stack components. |
 | `driver` | Driver and version number for any accelerators. |
 | `container_link` | Link to container for submission. |
-| `model_name` | Benchmark model name (must match supported model list). |
 | `max_supported_concurrency` | Declared Maximum Supported Concurrency `M`. |
 | `endpoint_url` | URL or description of the endpoint under test. |
 | `operating_system` | OS used for the node. |
@@ -1411,7 +1410,6 @@ Endpoints submissions must include the following metadata:
   "batch": 0,
   "config_summary": "",
   "config_summary_notes": "",
-  "link_config": "",
   "tps_utilization": 0
 }
 ```
