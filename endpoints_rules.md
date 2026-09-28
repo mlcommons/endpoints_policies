@@ -1469,7 +1469,7 @@ The **result ID** identifies a single published result and is human-readable. A 
 | `major-version` | Major version of the MLPerf Endpoints rules under which the result was submitted (e.g., `1` for v1.0). |
 | `minor-version` | Minor version of the same (e.g., `0` for v1.0). |
 | `cohort-number` | Cohort Number for this submission (e.g., `0` for the first cohort of a given version, `1` for the second, etc.)
-| `model_id` | Benchmark model identifier from the round's supported model list ([§3.2](#32-supported-models)). Must match `model_name` in `system_desc.json` ([§8.2](#82-system-description-system_desc_idjson)). |
+| `model_id` | Benchmark model identifier from the round's supported model list ([§3.2](#32-supported-models)). Must match `model_name` in `point.yaml` ([§8.3](#83-measurement-point-yaml)). |
 | `dataset_id` | Identifier of the dataset used for the performance and accuracy runs, as named in the benchmark definition ([§3.1](#31-benchmark-definition)) and recorded in each point's `dataset` field ([§8.3](#83-measurement-point-yaml)). |
 | `entry-number` | Sequence number assigned at publication, unique within the preceding four components. |
 
