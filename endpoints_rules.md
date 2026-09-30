@@ -63,6 +63,7 @@
 - [Appendix B: Quick-Reference Region Boundary Table](#appendix-b-quick-reference-region-boundary-table)
 - [Appendix C: Worked Power Normalization Examples](#appendix-c-worked-power-normalization-examples)
 - [Appendix D: MLCommons Default Power Reference Values](#appendix-d-mlcommons-default-power-reference-values)
+- [Appendix E: `system_power.json` Field Reference](#appendix-e-system_powerjson-field-reference)
 
 ---
 
@@ -814,9 +815,13 @@ The v1.0 approach normalizes by power using three elements:
 ##### Power Model
 
 ```
-System Power   = Major_components + Other_components
+System Power   = Major_components + Other_components + Scale_out_switch_power
 
-Major_components = CPU_power + Accelerator_power + Network_scale_up_power
+Major_components = CPU_power
+                 + Accelerator_power
+                 + Network_scale_up_power
+                 + Optional_scale_out_NIC_power
+
 Other_components = overhead_fraction × Major_components
 
 overhead_fraction = 0.30   liquid-cooled systems
@@ -827,7 +832,21 @@ overhead_fraction = 0.30   liquid-cooled systems
 - **`Accelerator_power`** — power required for the accelerators (e.g. AMD MI355X, Google TPU), calculated as `number of accelerators × TDP`. Where the TDP is not disclosed, public sources may be used to estimate it.
 - In some systems CPU and accelerator power are published as a **single combined value**. That is a valid alternative formulation.
 - **`Network_scale_up_power`** — power for the high-bandwidth network connecting the accelerators, such as NVIDIA NVLink, the TPU Inter-Chip Interconnect, or UALink over Ethernet. The scale-up network accounts for the majority of networking power. Calculated as `number of switches × TDP per switch`; where switch power is not disclosed it may be estimated as `total switch bandwidth × energy per bit`. In systems with no switches this term is zero.
-- **`Other_components`** — scale-out networking, storage, power-supply overhead, and cooling. Individually these may not be substantial; in aggregate they are significant and must be accounted for. They are estimated as a fixed fraction of the major-component power, set by cooling method.
+- **Scale-out fabric** — where the submission spans more than one node, the fabric that connects them is counted in two parts, which enter the model differently. **Both are zero for a single-node submission, and zero where the nodes are joined only by a fabric already counted in `Network_scale_up_power`.**
+  - **`Optional_scale_out_NIC_power`** is a **major component**, and so takes the overhead fraction. A NIC is a card inside the node: its rated TDP is silicon draw, and it needs the same cooling and power-supply headroom as any other component in the chassis.
+  - **`Scale_out_switch_power`** is added to the total **outside the overhead base**. A rack switch figure — whether the submitter's own or a [D.4](#d4-reference-scale-out-network) reference — is already **wall power**, including the switch's own power supply, so applying the overhead fraction to it would double-count.
+  - **Whether NIC power is counted depends on how node power was obtained.** Where node or rack power is **built with the MLC formula**, the formula has no NIC term of its own, so the scale-out NICs' rated TDP **MUST be included** here for a multi-node submission. Where node or rack power is taken from a **published specification**, the NICs are assumed to be part of that figure and MUST NOT be added again. A submitter who believes a published figure excluded the adapters must say so and evidence it. The reference value for a scale-out NIC is in [Appendix D.4](#d4-reference-scale-out-network).
+  - **Rack switch power** is counted in full, and depends on cabling. **The submitter MUST declare whether the fabric uses passive or active (optical) cabling**, because an active-optical deployment can draw more than twice the power of the same switch with passive cables.
+  - **Switch count follows from the bandwidth the fabric must carry**: the sum of per-node NIC bandwidth across the submitted nodes. A ten-node cluster of DGX B300s, each with eight 800 Gb/s NICs, needs `10 × 8 × 800 Gb/s = 64 Tb/s`. The submitter either declares the rack switches actually used, or selects one or more reference switches from [Appendix D.4](#d4-reference-scale-out-network) whose combined bandwidth meets the requirement.
+- **`Other_components`** — storage, power-supply overhead, and cooling. Individually these may not be substantial; in aggregate they are significant and must be accounted for. They are estimated as a fixed fraction of the major-component power, set by cooling method. Scale-out **NICs** are inside that base as major components; scale-out **switches** are not, and must not be counted twice.
+
+**Composing a multi-node submission from published node power.** Where a node's power is taken from a published *system* figure, that figure already includes that node's own `Other_components` — its cooling, power-supply overhead and storage. The overhead fraction MUST NOT be applied to it a second time. In that case:
+
+```
+System Power = Σ published node power + Scale_out_switch_power
+```
+
+The overhead fraction is applied to **neither** term. The published node figure already carries the node's own overhead — including its NICs, which is why they are not counted separately on this path — and published switch power is wall power, an ATIS typical figure already including the switch's power-supply draw. Where node power is instead built from components, the ordinary formula applies to the whole system at once.
 
 **Units and rounding.** Component power is declared in **watts**. `provisioned_power_kw` is the total system power in kilowatts — total watts ÷ 1000 — rounded to **two decimal places**, and `system_tps_per_kw` is reported to **one decimal place**. Rounding is applied once, to the final figures; intermediate sums are not rounded.
 
@@ -836,7 +855,7 @@ overhead_fraction = 0.30   liquid-cooled systems
 
 ##### Component Template (`system_power.json`)
 
-The template below is codified into a `system_power.json` descriptor file accompanying the submission.
+The template below is codified into a `system_power.json` descriptor file accompanying the submission. Its field-by-field definition, validation rules, and worked descriptors are in [Appendix E](#appendix-e-system_powerjson-field-reference).
 
 > [!IMPORTANT]
 > **`system_power.json` is mandatory.** Every submission MUST include a `system_power.json` descriptor for **each system**, conforming to the template below and located per [§8.1](#81-directory-structure). A submission without it is incomplete and is rejected at automated compliance ([§9.1](#91-automated-checks)). A submitter who does not supply a value for a given field leaves it to be auto-populated by the MLCommons checker, which triggers the estimated-power tag described below — but the file itself is required either way.
@@ -852,8 +871,8 @@ A submitter's own verifiable public reference **overrides** the corresponding ML
 | **CPU** | `num_cpu`, `tdp_per_cpu`, link to public specification | MLCommons uses the architecture (x86 / ARM), core count, process, and memory channels declared in the system description to select the closest proxy. Default TDP values by architecture and core count are in [Appendix D.2](#d2-processors). A submitter may propose a proxy, but MLCommons may substitute a different one if it deems the proposal insufficient. |
 | **Accelerator** | `num_accelerator`, `tdp_per_accelerator`, link to public specification; where run below rated spec, public evidence of the alternative SKU/TDP rating plus verifiable instructions and evidence of the reduced power (e.g. `rocm-smi` / `nvidia-smi` output) | Default TDP values for common accelerators are in [Appendix D.3](#d3-accelerators); beyond those, MLCommons relies on industry analysis and insights to estimate accelerator power for GPUs, ASICs, and similar. Under comprehensive testing the working group can guide the selection of appropriate values, and the target of the testing may volunteer better information provided it meets the public-and-verifiable requirement. Non-public information supplied by the submitter may be taken into consideration at the discretion of MLCommons or the working group. |
 | **Scale-up network** (intra-node and rack-level) | `num_switches`, `tdp_per_switch` | MLCommons uses the link protocol (NVLink, Ethernet, PCIe), bandwidth per switch, and pJ/bit, drawing on publicly available information or industry analysis. Default reference points for NVLink- and Ethernet-based fabrics are in [Appendix D.1](#d1-scale-up-network). |
-| **Scale-out network** (optional) | `num_switches`, `tdp_per_switch` | Used only for multi-node submissions that employ a scale-out fabric. The Ethernet methodology applies. |
-| **Other components and Cooling** | auto-calculated | `overhead_fraction × (CPU + Accelerator + Scale-up)`, with cooling estimated as a fraction of total power: **30%** for liquid-cooled, **50%** for air-cooled systems. |
+| **Scale-out network** (optional) | `num_nics`, `tdp_per_nic`, `num_switches`, `tdp_per_switch`, and the declared cabling (passive / active optical) | Used only for multi-node submissions. NICs are a major component and take the overhead fraction; switch power is wall power and is added outside it ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Defaults in [D.4](#d4-reference-scale-out-network). |
+| **Other components and Cooling** | auto-calculated | `overhead_fraction × (CPU + Accelerator + Scale-up + Scale-out NICs)`, with cooling estimated as a fraction of total power: **30%** for liquid-cooled, **50%** for air-cooled systems. Scale-out **switches** are excluded from this base. |
 | **Total system power** | auto-calculated; used for normalization | `Major_components + Other_components`. |
 
 **A published power figure is specific to the vendor and SKU that published it.** A rack or system power rating applies only to that vendor's implementation of that configuration. Two vendors shipping the same accelerator in the same rack topology may provision differently — power supplies, cooling, redundancy, and integration all differ — so one vendor's published rating MUST NOT be used by another. Each submitter cites a figure published for their own system.
@@ -861,6 +880,10 @@ A submitter's own verifiable public reference **overrides** the corresponding ML
 **Declaring provisioned power directly.** If the estimated total system power is higher than a submitter believes their system is rated at, they may instead provide a provisioned power number directly. That number is subject to the same verification and publication requirements as every other component. Where a published specification states a range for rack-level power, the **upper bound** is used — for example, a system rated at 132–140 kW is taken as 140 kW.
 
 These estimates are deliberately conservative. Submitters are encouraged to be as transparent as possible in order to obtain a more accurate power figure.
+
+**Obligation to report a materially wrong estimate.** A submitter who finds that the MLCommons formula or a default reference value diverges **materially** from their system's actual provisioned power MUST report the divergence to MLCommons, **in either direction**, so that the formula or the default can be corrected. The estimates exist to make every submission computable, not to stand in for a figure the submitter knows to be wrong.
+
+Accepting an estimate known to **understate** actual provisioned power — and so to flatter the normalized result — is a misrepresentation under [Submission Rules §8.4](endpoints_submission_rules.md#84-issues-discovered-after-publication). Reporting an estimate that **overstates** is equally required: an uncorrected overestimate penalizes the submitter and leaves the formula wrong for everyone using it next round.
 
 **Partially provisioned systems.** Where a system is only partially populated — a rack with sleds unfilled, or a node with accelerator slots empty — provisioned power is established in one of three ways:
 
@@ -882,13 +905,29 @@ provisioned_power(Y nodes) = P_rack × (Y / N)
 
 *Rationale:* at rack level, power scales linearly with the number of nodes — the per-node contribution of compute, scale-up switching, cooling, and power-delivery overhead is essentially constant across otherwise identical nodes. This path exists so that submitters who have already been transparent about rack power are not forced back onto component estimation when they submit a smaller configuration.
 
+**`Y` is a whole number of nodes, rounded up.** Any fractional node counts as a whole one. A submitter using 4.5 nodes — because a node is shared or virtualized — declares `Y = 5`. Provisioned power is a property of hardware that must be provisioned in whole units; half a node still requires a whole node to be powered.
+
+**The `N` nodes must be identical to each other and to the `Y` being submitted.** Scaling divides a published figure by a node count, which is only valid where every node in the set draws the same power. In particular:
+
+- A **partially populated node is not identical** to a fully populated one ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). A set containing both cannot be scaled as one set.
+- A node under a TDP cap is not identical to an uncapped node of the same model.
+
+**Heterogeneous racks are partitioned into homogeneous sets.** Where a rack holds more than one kind of node — a mix of H200 and B200 DGX nodes, say — the rack is divided into sets of identical nodes, each set scaled from its own published figure or computed by the formula, and the results summed:
+
+```
+provisioned_power = Σ over homogeneous sets:  P_set × (Y_set / N_set)
+```
+
+A published *whole-rack* figure cannot be scaled directly in that case, because it does not decompose into per-node shares that are equal across the rack.
+
 **This path applies only at node granularity.** It MUST NOT be used for partial provisioning *within* a node. Node power is a function of the accelerator count plus a substantial fixed component — host CPU, memory, NICs, chassis, and power-supply overhead — that does not scale down with accelerator count, so linear scaling materially understates the power of a partly populated node.
 
 | Configuration | Path |
 |---|---|
-| `Y` of `N` whole nodes in a rack, nodes otherwise identical | Rack-level node scaling above, or published power for that configuration |
-| Partially populated node (some accelerator slots empty) | Published power for that specific configuration, or the MLC formula with component counts limited to what is populated |
-| Node or rack running under a TDP cap | Published power for that specific configuration, or the MLC formula using the capped values, with the evidence required for running below rated TDP |
+| `Y` of `N` whole nodes, all identical | Rack-level node scaling above (`Y` rounded up to a whole node), or published power for that configuration |
+| Partially populated node (some accelerator slots empty) | Published power for that specific configuration, or the MLC formula with component counts limited to what is populated. Not identical to a fully populated node, so it forms its own set |
+| Node or rack running under a TDP cap | Published power for that specific configuration, or the MLC formula using the capped values, with the evidence required for running below rated TDP. Not identical to an uncapped node, so it forms its own set |
+| Rack of mixed node types | Partition into homogeneous sets, scale each separately, and sum |
 
 Vendor documentation describing the power provisioning of specific rack configurations is the preferred source for `P_rack` and `N`. For example, NVIDIA publishes per-configuration power-domain guidance for GB200 / GB300 NVL72 racks in its [Mission Control systems administration guide](https://docs.nvidia.com/mission-control/docs/systems-administration-guide/2.3.1/prs/faq.html#example-1-configuring-a-pd-for-a-gb200-gb300-nvl72-rack).
 
@@ -1288,7 +1327,7 @@ An Endpoints submission must follow this directory structure:
       │
       └── results/
           └── <system>/                     # e.g. H200-SXM-141GBx8_TRT/
-              ├── system_power.json            # §4.5.2 — REQUIRED, one per system.
+              ├── system_power.json            # §4.5.2, Appendix E — REQUIRED, one per system.
               │                                #   Provisioned power; fixed across all points.
               └── <model_name>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
                   └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
@@ -1511,7 +1550,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 |---|---|---|
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
 | **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
-| **Power descriptor** | A `system_power.json` conforming to the [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) template is present for each system. Required for all Standardized submissions, CoP and CoN. | Reject submission. |
+| **Power descriptor** | A `system_power.json` conforming to the [Appendix E](#appendix-e-system_powerjson-field-reference) schema is present for each system, and passes the validation rules of [E.7](#e7-validation). Required for all Standardized submissions, CoP and CoN. | Reject submission. |
 | **Point count** | ≥ 8 total measurement points including a dedicated Offline run (non-agentic); ≥ 7 where the $C_{max}$ point is elected as the Offline result, or for agentic benchmarks. | Reject submission. |
 | **Offline point present** | Exactly one point carries an `offline` declaration of `dedicated` or `elected` for non-agentic benchmarks; none is present for agentic benchmarks ([§5.7](#57-offline-point)). An `elected` declaration appears on the $C_{max}$ point. | Reject submission. |
 | **Ultra Low Concurrency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
@@ -1626,7 +1665,7 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 | Partially provisioned systems | Verified public documentation; rack-level node scaling `P_rack × Y/N` for whole nodes ([§4.5.2.1](#4521-rack-level-node-scaling)); or the MLC formula with component counts limited to what is provisioned. Linear scaling does not apply within a node. |
 | Scope | All Standardized CoP and CoN submissions; Serviced deferred; RDI optional. |
 | Estimated-power labelling | Results tagged **"MLC Estimated Power"** where values were not supplied by the submitter or arise from comprehensive testing. |
-| Descriptor file | `system_power.json` is required for a valid submission and checked at automated compliance ([§9.1](#91-automated-checks)). |
+| Descriptor file | `system_power.json` is required for a valid submission, defined field-by-field in [Appendix E](#appendix-e-system_powerjson-field-reference), and checked at automated compliance ([§9.1](#91-automated-checks)). Two schema choices remain open for the working group — per-value sourcing and the node-set array ([E.7](#e7-validation)). |
 
 ### \[OFFLINE\] Offline Point Open Items
 
@@ -1787,6 +1826,12 @@ This lowers the denominator and therefore raises `system_tps_per_kw`, which is p
 declared figure must be publicly verifiable — it is the one path where a submitter's own number
 improves their result.
 
+A divergence of this size also triggers the **obligation to report** of
+[§4.5.2](#452-proposed-endpoints-v10-normalization-methodology): the submitter tells MLCommons that
+the formula overestimated their system, so the formula or the defaults behind it can be corrected. A
+submitter may not simply take whichever of the two figures suits them and stay silent — least of all
+where the estimate is *lower* than reality, which flatters the result and is a misrepresentation.
+
 ### C.7 Estimating switch power when TDP is not published
 
 Where a scale-up switch's power is not disclosed, it may be estimated from bandwidth and energy per
@@ -1935,6 +1980,67 @@ figures for the CPU and accelerator would remove the tag and replace the default
 > [C.7](#c7-estimating-switch-power-when-tdp-is-not-published) is not needed.
 
 
+### C.11 Multi-node: ten DGX B300 nodes over Ethernet
+
+Ten of the [C.8](#c8-real-system-air-cooled-nvidia-dgx-b300) nodes, joined by an Ethernet scale-out
+fabric. This is the only example with a scale-out fabric, and so the only one where
+`Scale_out_switch_power` is non-zero.
+
+**Step 1 — node power.** Each node uses its published figure of **14.5 kW** (C.8):
+
+```
+10 × 14.5 kW = 145.00 kW
+```
+
+That figure already includes each node's own cooling and power-supply overhead, so the overhead
+fraction is **not** applied to it again
+([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)).
+
+**Step 2 — scale-out bandwidth.** Each DGX B300 carries eight 800 Gb/s NICs:
+
+```
+10 nodes × 8 NICs × 800 Gb/s = 64 Tb/s
+```
+
+**Step 3 — NICs.** Node power here comes from a **published** figure, so the NICs are assumed to be
+inside the 14.5 kW and are **not counted again**
+([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)).
+
+Had the nodes instead been built with the MLC formula, the NICs would have to be added, since the
+formula has no NIC term. At the [D.4](#d4-reference-scale-out-network) reference of 75 W each they are
+a major component and take the overhead, so each node becomes
+`(700 + 8,800 + 576 + 8 × 75) × 1.50 = 16.01 kW`, and the cluster
+`10 × 16.01 + 1.80 = 161.94 kW` — against 146.80 kW on the published path. Which path was taken
+changes what must be counted, not merely the arithmetic.
+
+**Step 4 — rack switches.** 64 Tb/s is met by **two SN5610** switches at 51.2 Tb/s each
+([D.4](#d4-reference-scale-out-network)), a combined 102.4 Tb/s. Power depends on the declared
+cabling. Published switch power is wall power, so no overhead multiplier is applied:
+
+| Declared cabling | Per switch | 2 switches | Cluster total |
+|---|---|---|---|
+| **Passive copper** | 900 W | 1,800 W | **146.80 kW** |
+| **Active optical** | 2.08 kW | 4,160 W | **149.16 kW** |
+
+```
+System Power = 145.00 kW + 1.80 kW = 146.80 kW      (passive)
+             = 145.00 kW + 4.16 kW = 149.16 kW      (active optical)
+```
+
+**The cabling declaration is worth 2.36 kW**, about 1.6% of the cluster — which is why
+[§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) requires the submitter to declare it
+rather than leaving it to be assumed. Taking the passive figure:
+
+```
+provisioned_power_kw = 146.80
+```
+
+> [!NOTE]
+> A single **SN6810-LD** at 102.4 Tb/s would also satisfy the 64 Tb/s requirement, at 1.96 kW typical
+> — giving `145.00 + 1.96 = 146.96 kW`. A submitter selects reference switches that meet the
+> bandwidth requirement; where the switches actually deployed are known, those are declared instead.
+
+
 ---
 
 ## Appendix D: MLCommons Default Power Reference Values
@@ -1947,6 +2053,13 @@ A submitter's own **verifiable public reference overrides** the default for that
 ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Self-declaration does not:
 a figure asserted without a public source is treated as absent, the default applies, and the result
 is tagged "MLC Estimated Power".
+
+**Update cadence.** MLCommons revisits these values **at least once per quarter**, and may update any
+of them sooner as soon as higher-quality information becomes available — a vendor publishing a
+specification, a correction reported under the obligation in
+[§4.5.2](#452-proposed-endpoints-v10-normalization-methodology), or better industry analysis. Each
+revision is published with the version of the reference list it belongs to, so that a submission can
+be read against the values in force when it was made.
 
 ### D.1 Scale-up network
 
@@ -1990,7 +2103,395 @@ Accelerators not listed have no default; MLCommons estimates them from industry 
 [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology), and a submitter may always supply a
 verifiable public figure instead.
 
+
+### D.4 Reference scale-out network
+
+Where a submitter does not declare the rack switches actually used, these reference switches may be
+selected to meet the fabric's bandwidth requirement ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)).
+Power depends on cabling, and the submitter must declare which applies.
+
+| Switch | Bandwidth | Passive cables | Active optical | Source |
+|---|---|---|---|---|
+| **SN4700** | 12.8 Tb/s | **630 W** (ATIS typical) | *not published* | [NVIDIA SN4000 specifications](https://networking-docs.nvidia.com/sn4000hw/specifications) |
+| **SN5400** | 25.6 Tb/s | **670 W** (ATIS typical) | *not published* | [NVIDIA SN5000 specifications](https://networking-docs.nvidia.com/sn5000hw/specifications) |
+| **SN5610** | 51.2 Tb/s | **900 W** (ATIS typical) | **2.08 kW** (64 optical modules) | [NVIDIA SN5000 specifications](https://networking-docs.nvidia.com/sn5000hw/specifications#SN5610-Specifications) |
+| **SN6810-LD** | 102.4 Tb/s | **1.96 kW** typical (2.2 kW max) | *not differentiated* | [NVIDIA SN6000 specifications](https://networking-docs.nvidia.com/sn6000hw/1.3/specifications) |
+
+Figures are the vendor's **typical** power. Where a switch has no published figure for the declared
+cabling, it cannot serve as a reference for that case and the submitter must declare the switch
+actually used.
+
+**Scale-out NICs.**
+
+| Component | Default | Basis |
+|---|---|---|
+| Scale-out NIC | **75 W** | A PCIe network adapter |
+
+This default applies only where scale-out NIC power is counted at all — that is, where node power was
+built with the MLC formula rather than taken from a published specification
+([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). A submitter may declare the rated
+TDP of the adapter actually fitted instead.
+
+
+
+---
+
+## Appendix E: `system_power.json` Field Reference
+
+This appendix is the normative definition of the `system_power.json` descriptor required by
+[§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) and located per
+[§8.1](#81-directory-structure). It is what the automated **Power descriptor** check in
+[§9.1](#91-automated-checks) validates against.
+
+The descriptor records **how provisioned power was established**, not how the system behaved during a
+run. It is written once per system and applies unchanged to every measurement point
+([§4.5.3](#453-normalized-metric)).
+
+### E.1 Sourced values
+
+[§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) requires **every** power value to
+carry a public, verifiable reference. Every such value is therefore written as a three-key object
+rather than a bare number:
+
+```json
+{ "value_w": 1100, "source_type": "vendor_spec", "source": "https://..." }
+```
+
+| Key | Type | Description |
+|---|---|---|
+| `value_w` | number | The value, in **watts**. Values naturally expressed in kilowatts use `value_kw` instead; no field carries both. |
+| `source_type` | string | One of `vendor_spec`, `publication`, `public_statement`, `mlc_default`. The first three are the verifiable categories of [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology); a submitter assertion with no public source is **not** a source type and is rejected. |
+| `source` | string | A resolvable URL for the first three types. For `mlc_default`, the Appendix D subsection the value came from — `"D.1"`, `"D.2"`, `"D.3"`, `"D.4"` — which is its own reference and needs no URL. |
+
+Any value whose `source_type` is `mlc_default`, or which is left absent and auto-populated by the
+checker, causes the submission to be tagged **"MLC Estimated Power"** — **where that value
+contributes to `provisioned_power_kw`**. A default that reaches only a superseded cross-check does
+not trigger the tag: where `declared_provisioned_power` governs, the tag follows the sourcing of the
+declared figure alone, and the component block beneath it may hold defaults without consequence
+([E.6.2](#e62-component-sum-with-a-published-override)).
+
+### E.2 Top-level fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `system_desc_id` | string | yes | The `system_desc.json` this descriptor belongs to ([§8.2](#82-system-description-system_descjson)). |
+| `cooling` | string | yes | `liquid` or `air`. Selects the overhead fraction — 0.30 or 0.50 ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). MUST be consistent with the `cooling` field of `system_desc.json`. |
+| `node_sets` | array | yes | One entry per **homogeneous set of identical nodes** ([E.3](#e3-node-sets)). A single-node or uniform-rack submission has exactly one entry. |
+| `scale_out` | object | yes | The scale-out fabric ([E.4](#e4-scale-out-fabric)). For a single-node submission, or where nodes are joined only by the scale-up fabric, this is `{ "present": false }`. |
+| `declared_provisioned_power` | sourced value (`value_kw`) | no | A directly declared provisioned power figure, overriding the computed total ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Where a published specification states a range, the **upper bound** is declared. |
+| `computed` | object | checker | The derived arithmetic ([E.5](#e5-computed-block)). A submitter may populate it; the checker recomputes and the checker's values govern. |
+| `provisioned_power_kw` | number | checker | The figure used as the normalization denominator: `declared_provisioned_power` where present, otherwise `computed.total_system_power_w / 1000`. Two decimal places. |
+| `mlc_estimated_power` | boolean | checker | Set by the checker where any value was defaulted or auto-populated. A submitter-supplied value is ignored. |
+| `notes` | string | no | Free-form submitter notes. Not a substitute for a `source`. |
+
+### E.3 Node sets
+
+Each entry of `node_sets` describes one set of **identical** nodes. A partially populated node, or a
+node under a TDP cap, is not identical to a fully populated or uncapped one and belongs to its own
+set ([§4.5.2.1](#4521-rack-level-node-scaling)).
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `node_set_id` | integer | yes | Identifier, unique within the file. |
+| `system_node_ensemble_id` | integer | yes | The matching node type in `system_desc.json` ([§8.2](#82-system-description-system_descjson)). |
+| `nodes_provisioned` | integer | yes | `Y` — the number of nodes of this set in the submission, **rounded up to a whole node** ([§4.5.2.1](#4521-rack-level-node-scaling)). |
+| `power_method` | string | yes | How this set's power was established: `component_sum`, `published_system`, or `node_scaling`. |
+| `published_power` | sourced value | conditional | Required for `published_system` and `node_scaling`. The published figure for **one node** (`published_system`) or for the **whole rack** (`node_scaling`). A figure published by another vendor for a comparable system MUST NOT be used ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). |
+| `nodes_in_published_rack` | integer | conditional | `N` — required for `node_scaling` only; the node count the published rack figure covers. |
+| `components` | object | conditional | Required for `component_sum` ([E.3.1](#e31-components)). Optional otherwise, where a submitter wishes to record the component sum as a cross-check. |
+
+#### E.3.1 Components
+
+| Field | Type | Description |
+|---|---|---|
+| `cpu.model` | string | Model name, matching `system_desc.json`. |
+| `cpu.count_per_node` | integer | CPUs actually provisioned, not the maximum the chassis holds. |
+| `cpu.tdp_per_unit` | sourced value | Per-CPU TDP. Defaults by architecture and core count in [D.2](#d2-processors). |
+| `accelerator.model` | string | Model name, matching `system_desc.json`. |
+| `accelerator.count_per_node` | integer | Accelerators actually provisioned. |
+| `accelerator.tdp_per_unit` | sourced value | Per-accelerator TDP. Defaults in [D.3](#d3-accelerators). |
+| `accelerator.below_rated_tdp` | object | Present only where the accelerator runs below its rated TDP. Carries `rated_tdp_w`, the sourced alternative rating, and `evidence` — a description of the reproducible third-party check, or the public listing of the reduced mode as a production operating point ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). |
+| `combined_cpu_accelerator` | sourced value | Alternative to the two blocks above where the vendor publishes a single combined figure ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Mutually exclusive with `cpu.tdp_per_unit` and `accelerator.tdp_per_unit`. |
+| `scale_up_network.method` | string | `declared_tdp`, `bandwidth_estimate`, or `none` (systems with no scale-up switch). |
+| `scale_up_network.switch_count` | integer | Number of scale-up switches. |
+| `scale_up_network.tdp_per_switch` | sourced value | Required for `declared_tdp`. |
+| `scale_up_network.aggregate_bandwidth_tbps` | number | Required for `bandwidth_estimate`. The **aggregate** bandwidth of the fabric being costed, counted once — not a per-switch figure multiplied by the switch count ([C.8](#c8-real-system-air-cooled-nvidia-dgx-b300)). |
+| `scale_up_network.energy_per_bit_pj` | sourced value (`value_pj`) | Required for `bandwidth_estimate`. Reference points in [D.1](#d1-scale-up-network). The reference point used and its source are declared here ([C.7](#c7-estimating-switch-power-when-tdp-is-not-published)). |
+
+### E.4 Scale-out fabric
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `present` | boolean | yes | `false` for a single-node submission, or where the nodes are joined only by a fabric already counted in `scale_up_network`. All other fields are omitted when `false`. |
+| `cabling` | string | yes | `passive` or `active_optical`. **A mandatory declaration** — an active-optical deployment can draw more than twice the power of the same switch with passive cables ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). |
+| `required_bandwidth_tbps` | number | yes | The sum of per-node NIC bandwidth across the submitted nodes. Determines the switch count. |
+| `nics.count_per_node` | integer | yes | Scale-out adapters per node. |
+| `nics.bandwidth_per_nic_gbps` | number | yes | Per-adapter line rate, from which `required_bandwidth_tbps` follows. |
+| `nics.counted` | boolean | yes | `true` where node power was built with the MLC formula — the formula has no NIC term, so the adapters MUST be counted. `false` where node power came from a published specification, which is assumed to include them ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). |
+| `nics.tdp_per_nic` | sourced value | conditional | Required where `counted` is `true`. Reference value in [D.4](#d4-reference-scale-out-network). |
+| `nics.excluded_from_published_power` | string | no | Where `counted` is `true` **despite** a published node figure, the evidence that the published figure excluded the adapters. |
+| `switches` | array | yes | One entry per switch model: `model`, `count`, `bandwidth_tbps`, and `power_per_switch` as a sourced value. The combined bandwidth MUST meet `required_bandwidth_tbps`. Where the switches actually deployed are known they are declared; otherwise reference switches from [D.4](#d4-reference-scale-out-network) are selected. |
+
+Scale-out **NICs** are major components and take the overhead fraction. Scale-out **switch** power is
+wall power and is added outside the overhead base
+([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)).
+
+### E.5 Computed block
+
+| Field | Description |
+|---|---|
+| `major_components_w` | `Σ over node sets: nodes_provisioned × (cpu + accelerator + scale_up)` `+ scale-out NIC power where counted`. Zero for sets on the `published_system` or `node_scaling` path. |
+| `overhead_fraction` | `0.30` liquid, `0.50` air — from `cooling`. |
+| `other_components_w` | `overhead_fraction × major_components_w`. |
+| `published_node_power_w` | `Σ over node sets on a published path: nodes_provisioned × published node power`, with `node_scaling` sets contributing `published_power × (nodes_provisioned / nodes_in_published_rack)`. The overhead fraction is **not** applied to this term ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). |
+| `scale_out_switch_power_w` | `Σ switches: count × power_per_switch`. Outside the overhead base. |
+| `total_system_power_w` | `major_components_w + other_components_w + published_node_power_w + scale_out_switch_power_w`. |
+
+Rounding is applied once, to `provisioned_power_kw` (two decimal places) and to `system_tps_per_kw`
+(one decimal place). Intermediate sums are not rounded
+([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)).
+
+### E.6 Worked descriptors
+
+#### E.6.1 Component sum, no published rating
+
+The AMD MI455X Helios rack of [C.10](#c10-no-published-rating-liquid-cooled-amd-mi455x-helios-rack).
+Every component value falls back to an Appendix D default, so the result carries the estimated-power
+tag.
+
+```json
+{
+  "system_desc_id": "helios_mi455x",
+  "cooling": "liquid",
+  "node_sets": [
+    {
+      "node_set_id": 0,
+      "system_node_ensemble_id": 0,
+      "nodes_provisioned": 1,
+      "power_method": "component_sum",
+      "components": {
+        "cpu": {
+          "model": "AMD Venice 256-core",
+          "count_per_node": 18,
+          "tdp_per_unit": { "value_w": 500, "source_type": "mlc_default", "source": "D.2" }
+        },
+        "accelerator": {
+          "model": "AMD Instinct MI455X",
+          "count_per_node": 72,
+          "tdp_per_unit": { "value_w": 2500, "source_type": "mlc_default", "source": "D.3" }
+        },
+        "scale_up_network": {
+          "method": "declared_tdp",
+          "switch_count": 6,
+          "tdp_per_switch": {
+            "value_w": 7000,
+            "source_type": "publication",
+            "source": "https://hc2026.hotchips.org/assets/program/conference/day1/FINAL_AMD%20MI400_System_Arch_Hot_Chips_2026.pdf"
+          }
+        }
+      }
+    }
+  ],
+  "scale_out": { "present": false },
+  "computed": {
+    "major_components_w": 231000,
+    "overhead_fraction": 0.30,
+    "other_components_w": 69300,
+    "published_node_power_w": 0,
+    "scale_out_switch_power_w": 0,
+    "total_system_power_w": 300300
+  },
+  "provisioned_power_kw": 300.30,
+  "mlc_estimated_power": true
+}
+```
+
+The rack is declared as a single node set of one, because the Helios rack is submitted as one
+indivisible system; `nodes_provisioned` counts submitted units of the granularity being costed.
+
+#### E.6.2 Component sum with a published override
+
+The NVIDIA DGX B300 node of [C.8](#c8-real-system-air-cooled-nvidia-dgx-b300).
+The component sum is 15.11 kW; the published figure of 14.5 kW is lower and verifiable, so it is
+declared and governs. The component block is retained as the cross-check.
+
+```json
+{
+  "system_desc_id": "dgx_b300_1node",
+  "cooling": "air",
+  "node_sets": [
+    {
+      "node_set_id": 0,
+      "system_node_ensemble_id": 0,
+      "nodes_provisioned": 1,
+      "power_method": "component_sum",
+      "components": {
+        "cpu": {
+          "model": "Intel Xeon 6776P",
+          "count_per_node": 2,
+          "tdp_per_unit": {
+            "value_w": 350,
+            "source_type": "vendor_spec",
+            "source": "https://www.intel.com/content/www/us/en/products/sku/243691/intel-xeon-6776p-processor-336m-cache-2-30-ghz/specifications.html"
+          }
+        },
+        "accelerator": {
+          "model": "NVIDIA B300",
+          "count_per_node": 8,
+          "tdp_per_unit": {
+            "value_w": 1100,
+            "source_type": "vendor_spec",
+            "source": "https://resources.nvidia.com/en-us-blackwell-architecture/blackwell-ultra-datasheet"
+          }
+        },
+        "scale_up_network": {
+          "method": "bandwidth_estimate",
+          "switch_count": 2,
+          "aggregate_bandwidth_tbps": 14.4,
+          "energy_per_bit_pj": { "value_pj": 5, "source_type": "mlc_default", "source": "D.1" }
+        }
+      }
+    }
+  ],
+  "scale_out": { "present": false },
+  "declared_provisioned_power": {
+    "value_kw": 14.50,
+    "source_type": "vendor_spec",
+    "source": "https://docs.nvidia.com/dgx/dgxb300-user-guide/introduction-to-dgxb300.html"
+  },
+  "computed": {
+    "major_components_w": 10076,
+    "overhead_fraction": 0.50,
+    "other_components_w": 5038,
+    "published_node_power_w": 0,
+    "scale_out_switch_power_w": 0,
+    "total_system_power_w": 15114
+  },
+  "provisioned_power_kw": 14.50,
+  "mlc_estimated_power": false
+}
+```
+
+`aggregate_bandwidth_tbps` is the fabric's aggregate across both switches, counted once. It is **not**
+multiplied by `switch_count` ([C.8](#c8-real-system-air-cooled-nvidia-dgx-b300)).
+
+#### E.6.3 Multi-node, published node power plus scale-out
+
+The ten-node DGX B300 cluster of [C.11](#c11-multi-node-ten-dgx-b300-nodes-over-ethernet).
+Node power comes from a published figure, so the NICs are inside it and `nics.counted` is `false`.
+Switch power is wall power and is added outside the overhead base.
+
+```json
+{
+  "system_desc_id": "dgx_b300_10node_eth",
+  "cooling": "air",
+  "node_sets": [
+    {
+      "node_set_id": 0,
+      "system_node_ensemble_id": 0,
+      "nodes_provisioned": 10,
+      "power_method": "published_system",
+      "published_power": {
+        "value_kw": 14.50,
+        "source_type": "vendor_spec",
+        "source": "https://docs.nvidia.com/dgx/dgxb300-user-guide/introduction-to-dgxb300.html"
+      }
+    }
+  ],
+  "scale_out": {
+    "present": true,
+    "cabling": "passive",
+    "required_bandwidth_tbps": 64.0,
+    "nics": {
+      "count_per_node": 8,
+      "bandwidth_per_nic_gbps": 800,
+      "counted": false
+    },
+    "switches": [
+      {
+        "model": "NVIDIA Spectrum SN5610",
+        "count": 2,
+        "bandwidth_tbps": 51.2,
+        "power_per_switch": { "value_w": 900, "source_type": "mlc_default", "source": "D.4" }
+      }
+    ]
+  },
+  "computed": {
+    "major_components_w": 0,
+    "overhead_fraction": 0.50,
+    "other_components_w": 0,
+    "published_node_power_w": 145000,
+    "scale_out_switch_power_w": 1800,
+    "total_system_power_w": 146800
+  },
+  "provisioned_power_kw": 146.80,
+  "mlc_estimated_power": true
+}
+```
+
+The switch power is an Appendix D reference rather than the switch actually deployed, which is what
+sets `mlc_estimated_power`. Declaring `"cabling": "active_optical"` instead would select the 2.08 kW
+figure from [D.4](#d4-reference-scale-out-network) and give 149.16 kW.
+
+#### E.6.4 Heterogeneous rack by node scaling
+
+A rack holding two kinds of node is partitioned into homogeneous sets, each scaled from its own
+published rack figure. Only the `node_sets` array is shown.
+
+```json
+"node_sets": [
+  {
+    "node_set_id": 0,
+    "system_node_ensemble_id": 0,
+    "nodes_provisioned": 5,
+    "nodes_in_published_rack": 8,
+    "power_method": "node_scaling",
+    "published_power": { "value_kw": 120.00, "source_type": "vendor_spec", "source": "https://..." }
+  },
+  {
+    "node_set_id": 1,
+    "system_node_ensemble_id": 1,
+    "nodes_provisioned": 3,
+    "nodes_in_published_rack": 8,
+    "power_method": "node_scaling",
+    "published_power": { "value_kw": 96.00, "source_type": "vendor_spec", "source": "https://..." }
+  }
+]
+```
+
+This contributes `120.00 × (5/8) + 96.00 × (3/8) = 75.00 + 36.00 = 111.00 kW` to
+`published_node_power_w`. A published *whole-rack* figure covering both kinds of node cannot be
+scaled directly, because it does not decompose into equal per-node shares
+([§4.5.2.1](#4521-rack-level-node-scaling)).
+
+### E.7 Validation
+
+The [§9.1](#91-automated-checks) **Power descriptor** check rejects a submission where:
+
+- the file is absent for any system, or is not valid JSON;
+- a required field of [E.2](#e2-top-level-fields), [E.3](#e3-node-sets) or [E.4](#e4-scale-out-fabric) is missing;
+- any object carrying `value_w`, `value_kw` or `value_pj` lacks a `source_type` and `source`, or gives a `source_type` outside the four permitted values;
+- `cooling` disagrees with the `cooling` field of the corresponding `system_desc.json`;
+- `nodes_provisioned` is not a positive integer, or `nodes_in_published_rack` is absent, or is not greater than `nodes_provisioned`, for a `node_scaling` set;
+- `scale_out.present` is `true` and the combined `bandwidth_tbps × count` across `switches` is below `required_bandwidth_tbps`;
+- `scale_out.cabling` is absent while `scale_out.present` is `true`;
+- the submitter-supplied `computed` block disagrees with the checker's recomputation.
+
+The last case is a rejection rather than a silent correction: a disagreement means either the
+descriptor or the formula is being read differently by the two parties, and that must be resolved
+before the result is normalized.
+
 > [!NOTE]
-> **[WG Open Item]** — Unlike D.1 and D.2, these values carry no citation. Sources should be attached
-> before v1.0 publishes, since a submitter disputing a default has nothing to argue against. The
-> designation "AWS Trainium Tn3" should also be confirmed against the vendor's own SKU naming.
+> **[WG Open Item] — two structural choices in this schema need working-group confirmation before
+> v1.0.**
+>
+> 1. **References are carried per value** ([E.1](#e1-sourced-values)), as a three-key object on every
+>    power figure, rather than as a single citation list at the top of the file. Per-value sourcing is
+>    what makes the [§9.1](#91-automated-checks) check mechanical — a checker can assert that every
+>    value has a source — at the cost of some verbosity.
+> 2. **Heterogeneity is expressed as an array of node sets** ([E.3](#e3-node-sets)) rather than a flat
+>    per-system field list, so that a rack of mixed node types, or a mix of fully and partially
+>    populated nodes, can be described at all. A flat schema cannot express
+>    [§4.5.2.1](#4521-rack-level-node-scaling)'s per-set scaling.
+>
+> Both are recommendations, not settled policy.
