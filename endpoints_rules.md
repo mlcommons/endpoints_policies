@@ -100,7 +100,7 @@ The submitter hosts both the client infrastructure and the endpoint server infra
 
 - The submitter provides and operates both client and server infrastructure.
 - The client must use the MLPerf Endpoints reference client (`inference_endpoint` from `github.com/mlcommons/endpoints`) without source-code modification, compiled from a commit accessible to the MLCommons review committee. Submitters MAY configure runtime behavior via the YAML configuration file the client accepts; everything that changes behavior MUST be expressible via that YAML. The client logs the commit SHA used for the run; review may additionally use a seeded RNG check (analogous to LoadGen's RNG-output check in MLPerf Inference) to detect undisclosed client modifications.
-  The seeded RNG check uses the submission's **bound seed set**, selected from the sets MLCommons made available for the submission's target cohort ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)); the client's request-issue / sample-order RNG and the per-query salt MUST each be seeded from that set, and the seed set MUST be set through the YAML configuration.
+  The seeded RNG check uses the submission's bound seed set, selected from the sets MLCommons make available every publication date ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)); the client's request-issue / sample-order RNG and the per-query salt MUST each be seeded from that set, and the seed set MUST be set through the YAML configuration.
 - Network latency between client and server is included in all timing measurements.
 - The submitter must document the network topology between client and server, including type of interconnect, number of hops, and measured baseline network latency.
 - On-prem submissions must be self-contained: all components required to replicate the result must be documented and provided.
@@ -412,7 +412,7 @@ Statically removing weights that *do* participate in the forward pass for some i
 
 - The benchmark task force seeds the list with ≥ 1 approved head/drafter per benchmark model where feasible.
 - Submitters (and any WG member) may propose additional drafters via a standing intake process. Proposal review is **WG review by default**; on escalation, the benchmark task force takes over the review and returns its recommendation to the WG for ratification.
-- A newly approved drafter may first be used in a submission whose `target_cohort` is **at least two cohorts after** the cohort in which the drafter was approved. Approval is recorded against the cohort in which the updated list is published.
+- A newly approved drafter may first be used in a submission where the review eligibility date for a submission is **at least two cohorts dates after** the cohort in which the drafter was approved. Approval is recorded against the cohort in which the updated list is published.
 - The approved list is published in the reference repository, versioned per submission round, alongside the model list (see [§3.2](#32-supported-models)).
 
 **Drafter eligibility.** The following disqualify a drafter from the approved list:
