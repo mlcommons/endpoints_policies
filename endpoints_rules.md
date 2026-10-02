@@ -891,7 +891,7 @@ Accepting an estimate known to **understate** actual provisioned power — and s
 2. **Rack-level node scaling** from published rack power, where the partial provisioning is a whole number of nodes ([§4.5.2.1](#4521-rack-level-node-scaling)); or
 3. **The MLC formula above**, applied with the component counts limited to what is actually provisioned. `num_cpu` and `num_accelerator` reflect the populated configuration, not the maximum the chassis or rack could hold.
 
-This describes how the system is *provisioned*, not how heavily it is *used* during a run. The counts are fixed for the submission, and the resulting provisioned power applies unchanged to every measurement point ([§4.5.3](#453-normalized-metric)).
+This describes how the system is *provisioned*, not how heavily it is *used* during a run: `num_cpu` and `num_accelerator` reflect what is installed, and the resulting provisioned power is the same for every measurement point. How much of that provisioned system a given point *engages* is a separate question, answered per point by the node scaling of [§4.5.3](#453-normalized-metric).
 
 ##### 4.5.2.1 Rack-Level Node Scaling
 
@@ -904,6 +904,9 @@ provisioned_power(Y nodes) = P_rack × (Y / N)
 `P_rack` is subject to the same verification and publication requirements as every other power value in this section, and where the published specification states a range, the upper bound is used.
 
 *Rationale:* at rack level, power scales linearly with the number of nodes — the per-node contribution of compute, scale-up switching, cooling, and power-delivery overhead is essentially constant across otherwise identical nodes. This path exists so that submitters who have already been transparent about rack power are not forced back onto component estimation when they submit a smaller configuration.
+
+> [!NOTE]
+> **This formula is applied twice, for two different purposes.** Here it establishes the **provisioned power of the submitted system** — how much hardware the submission consists of, fixed for the whole submission. In [§4.5.3](#453-normalized-metric) the same `× (Y / N)` scaling is applied again, **per measurement point**, to the nodes a given point engages. The linearity argument above is what licenses both. Keep the two distinct: `N` and the provisioned `Y` describe the system; the per-point `Y_s` describes one point on its curve.
 
 **`Y` is a whole number of nodes, rounded up.** Any fractional node counts as a whole one. A submitter using 4.5 nodes — because a node is shared or virtualized — declares `Y = 5`. Provisioned power is a property of hardware that must be provisioned in whole units; half a node still requires a whole node to be powered.
 
@@ -937,14 +940,62 @@ Vendor documentation describing the power provisioning of specific rack configur
 
 | Metric | Symbol | Definition |
 |---|---|---|
-| Total System Throughput per Kilowatt | `system_tps_per_kw` | `system_tps_per_kw = system_tps / provisioned_power_kw`, where `provisioned_power_kw` is the total system power of [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) expressed in kilowatts. |
+| Total System Throughput per Kilowatt | `system_tps_per_kw` | `system_tps_per_kw = system_tps / point_power_kw`, evaluated **per measurement point**. |
+| Point power | `point_power_kw` | The normalization denominator for a single measurement point: the provisioned power of [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) scaled to the nodes used at that point, per the rule below. |
 
-**Provisioned power is fixed for a given system.** It does not vary with how many CPUs or accelerators were actually exercised at a measurement point. A low-concurrency point that leaves most of the system idle is normalized by the *full* provisioned power of the system, exactly as a high-concurrency point is. The denominator is therefore constant across a submission's entire pareto curve, and the normalized curve is the throughput curve scaled by a single constant.
+**Normalization is per measurement point.** A point that engages only part of a multi-node system is normalized by the power of the part it engages, not by the whole system.
 
-Two consequences follow:
+**Submitters MUST maximize the provisioned hardware engaged at each point.** A point may not be served from a narrow slice of a larger provisioned system while the remainder sits idle. Where the serving configuration admits replication, the submitter MUST replicate it **data-parallel** until no further replica fits:
 
-- Provisioned power is a property of a *system*. Two systems that are otherwise identical but differ in provisioned power — because of power capping, for example — are **different systems**, and all points on a single pareto curve MUST use the same provisioned power.
-- A submitter cannot improve `system_tps_per_kw` at low concurrency by attributing only the active fraction of the system to that point. Sizing the provisioned power down requires changing what the system *is* — capping it, or populating it less ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)) — which applies to every point alike.
+```
+A_replica          = accelerators required by one replica   (TP × PP × EP at that point)
+DP                 = floor( A_provisioned / A_replica )
+accelerators_used  = DP × A_replica
+```
+
+A point whose configuration requires **24** accelerators per replica, on a system provisioning **64**, MUST be run at `DP = floor(64 / 24) = 2`, engaging **48** accelerators. Running that point at `DP = 1` on 24 accelerators, and normalizing by 24 accelerators' worth of power, is not a valid submission of that point.
+
+**The remainder is stranded, not charged.** In that example the leftover 16 accelerators cannot form a third replica. They are excluded from the denominator by the node scaling below, and the point divides by the power of the nodes holding the 48. The two rules are complements: maximal engagement stops a submitter *choosing* to under-deploy, and per-point normalization stops them being charged for capacity that genuinely cannot be used.
+
+*Rationale:* a submission's pareto curve characterizes the system the submitter provisioned. Without this rule, per-point normalization would let a submitter report every point from whatever small slice happens to be most efficient, and publish it as a curve for the full system. Maximal engagement is what keeps `system_tps` and `point_power_kw` descriptions of the *same* machine at every point.
+
+**Where a further replica genuinely does not fit.** `DP` is bounded by the formula above, so a remainder smaller than one replica needs no justification. Where a submitter runs **fewer** replicas than `floor(A_provisioned / A_replica)`, the shortfall and its reason MUST be declared in the point YAML ([§8.3](#83-measurement-point-yaml)) and is subject to Methodology objection during peer review. Accepted reasons include remaining accelerators that cannot satisfy the replica's interconnect topology — a replica requiring a single NVLink domain cannot be formed from accelerators spread across nodes — or a non-accelerator resource such as host memory or NIC count binding before accelerator count. That the serving framework does not implement data parallelism is not on its own sufficient.
+
+**Scaling is per node.** The unit of scaling is a whole node, never a fraction of one — the same granularity rule as [§4.5.2.1](#4521-rack-level-node-scaling), and for the same reason: a node's power does not scale down with the accelerators left idle inside it. For each node set `s`:
+
+```
+Y_s = ceil( accelerators_used_s / accelerators_per_node_s )
+```
+
+`Y_s` is the number of nodes of set `s` engaged at that point, `N_s` the number provisioned. **Any fractional node rounds up to a whole node.** A point engaging 42 accelerators on nodes holding 8 each uses `ceil(42 / 8) = 6` nodes, and is normalized as though all 48 accelerators in those 6 nodes were provisioned to it.
+
+**The denominator scales by node fraction, uniformly.** Every term of [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)'s power model scales together, including scale-out switch power:
+
+```
+point_power_kw = Σ over node sets s:  P_s × (Y_s / N_s)   +   S × (Σ Y_s / Σ N_s)
+```
+
+where `P_s` is node set `s`'s contribution to provisioned power and `S` is the scale-out switch power. For a homogeneous submission — a single node set — this collapses to:
+
+```
+point_power_kw = provisioned_power_kw × (Y / N)
+```
+
+**Single-node submissions are unaffected.** With `Y = N = 1` the ratio is 1 at every point, so `point_power_kw = provisioned_power_kw` across the whole pareto curve and the normalized curve is the throughput curve scaled by a single constant, exactly as before.
+
+| Submission | Denominator |
+|---|---|
+| Single node | Constant across the pareto. The full node power, every point. |
+| Multi-node, rack-scale, or heterogeneous | Varies per point with `Y_s`. A complete `system_power.json` ([Appendix E](#appendix-e-system_powerjson-field-reference)) is **required**, since the per-set provisioned power `P_s` and node count `N_s` come from it. |
+
+**Declaring the node count.** A submitter electing per-point normalization declares the nodes used at each point in that point's measurement YAML ([§8.3](#83-measurement-point-yaml)), **by node type**: a single count for a homogeneous system, one count per node type for a heterogeneous one. The declaration is **optional**. Where it is absent for a point, that point is normalized by the **full** provisioned power — `Y_s = N_s` for every set. The conservative figure is the default; scaling it down requires an affirmative, checkable declaration.
+
+**The declaration must match the serving deployment.** The declared node count is the set of nodes holding model weights and able to receive requests for that point. It MUST be consistent with the parallelism configuration declared in `system_desc.json` ([§8.2](#82-system-description-system_descjson)) — `tensor_parallel`, `pipeline_parallel`, `expert_parallel`, and `data_parallel` — and reproducible on a re-run of that point. Declaring fewer nodes than the deployment actually spans is a misrepresentation under [Submission Rules §8.4](endpoints_submission_rules.md#84-issues-discovered-after-publication).
+
+> [!IMPORTANT]
+> **This is a deployment property, not a utilization measurement.** A node loaded with weights and able to serve counts as used, whether or not it happened to receive a request during the steady-state window. Idle-but-deployed capacity draws power and is counted. A submitter is not credited for uneven load balancing across a deployment that spans every node, and — under the maximal-engagement rule above — may not narrow the deployment to earn a smaller denominator. The only reduction available is the one the hardware forces: a remainder too small to hold another replica.
+
+Provisioned power itself remains a property of the *system*: two otherwise identical systems that differ in provisioned power — because of power capping, for example — are **different systems**, and `P_s` and `N_s` are the same for every point on a submission's pareto curve. Only `Y_s` varies.
 
 
 ---
@@ -1328,7 +1379,8 @@ An Endpoints submission must follow this directory structure:
       └── results/
           └── <system>/                     # e.g. H200-SXM-141GBx8_TRT/
               ├── system_power.json            # §4.5.2, Appendix E — REQUIRED, one per system.
-              │                                #   Provisioned power; fixed across all points.
+              │                                #   Provisioned power + per-set node counts N_s.
+              │                                #   Per-point scaling: point.yaml `nodes_used` (§4.5.3).
               └── <model_name>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
                   └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
                       ├── point.yaml              # §8.3 — includes shared_src / shared_docs pointers
@@ -1501,6 +1553,8 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 | `dataset_link` | Link to data used for submission e.g., via GitHub. |
 | `steady_state` | The reporting block of [§4.4](#44-reporting-basis-steady-state-window) — `status` (`windowable` / `insufficient_duration` / `insufficient_passes` / `partial_dataset`), `window` (super-pass range, sample count, the effective super-pass size used, and `duration_s` — the window's issue-time span, checked against the [§6.2](#62-minimum-run-duration) minimum), per-metric `state` (`Plateau` / `Drifting Up` / `Drifting Down`), and `anomaly` (present only on a level shift); `total` metrics reported alongside as supplementary. |
 | `speculative_decoding` | If used for this point: drafter model ID/checksum, precision, public release date, a link to the drafter's model card or technical report, and tokenizer-compatibility notes for the drafter/target pair. (Algorithm and per-point configuration are already covered by [§2.9.4](#294-speculative-decoding)'s disclosure requirements.) |
+| `nodes_used` | **Optional.** The nodes engaged at this point, for per-point power normalization ([§4.5.3](#453-normalized-metric)). A list of `{ system_node_ensemble_id, nodes }` entries — one entry for a homogeneous system, one per node type for a heterogeneous one. `nodes` is a whole number of nodes, rounded up from the accelerators engaged ([§4.5.3](#453-normalized-metric)), and MUST NOT exceed the `N` provisioned for that node set in `system_power.json`. **Omitting this field normalizes the point by the full provisioned power of the system.** Single-node submissions need not declare it: the result is identical either way. |
+| `dp_shortfall` | Present only where `DP` is lower than `floor(A_provisioned / A_replica)` ([§4.5.3](#453-normalized-metric)). Declares the `DP` actually run, the `DP` the formula gives, and the reason the further replica could not be formed. Subject to Methodology objection during peer review. |
 
 ### 8.4 Software Disclosure
 
@@ -1551,6 +1605,9 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
 | **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
 | **Power descriptor** | A `system_power.json` conforming to the [Appendix E](#appendix-e-system_powerjson-field-reference) schema is present for each system, and passes the validation rules of [E.7](#e7-validation). Required for all Standardized submissions, CoP and CoN. | Reject submission. |
+| **Per-point node declaration** | Where a point declares `nodes_used` ([§8.3](#83-measurement-point-yaml)): every `system_node_ensemble_id` resolves to a node set in `system_power.json`; each `nodes` value is a positive integer not exceeding that set's provisioned `N_s`; and the implied accelerator count is consistent with the parallelism configuration in `system_desc.json` ([§4.5.3](#453-normalized-metric)). | Reject submission. |
+| **Per-point denominator** | `system_tps_per_kw` at each point equals `system_tps / point_power_kw` recomputed by the checker, with `Y_s = N_s` for any point not declaring `nodes_used`. | Reject submission. |
+| **Maximal engagement** | Accelerators engaged at each point equal `DP × A_replica` with `DP = floor(A_provisioned / A_replica)`, derived from the point's parallelism configuration ([§4.5.3](#453-normalized-metric)). A point falling short without a `dp_shortfall` declaration is non-conforming. | Reject submission. |
 | **Point count** | ≥ 8 total measurement points including a dedicated Offline run (non-agentic); ≥ 7 where the $C_{max}$ point is elected as the Offline result, or for agentic benchmarks. | Reject submission. |
 | **Offline point present** | Exactly one point carries an `offline` declaration of `dedicated` or `elected` for non-agentic benchmarks; none is present for agentic benchmarks ([§5.7](#57-offline-point)). An `elected` declaration appears on the $C_{max}$ point. | Reject submission. |
 | **Ultra Low Concurrency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
@@ -1661,7 +1718,8 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 | Item | Resolution |
 |---|---|
 | Air-cooled overhead fraction | **50%**, as used in [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology). Liquid-cooled remains 30%. |
-| Normalized metric | **`system_tps_per_kw`** = total system throughput ÷ provisioned power in kW, with provisioned power fixed per system ([§4.5.3](#453-normalized-metric)). |
+| Normalized metric | **`system_tps_per_kw`** = total system throughput ÷ `point_power_kw`, evaluated **per measurement point** ([§4.5.3](#453-normalized-metric)). Provisioned power is fixed per system; the denominator scales by the node fraction `Y_s / N_s` engaged at each point, rounded up to whole nodes. Single-node submissions have a constant denominator. |
+| Per-point node declaration | Optional `nodes_used` field in the measurement-point YAML ([§8.3](#83-measurement-point-yaml)), by node type. Omitted ⇒ the point is normalized by full provisioned power. |
 | Partially provisioned systems | Verified public documentation; rack-level node scaling `P_rack × Y/N` for whole nodes ([§4.5.2.1](#4521-rack-level-node-scaling)); or the MLC formula with component counts limited to what is provisioned. Linear scaling does not apply within a node. |
 | Scope | All Standardized CoP and CoN submissions; Serviced deferred; RDI optional. |
 | Estimated-power labelling | Results tagged **"MLC Estimated Power"** where values were not supplied by the submitter or arise from comprehensive testing. |
@@ -1768,18 +1826,54 @@ An 18-node rack, each node carrying 2 CPUs and 4 accelerators, with 9 rack-level
 | Other (liquid-cooled, × 0.30) | | | 35,100 W |
 | **Total system power** | | | **152,100 W = 152.10 kW** |
 
-### C.3 The denominator is fixed across the pareto
+### C.3 Per-point normalization across the pareto
 
-Using the rack of C.2, every measurement point divides by the same 152.10 kW — the figure does not
-shrink at low concurrency just because less of the rack is busy ([§4.5.3](#453-normalized-metric)):
+**Single node — the denominator is constant.** For the C.1 node at 13.05 kW there is one node, so
+`Y = N = 1` at every point and the denominator never moves ([§4.5.3](#453-normalized-metric)):
 
-| Concurrency | `system_tps` | `system_tps_per_kw` |
-|---|---|---|
-| 32 | 12,000 | 78.9 |
-| 512 | 60,000 | 394.5 |
-| 4,096 | 91,260 | 600.0 |
+| Concurrency | `system_tps` | `point_power_kw` | `system_tps_per_kw` |
+|---|---|---|---|
+| 32 | 1,100 | 13.05 | 84.3 |
+| 512 | 5,400 | 13.05 | 413.8 |
+| 4,096 | 7,830 | 13.05 | 600.0 |
 
-The normalized curve is therefore the throughput curve scaled by a single constant.
+The normalized curve is the throughput curve scaled by a single constant. A single-node submitter
+need not declare `nodes_used` at all.
+
+**Rack-scale — the denominator tracks the nodes engaged.** Take the C.2 rack at 152.10 kW, built from
+`N = 18` nodes of 4 accelerators each (72 accelerators). The submitter uses a wider tensor-parallel
+replica at low concurrency for latency, and a narrower one at high concurrency for throughput. At
+every point `DP` is maximized against the 72 provisioned accelerators
+([§4.5.3](#453-normalized-metric)):
+
+| Concurrency | `A_replica` | `DP = floor(72 / A_replica)` | Accelerators engaged | `Y = ceil(acc / 4)` | `point_power_kw = 152.10 × Y/18` | `system_tps` | `system_tps_per_kw` |
+|---|---|---|---|---|---|---|---|
+| 32 | 16 | 4 | **64** | 16 | 135.20 | 6,000 | 44.4 |
+| 512 | 8 | 9 | 72 | 18 | 152.10 | 60,000 | 394.5 |
+| 4,096 | 4 | 18 | 72 | 18 | 152.10 | 91,260 | 600.0 |
+
+Only the first point engages less than the whole rack, and not by choice: a 16-accelerator replica
+divides into 72 four times with **8 accelerators left over** — two nodes that cannot hold a fifth
+replica. Those two nodes are excluded from that point's denominator. The other two points use a
+replica size that divides 72 exactly, so `DP` consumes the rack and `Y = N`.
+
+**Why maximal engagement is about the curve, not the ratio.** Had the submitter run that first point
+at `DP = 1` on a single 16-accelerator replica, they would have engaged 4 nodes and divided by
+`152.10 × 4/18 = 33.80 kW`. Throughput would fall roughly in proportion — about 1,500 `system_tps` —
+giving ≈ 44.4 `system_tps_per_kw`, essentially the same ratio. What changes is the **position of the
+point on the pareto curve**: 1,500 TPS instead of 6,000, from a system the submission describes as a
+72-accelerator rack. Maximal engagement is what stops a submitter publishing a curve measured on a
+slice and labelled with the whole machine ([§4.5.3](#453-normalized-metric)).
+
+Had the submitter omitted `nodes_used` entirely, every point would divide by the full 152.10 kW —
+giving 39.4 at the first point instead of 44.4. **The conservative figure is the default**; the
+declaration is what earns the scaling.
+
+> [!NOTE]
+> Scaling applies to *every* term of the power model, including scale-out switch power
+> ([§4.5.3](#453-normalized-metric)). The C.2 rack has no scale-out fabric, so the single ratio above
+> covers the whole figure; [C.11](#c11-multi-node-ten-dgx-b300-nodes-over-ethernet) is the case where
+> a separate switch term is present.
 
 ### C.4 Partially populated node — why intra-node scaling is barred
 
@@ -1814,6 +1908,12 @@ Two rules apply to the published figure:
   132–140 kW is taken as **140 kW**, not 132.
 - The nodes must be otherwise identical. Scaling is by whole nodes only — a partial rack containing
   a partly populated node falls back to C.4's treatment for that node.
+
+**The same scaling runs again, per point.** The 46.67 kW above is this submission's *provisioned*
+power: `N = 6` is now what the submission consists of. Each measurement point then scales that figure
+by the nodes it engages ([§4.5.3](#453-normalized-metric)) — a point deploying across 2 of the 6
+nodes divides by `46.67 × (2 / 6) = 15.56 kW`. The two applications compose; they do not conflict.
+See [C.3](#c3-per-point-normalization-across-the-pareto).
 
 ### C.6 Declaring provisioned power directly
 
@@ -2144,8 +2244,11 @@ This appendix is the normative definition of the `system_power.json` descriptor 
 [§9.1](#91-automated-checks) validates against.
 
 The descriptor records **how provisioned power was established**, not how the system behaved during a
-run. It is written once per system and applies unchanged to every measurement point
-([§4.5.3](#453-normalized-metric)).
+run. It is written once per system, and the provisioned power it yields is the same for every
+measurement point. What varies per point is how much of that system a point *engages*: each point's
+denominator is this file's figure scaled by the nodes declared in that point's `nodes_used`
+([§4.5.3](#453-normalized-metric), [§8.3](#83-measurement-point-yaml)). This file supplies the `P_s`
+and `N_s` that scaling divides into; it does not itself vary by point.
 
 ### E.1 Sourced values
 
@@ -2180,7 +2283,7 @@ declared figure alone, and the component block beneath it may hold defaults with
 | `scale_out` | object | yes | The scale-out fabric ([E.4](#e4-scale-out-fabric)). For a single-node submission, or where nodes are joined only by the scale-up fabric, this is `{ "present": false }`. |
 | `declared_provisioned_power` | sourced value (`value_kw`) | no | A directly declared provisioned power figure, overriding the computed total ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Where a published specification states a range, the **upper bound** is declared. |
 | `computed` | object | checker | The derived arithmetic ([E.5](#e5-computed-block)). A submitter may populate it; the checker recomputes and the checker's values govern. |
-| `provisioned_power_kw` | number | checker | The figure used as the normalization denominator: `declared_provisioned_power` where present, otherwise `computed.total_system_power_w / 1000`. Two decimal places. |
+| `provisioned_power_kw` | number | checker | The system's full provisioned power: `declared_provisioned_power` where present, otherwise `computed.total_system_power_w / 1000`. Two decimal places. This is the figure each point's `point_power_kw` is scaled from, and is the denominator in full for any point not declaring `nodes_used` ([§4.5.3](#453-normalized-metric)). |
 | `mlc_estimated_power` | boolean | checker | Set by the checker where any value was defaulted or auto-populated. A submitter-supplied value is ignored. |
 | `notes` | string | no | Free-form submitter notes. Not a substitute for a `source`. |
 
@@ -2194,7 +2297,7 @@ set ([§4.5.2.1](#4521-rack-level-node-scaling)).
 |---|---|---|---|
 | `node_set_id` | integer | yes | Identifier, unique within the file. |
 | `system_node_ensemble_id` | integer | yes | The matching node type in `system_desc.json` ([§8.2](#82-system-description-system_descjson)). |
-| `nodes_provisioned` | integer | yes | `Y` — the number of nodes of this set in the submission, **rounded up to a whole node** ([§4.5.2.1](#4521-rack-level-node-scaling)). |
+| `nodes_provisioned` | integer | yes | `N_s` — the number of nodes of this set the submission provisions, **rounded up to a whole node** ([§4.5.2.1](#4521-rack-level-node-scaling)). This is the denominator of the per-point node fraction; a point's `nodes_used` for this set MUST NOT exceed it ([§4.5.3](#453-normalized-metric)). |
 | `power_method` | string | yes | How this set's power was established: `component_sum`, `published_system`, or `node_scaling`. |
 | `published_power` | sourced value | conditional | Required for `published_system` and `node_scaling`. The published figure for **one node** (`published_system`) or for the **whole rack** (`node_scaling`). A figure published by another vendor for a comparable system MUST NOT be used ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). |
 | `nodes_in_published_rack` | integer | conditional | `N` — required for `node_scaling` only; the node count the published rack figure covers. |
@@ -2208,7 +2311,7 @@ set ([§4.5.2.1](#4521-rack-level-node-scaling)).
 | `cpu.count_per_node` | integer | CPUs actually provisioned, not the maximum the chassis holds. |
 | `cpu.tdp_per_unit` | sourced value | Per-CPU TDP. Defaults by architecture and core count in [D.2](#d2-processors). |
 | `accelerator.model` | string | Model name, matching `system_desc.json`. |
-| `accelerator.count_per_node` | integer | Accelerators actually provisioned. |
+| `accelerator.count_per_node` | integer | Accelerators actually provisioned. Also the divisor for the per-point node rounding `Y_s = ceil(accelerators_used_s / accelerators_per_node_s)` ([§4.5.3](#453-normalized-metric)). |
 | `accelerator.tdp_per_unit` | sourced value | Per-accelerator TDP. Defaults in [D.3](#d3-accelerators). |
 | `accelerator.below_rated_tdp` | object | Present only where the accelerator runs below its rated TDP. Carries `rated_tdp_w`, the sourced alternative rating, and `evidence` — a description of the reproducible third-party check, or the public listing of the reduced mode as a production operating point ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). |
 | `combined_cpu_accelerator` | sourced value | Alternative to the two blocks above where the vendor publishes a single combined figure ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). Mutually exclusive with `cpu.tdp_per_unit` and `accelerator.tdp_per_unit`. |
