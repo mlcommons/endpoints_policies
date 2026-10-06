@@ -174,6 +174,19 @@ The Standardized division is the primary benchmark division, requiring strict ad
 > [!NOTE]
 > **Why blacklist-only?** Submitters frequently ask "is X allowed?" for techniques that don't exist yet (new quantization formats, novel kernels, alternative attention impls). A closed whitelist forces a rule change every time. Endpoints maintains a single disallowed list together with the Model Equivalence rules ([§2.9](#29-model-equivalence-rules-standardized-division)); anything not banned and consistent with model equivalence is permitted. The [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) provides interpretive guidance.
 
+**Divergences from upstream.** Inheritance is not wholesale. Endpoints both **narrows** and **widens** the upstream allowances, and where the two disagree this document governs. A submitter who reads only the upstream allowed list will get the wrong answer on the following, each of which is a deliberate Endpoints decision rather than an oversight:
+
+| Upstream §Model Equivalence | Endpoints position | Where |
+|---|---|---|
+| Allows *empirical performance and accuracy tuning based on the performance and accuracy set* (e.g. selecting batch sizes or numerics experimentally). | **Narrowed.** Tuning against the benchmark performance or accuracy dataset is input-based optimization and is disallowed. Thresholds for approximate methods must be selected on the published calibration set or by a data-independent procedure. | [§2.9.6.4](#2964-dynamic-approximate-sparsity), and the input-based-optimization bullet above |
+| Allows *incorporating explicit statistical information about the calibration set* (min, max, mean, distribution). | **Retained**, and unchanged: the *calibration* set remains a legitimate source of statistics. The boundary Endpoints enforces is calibration set versus benchmark set, not statistics versus no statistics. | [§2.9.3](#293-model-weight-rules), [§2.9.6.4](#2964-dynamic-approximate-sparsity) |
+| Allows *dead code elimination*, unqualified. | **Narrowed.** Permitted for the executed graph, and only where the elimination is data- and weight-invariant. Does not license removing components from the submitted checkpoint artifact. Dead code in the reference that is data-dependent must be reported to the working group. | [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision), [§2.9.3](#293-model-weight-rules) |
+| Prohibits cross-query KV-cache reuse. | **Widened.** Permitted under the per-query salt mechanism. | [§2.9.5](#295-kv-cache-rules) |
+| Allows speculative decoding for an enumerated set of upstream workloads. | **Replaced.** Governed by the Endpoints approved-drafter list and its own eligibility and approval process. | [§2.9.4](#294-speculative-decoding) |
+| Permits sparse execution only where mathematically equivalent to the dense reference. | **Widened.** Dynamic, run-time-derived approximate sparsity is permitted under the accuracy gate. | [§2.9.6.4](#2964-dynamic-approximate-sparsity) |
+
+*Why the tuning rule is narrowed:* upstream is in tension with itself on this point — its allowed list permits *empirical performance and accuracy tuning based on the performance and accuracy set*, while its disallowed list prohibits *incorporating explicit statistical information about the performance or accuracy sets*. Endpoints resolves that tension toward the prohibition. Upstream's allowance is workable where a benchmark's accuracy is a pass/fail threshold on a fixed task. Endpoints reports a curve across concurrency, and [§2.9.6.4](#2964-dynamic-approximate-sparsity) admits approximations whose aggressiveness is set by a tunable threshold. Permitting that threshold to be tuned against the benchmark's own accuracy set would let a submitter walk the approximation right up to the pass line on the data it is scored against, which is a materially different rule from choosing a batch size experimentally. The accuracy gate only means something if the threshold was not fitted to it.
+
 #### 2.2.2 Client over Network (CoN) — Additional Rules
 
 When submitting to the Standardized division via the CoN scenario, the following additional rules apply:
@@ -401,8 +414,18 @@ Declining to *use* a component at run time is a separate matter, governed by [§
 
 Statically removing weights that *do* participate in the forward pass for some inputs is pruning, and is disallowed above and in [§2.9.6.5](#2965-disallowed).
 
-> [!NOTE]
-> **[WG Open Item — `[CKPT-RESIDENCY]`]** — **TODO:** this rule governs the checkpoint *artifact*. Whether a component present in the checkpoint must also be **resident in accelerator memory** during measurement is undecided, and the memory freed by not loading it is a measurable performance advantage. See [Appendix A \[CKPT-RESIDENCY\]](#ckpt-residency-checkpoint-component-residency).
+**Residency is not required.** The rule above governs the checkpoint *artifact*. It does not require a component to be loaded into accelerator memory during measurement. A submitter is **not obligated to load or copy every weight in the checkpoint to the accelerator** where the component is not needed for the configuration being measured — a submission that has legitimately disabled speculative decoding at a point ([§2.9.4](#294-speculative-decoding)) need not reserve memory for the drafter at that point.
+
+The two obligations are therefore distinct, and both hold:
+
+| | Requirement |
+|---|---|
+| **Checkpoint artifact** | MUST contain every component of the canonical checkpoint. Stripping is not permitted, whether or not the component is used ([§2.9.6.5](#2965-disallowed)). |
+| **Accelerator residency** | Not required. What is loaded at run time is a submitter configuration choice, constrained only by the equivalence rules governing what is *computed*. |
+
+Memory footprint is a legitimate dimension of a serving configuration, and the artifact requirement is what preserves provenance and the ability to re-run the submission with the component enabled. Nothing here licenses any change to the computation: a component that participates in the forward pass for the configuration being measured must be present and used.
+
+**Dead code elimination does not reach the checkpoint.** Upstream §Model Equivalence lists *dead code elimination* among its permitted optimizations, without qualification. An unused auxiliary component — an MTP or EAGLE-style head at a point where speculative decoding is disabled — is dead code in the ordinary compiler sense, and the upstream allowance might be read to license deleting it from the derived checkpoint. **It does not.** Under [§2.2.1](#221-general-rules) this document overrides upstream wherever the two conflict, and the allowance is confined to the executed graph ([§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision)). The submitted artifact is not code and is not subject to elimination: it is the evidence of provenance against which the submission is verified. Eliminating such a component from the *loaded* graph is the residency question answered above, and is permitted.
 
 #### 2.9.4 Speculative Decoding
 
@@ -503,7 +526,7 @@ This section governs techniques that skip, elide, or approximate part of the com
 
 The operative test throughout is whether the technique **changes the tokens the model emits for any input**:
 
-- Techniques that provably do not are permitted without exception ([§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision), [§2.9.6.3](#2963-canonical-architectural-sparsity)).
+- Techniques that provably do not are permitted without an accuracy-gate condition ([§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision), [§2.9.6.3](#2963-canonical-architectural-sparsity)).
 - Techniques that may are permitted only under [§2.9.6.4](#2964-dynamic-approximate-sparsity): they must pass the accuracy gate and be disclosed.
 - Techniques that change the model's structure rather than approximating its computation are disallowed ([§2.9.6.5](#2965-disallowed)).
 
@@ -511,14 +534,28 @@ Whether a technique is implemented in software or accelerated by hardware is not
 
 ##### 2.9.6.2 Exact Sparse Execution and Softmax Elision
 
-The following are mathematically equivalent to the reference computation. They are permitted with no exception and no disclosure beyond the software-stack listing of [§8.4](#84-software-disclosure):
+The following are mathematically equivalent to the reference computation. They are permitted with no accuracy-gate condition and no disclosure beyond the software-stack listing of [§8.4](#84-software-disclosure). Dead code elimination carries two further constraints, set out after the list:
 
 - **Mathematically equivalent sparse operations.** Replacing a dense operation with a sparse operation that produces the same outputs — for example a dense matmul executed as a sparse matmul, or skipping blocks whose values are exactly zero. Inherited from upstream §Model Equivalence.
 - **Fused, streaming, and online softmax.** FlashAttention-style running max/sum, fused softmax kernels, log-sum-exp rearrangement, and max-subtraction for numerical stability.
 - **Vocabulary softmax elision under greedy decoding.** Softmax is monotonic, so `argmax(softmax(logits)) == argmax(logits)`. Where the benchmark's reference sampling configuration is greedy (temperature = 0, per [§2.9.7](#297-post-processing-equivalence)), taking argmax over raw logits and skipping normalization entirely is exactly equivalent.
 - **Softmax elision in speculative-decoding verification** where the target's sampling configuration is greedy, since acceptance reduces to comparing argmax.
+- **Dead code elimination.** Removing graph nodes, kernels, or branches that cannot affect the output of the configuration being served — constant folding, identity-op removal, elimination of unreachable branches. Inherited from upstream §Model Equivalence, where it is listed without qualification. In Endpoints it is an *execution* allowance and is bounded by [§2.9.3](#293-model-weight-rules) and by the invariance requirement below: it does not extend to the checkpoint artifact.
 
 Bit-exact identity is not required — ordinary floating-point reassociation is expected.
+
+**Dead code elimination MUST be data-invariant.** The eliminated computation must be incapable of affecting the output for **any admissible input** and for **any checkpoint** satisfying [§2.9.3](#293-model-weight-rules) — not merely for the benchmark's dataset or for the reference checkpoint's particular weight values. Two eliminations that look identical in a profile are treated differently:
+
+| Elimination | Status |
+|---|---|
+| A branch that is unreachable for every input the API admits. | **Permitted.** The removal is a property of the program. |
+| A branch the benchmark's inputs happen never to take. | **Disallowed.** This is input-based optimization under [§2.2.1](#221-general-rules) — the implementation encodes knowledge of the dataset's content. |
+| A computation compiled out because a tensor is zero or constant *in this checkpoint*. | **Disallowed.** The artifact is baked into the graph, and the elimination would not survive a re-quantized or re-released checkpoint. |
+| A block skipped at run time because its values are exactly zero on that pass. | **Permitted** (first bullet above). This is a dynamic property of the data being processed, not a static assumption compiled into the implementation. |
+
+The distinction throughout is **static versus dynamic**, the same line drawn in [§2.9.6.3](#2963-canonical-architectural-sparsity) and [§2.9.6.5](#2965-disallowed): deciding once, at build time, on the basis of the benchmark's data or weights is disallowed; deciding per pass, from the values actually present, is permitted.
+
+**Obligation to report data-dependent dead code in the reference.** A submitter who identifies computation in the reference implementation that is dead **only** for the benchmark's data, or only for the reference checkpoint's particular weights, MUST report it to the working group rather than silently eliminating it. Such code is a property of the reference, not of any one submission: its presence may indicate a reference defect, or an unintended advantage for whichever implementations detect it first. It is resolved by changing the reference for every submitter ([§2.9.1](#291-reference-implementation)), not by each submitter's compiler. Reporting is required whether or not the submitter intends to exploit it.
 
 ##### 2.9.6.3 Canonical Architectural Sparsity
 
@@ -686,9 +723,18 @@ The following metrics are derived from primary measurements and used in publicat
 Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
 
 
-One accuracy validation run is required for each of the 5 pareto regions. Accuracy and performance runs MUST use the same server endpoint configuration, model weights, and software stack.
+**Exactly one** accuracy validation run is required, and **exactly one may be submitted**, for each of the mandatory points defined in [§5.3](#53-minimum-submission-requirements) — one in the Ultra Low Concurrency region, one in each of the Low, Medium, and High Concurrency regions, and, for non-agentic benchmarks, one at the Offline point. Accuracy and performance runs MUST use the same server endpoint configuration, model weights, and software stack.
 
-For both single-turn and multi-turn benchmarks, accuracy is required at the `N` points defined in [§5.3](#53-minimum-submission-requirements).
+| Benchmark type | Required accuracy runs (`N`) | Composition |
+|---|---|---|
+| Non-agentic | **5** | 4 concurrency regions + Offline |
+| Agentic | **4** | 4 concurrency regions; the Offline point does not apply ([§5.7](#57-offline-point)) |
+
+`N` is a fixed count, not a floor. A submission carrying more than one accuracy result for a region, or any accuracy result at a submitter's-choice point, is non-conforming and is rejected at automated compliance ([§9.1](#91-automated-checks)).
+
+*Rationale:* the multi-turn criterion below is a **mean** over the `N` results. If the number of accuracy runs were at the submitter's discretion, that mean could be shifted by adding runs at favourable operating points, and the threshold would no longer mean the same thing across submissions. Fixing `N` — and fixing *which* points it covers — keeps the accuracy criterion comparable. The three submitter's-choice performance points characterize the curve; they carry no accuracy run.
+
+For both single-turn and multi-turn benchmarks, accuracy is required at exactly those `N` points.
 
 - **Single-turn (per-point):** Each of the `N` required accuracy results MUST meet the quality threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after the corresponding performance run.
 - **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn accuracy runs are time- and resource-intensive.
@@ -1027,7 +1073,7 @@ Each submission for a non-agentic benchmark must include a minimum of **8 measur
 | 3 submitter's-choice points | Any concurrency level in any of the three "concurrency" regions, at the submitter's discretion. |
 | 1 mandatory **Offline** point | The unconstrained-throughput point defined in [§5.7](#57-offline-point). Required for every non-agentic submission; not applicable to agentic benchmarks. Where the submitter elects the $C_{max}$ point as the Offline result ([§5.7.2](#572-relationship-to-maximum-supported-concurrency)), no separate run is required and the minimum is 7. |
 
-Accuracy results are required at `N` points: the four mandatory concurrency points — one low-latency point in the Ultra Low Concurrency region and one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions — plus the Offline point for non-agentic benchmarks. `N` is therefore 5 for non-agentic benchmarks and 4 for agentic benchmarks.
+Accuracy results are required at exactly `N` points, and at no others: the four mandatory concurrency points — one low-latency point in the Ultra Low Concurrency region and one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions — plus the Offline point for non-agentic benchmarks. `N` is therefore **5** for non-agentic benchmarks and **4** for agentic benchmarks. The three submitter's-choice points carry no accuracy run ([§4.3](#43-accuracy-metric)).
 
 #### No Spacing Requirements
 
@@ -1613,6 +1659,7 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Maximal engagement** | Accelerators engaged at each point equal `DP × A_replica` with `DP = floor(A_provisioned / A_replica)`, derived from the point's parallelism configuration ([§4.5.3](#453-normalized-metric)). A point falling short without a `dp_shortfall` declaration is non-conforming. | Reject submission. |
 | **Point count** | ≥ 8 total measurement points including a dedicated Offline run (non-agentic); ≥ 7 where the $C_{max}$ point is elected as the Offline result, or for agentic benchmarks. | Reject submission. |
 | **Offline point present** | Exactly one point carries an `offline` declaration of `dedicated` or `elected` for non-agentic benchmarks; none is present for agentic benchmarks ([§5.7](#57-offline-point)). An `elected` declaration appears on the $C_{max}$ point. | Reject submission. |
+| **Accuracy run count** | Exactly `N` accuracy results are present — 5 for non-agentic, 4 for agentic ([§4.3](#43-accuracy-metric)) — one per mandatory point, and none at a submitter's-choice point. More or fewer than `N` is non-conforming. | Reject submission. |
 | **Ultra Low Concurrency coverage** | ≥ 1 point with concurrency in [1, 32]. | Reject submission. |
 | **Low Concurrency coverage** | ≥ 1 point in the Low Concurrency region. | Reject submission. |
 | **Medium Concurrency coverage** | ≥ 1 point in the Medium Concurrency region. | Reject submission. |
@@ -1658,9 +1705,9 @@ Human reviewers should focus on aspects that automation cannot easily verify:
 ## Appendix A: Open Questions and Working Group Items
 
 > [!WARNING]
-> **WORK IN PROGRESS** — This appendix collects items that require working group decision before the rules can be finalized. None of the open items below represent current policy; they are placeholders for decisions in progress.
+> **WORK IN PROGRESS** — This appendix collects items that require working group decision before the rules can be finalized. Items marked **Open** do **not** represent current policy; they are placeholders for decisions in progress.
 
-The following items require working group decision before finalization.
+Entries marked **Resolved** record a decision that has been taken and is already reflected in the operative sections; they are retained here for traceability, and the operative section is the source of truth. An entry may carry both — a settled core with a narrower question still open.
 
 ### \[RDI-COMP\] Comparability Across Publication Status Categories
 
@@ -1700,13 +1747,17 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 **Question:** Must a component present in the canonical checkpoint — for example a speculative-decoding head such as MTP — be loaded into accelerator memory during measurement, or is it sufficient that it be present in the submitted checkpoint artifact?
 
-**Context:** [§2.9.3](#293-model-weight-rules) requires a derived checkpoint to preserve the component set of the canonical checkpoint, so a component may not be stripped during quantization. That rule governs the *artifact* and establishes provenance; it does not require the component to be resident at run time. A submission may therefore ship a complete checkpoint, satisfy any provenance check, and still exclude the component at load time — freeing accelerator memory that converts directly into KV-cache capacity, and therefore into concurrency and throughput. Where the component is a material fraction of the parameter count, this is a measurable advantage over a submitter who keeps it resident, and it is currently undisclosed. Resolution is needed before the first round in which a benchmark model ships an optional auxiliary head.
+**Resolved — residency is not required.** The checkpoint *artifact* must preserve the full component set of the canonical checkpoint; unused weights MUST NOT be removed from it. Residency is a separate question, and the answer is that submitters are **not obligated to load or copy every weight in the checkpoint to the accelerator** where the component is not needed for the configuration being measured. The operative rule is in [§2.9.3](#293-model-weight-rules).
 
-**Options under consideration:**
+| Item | Resolution |
+|---|---|
+| Stripping unused components from the checkpoint | **Not permitted** ([§2.9.3](#293-model-weight-rules), [§2.9.6.5](#2965-disallowed)). |
+| Loading every component into accelerator memory | **Not required.** A submitter may decline to load a component that the measured configuration does not use. |
+| Memory footprint | A legitimate configuration dimension, consistent with [§2.9.4](#294-speculative-decoding) already permitting speculative decoding to be disabled at any or all measurement points. |
 
-1. **Require residency.** Components present in the canonical checkpoint must be loaded into the serving process for all measurement points, whether or not they are used. Strongest comparability, but forces submitters to reserve memory for a module they have legitimately disabled under [§2.9.4](#294-speculative-decoding).
-2. **Require disclosure of the loaded component set.** Permit non-residency, but declare per measurement point which canonical components were loaded, alongside the existing drafter configuration fields. Preserves the engineering choice while making it visible to reviewers; would extend the disclosure table in [§2.9.6.6](#2966-disclosure).
-3. **Leave unconstrained.** Treat memory footprint as a legitimate configuration dimension, consistent with [§2.9.4](#294-speculative-decoding) already permitting speculation to be disabled at any or all measurement points.
+*Rationale:* the artifact requirement is what preserves provenance and lets a reviewer re-run the submission with the component enabled; it does not depend on the component occupying accelerator memory during a run. Requiring residency would force a submitter to reserve HBM for a module the rules explicitly permit them to disable, which the working group did not consider a meaningful comparability gain.
+
+**Open — disclosure of the loaded component set.** This resolution permits non-residency without requiring the loaded component set to be declared per measurement point. For speculative-decoding heads the choice is already visible through the per-point drafter configuration required by [§2.9.4](#294-speculative-decoding); for any other auxiliary component it is not. Whether to extend the [§2.9.6.6](#2966-disclosure) table to cover the general case is left to the working group.
 
 ### \[POWER-NORM\] Power Normalization Open Items
 
