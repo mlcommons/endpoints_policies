@@ -104,7 +104,7 @@ The review process is designed to:
 
 ### 2.1 Structure
 
-The review committee for a given cohort consists of representatives from organizations that have participated in MLPerf Endpoints within the preceding **6 months or 12 cohorts, whichever is longer**, counting backward from the first day of the publication month.
+The review committee for a submission consists of representatives from organizations that have participated in MLPerf Endpoints within the preceding **6 months or 12 cohorts, whichever is longer**, counting backward from the first day of the publication month.
 
 "Participated" means the organization has at least one MLPerf Endpoints result that has completed the full review process and been published without a "peer review pending" tag (i.e., finalized results). Results that were published but are still carrying the "peer review pending" tag do not count toward participation eligibility. Organizations whose only finalized results within the lookback period were subsequently withdrawn are not eligible for committee membership.
 
@@ -223,12 +223,10 @@ This section replaces the batch submission schedule defined in the MLPerf Genera
 
 MLCommons publishes results on a bi-weekly cadence, on the **1st and 3rd Wednesday of each month at 8:00 AM Pacific Time**.
 
-Each cohort is identified as:
+A cohort is defined as a batch of submissions results that are published together, on a bi–weekly cadence. The date of publication for a cohort is called the Cohort Date and also serves as the unique identifier for the cohort: 
 
-- `YYYY-MM-C0` — published on the 1st Wednesday of the month at 8:00 AM PT.
+- `YYYY-MM-C0` — published on the 1st Wednesday of the month at 8:00 AM PT.  
 - `YYYY-MM-C1` — published on the 3rd Wednesday of the month at 8:00 AM PT.
-
-> **Example:** A submission received on a Monday could appear in the next Wednesday's cohort at the earliest, subject to passing automated compliance checks and the 1 business-day alignment window (see [§4.3](#43-submission-to-publication-alignment)).
 
 #### Publication Embargo
 
@@ -247,9 +245,9 @@ Rules for embargoed submissions:
 
 ### 4.3 Submission-to-Publication Alignment
 
-A submission is eligible for the next cohort if it passes automated compliance checks (see [§6.1 Automated Compliance](#61-automated-compliance-week-1)) at least 1 business day before the Wednesday publication date. Submissions that do not clear automated checks in time roll to the following cohort.
+A submission is eligible for the next cohort if it passes automated compliance checks and peer review (see [§6.1 Automated Compliance](#61-automated-compliance-week-1)) at least 1 business day before the Wednesday publication date. Submissions that do not clear automated checks in time roll to the following cohort.
 
-All review timelines, update windows, and objection deadlines are anchored to the **cohort in which a submission first appears** — not the raw submission date.
+All review timelines are anchored to the first date that the submission passes automatic compliance checks, is in the review repository, and no longer under submitter-specified review or provisional publication embargo. This date is called the **review eligibility date.**
 
 ### 4.4 Benchmark Roadmap
 
@@ -272,13 +270,15 @@ The figure below traces four submissions entering the pipeline shortly after the
 > [!NOTE]
 > **[WG Open Item — embargo versus cohort cadence]** Scenarios B and D both publish on a date that is not a cohort date, which [§4.2](#42-publication-cohorts-and-embargo) permits: embargoed results "are published on the requested embargo date and are not tied to the regular cohort schedule". In Scenario B the effect is more than off-cadence — a submission clearing compliance on 23 October would not otherwise reach a cohort until 4 November, so an embargo to 30 October makes the result public *earlier* than it could have been without one. The working group should decide whether an embargo date may precede the submission's next eligible cohort, and whether off-cadence publication is intended for one, both, or neither mode.
 
+Each submission has its own “Publication Date” which is defined as the first date the submission results are publicly visible in the MLC database and visualizer. By default, publication dates are aligned with cohort dates, the only exception being when submitters opt for specific publication embargos. 
+
 ### 4.6 Seed Rotation
 
 A **seed set** is the collection of seeds published by MLCommons that control the reference client's sources of run-to-run non-determinism for a cohort. These seeds drive the random number generators the client uses for benchmarking (request-issue / sample order, and the per-query salt). The seed set is an *extensible collection* — additional seeds may be introduced in future versions without changing this rule. This mirrors MLPerf Inference, where MLCommons rotates the LoadGen seeds (`qsl_rng_seed`, `sample_index_rng_seed`, `schedule_rng_seed`) every submission round.
 
-MLCommons refreshes the seed set **once every two publication cohorts**. Its relationship to the cohort has two distinct parts — a window during which a *new* submission may **adopt** a set, and the lifetime for which a submission stays **bound** to the set it adopted. Keeping these separate is what lets a rolling submission keep growing without seed rotation ever cutting it short.
+MLCommons refreshes the seed set **once every two cohort dates.** . Its relationship to the cohort has two distinct parts — a window during which a *new* submission may **adopt** a set, and the lifetime for which a submission stays **bound** to the set it adopted. Keeping these separate is what lets a rolling submission keep growing without seed rotation ever cutting it short.
 
-- **Publication and adoption window.** MLCommons publishes a new seed set every two publication cohorts ([§4.2](#42-publication-cohorts-and-embargo)), keyed by the cohort ID (`YYYY-MM-C0` / `YYYY-MM-C1`) in which it is published. Each published seed set is available for **adoption by new submissions for four consecutive cohorts** — its publication cohort and the following three cohorts — and is then dropped from the sets available for adoption. Because refresh occurs every two cohorts and each set remains adoptable for four, **two seed sets are normally available for adoption**. For example, a set published in cohort `N` is adoptable in cohorts `N` through `N+3`; the next set is published in `N+2`, and the first set is dropped when cohort `N+4` begins. The adoption window governs only which set a *new* submission may bind to; it does **not** expire the seed set of a submission already in flight (see *Binding lifetime* below).
+- **Publication and adoption window.** MLCommons publishes a new seed set every two publication cohorts ([§4.2](#42-publication-cohorts-and-embargo)), keyed by the cohort ID (`YYYY-MM-C0` / `YYYY-MM-C1`) in which it is published. Each published seed set is available for **adoption by new submissions until 4 cohort dates have passed** and is then dropped from the sets available for adoption. As the refresh occurs every two cohorts and each set remains adoptable for four, **two seed sets are normally available for adoption**. For example, a set published in cohort `2026-10-C0` is adoptable by new submissions until the cohort date of `2026-11-C1` ; the next set is published in `` `2026-11-C0` ``. The adoption window governs only which set a *new* submission may bind to; it does **not** expire the seed set of a submission already in flight (see *Binding lifetime* below).
 
 - **Binding at first submission.** A submission binds to exactly **one** seed set when it first appears, chosen from the sets in its adoption window. The adopted seed set and the targeted cohort MUST be recorded in the submission ([`endpoints_rules.md` §8.3](endpoints_rules.md#83-measurement-point-yaml)) so a reviewer or auditor can reproduce the run and the seeded-RNG integrity check ([`endpoints_rules.md` §2.1.1](endpoints_rules.md#211-client-on-prem-cop)) can confirm the client used the published seeds without modification.
 
@@ -370,7 +370,7 @@ Automated compliance checks are executed immediately after submission. The check
 
 The full list of automated checks is defined in [MLPerf Endpoints Rules §9](endpoints_rules.md#9-compliance-validation).
 
-**If a submission fails any automated check by the end of Week 0, it is rejected.** The submitter is notified of the specific failures and may correct the issues and resubmit as a new submission. Rejected submissions do not enter the peer review phase. The peer review period begins as soon as all automated checks have passed — except for submissions using provisional publication, where it begins at provisional publication (see [§6.2](#62-publication-modes)).
+**If a submission fails any automated check by the end of Week 0, it is rejected.** The submitter is notified of the specific failures and may correct the issues and resubmit as a new submission. Rejected submissions do not enter the peer review phase. The peer review period begins as soon as all automated checks have passed — except for submissions using provisional publication, where it begins at provisional publication (see [§6.2](#62-publication-modes)). The date at which the automated checks pass and peer-review period begins, is defined as the “Review Eligibility Date”. The review eligibility date serves as the anchor for all subsequent review-specific deadlines. 
 
 ### 6.2 Publication Modes
 
@@ -378,13 +378,13 @@ Every submission declares one of three publication modes at submission time. The
 
 | Mode | Public before finalization | Peer review begins | Finalized results published |
 |---|---|---|---|
-| **A. Confidential review** *(default)* | No | When automated checks pass | First cohort after finalization |
+| **A. Confidential review** *(default)* | No | When automated checks pass | First cohort date after finalization |
 | **B. Confidential review, embargoed publication** | No | When automated checks pass | On the declared embargo date |
 | **C. Provisional publication** | Yes — tagged "peer review pending" | At provisional publication | Tag removed at finalization |
 
 #### 6.2.1 Confidential Review (default)
 
-Results and artifacts are visible to the review committee and to other submitters, but are not published publicly until review is complete — all objections resolved, none pending. Results are published in the first cohort after finalization. Peer review begins as soon as automated compliance passes ([§6.1](#61-automated-compliance-week-0)).
+Results and artifacts are visible to the review committee and to other submitters, but are not published publicly until review is complete — all objections resolved, none pending. Results are published on the earliest cohort date available after finalization. Peer review begins as soon as automated compliance passes ([§6.1](#61-automated-compliance-week-0)).
 
 #### 6.2.2 Confidential Review with Embargoed Publication
 
@@ -393,7 +393,7 @@ A submitter who does not want provisional publication, but does want to control 
 - The embargo date is declared at submission and may be up to **60 days after the completion of review** ([§4.2](#42-publication-cohorts-and-embargo)).
 - No result is ever publicly visible carrying a "peer review pending" tag under this mode.
 - If review completes before the embargo date, the result is finalized on schedule and held, then published on the embargo date.
-- If review is still running when the embargo date passes, the embargo has no further effect and the result is published at the first cohort after finalization.
+- If review is still running when the embargo date passes, the embargo has no further effect and the result is published at the earliest cohort date after finalization.
 
 This mode suits a submitter aligning publication to a launch, conference or earnings date who does not want preliminary numbers in public beforehand.
 
@@ -403,7 +403,8 @@ Submitters may **opt in** to provisional publication at the time of submission. 
 
 - Results are published before peer review completes, carrying a **"peer review pending"** tag. This allows submitters to reference new results in time-sensitive contexts — such as keynote presentations, product launches, and press briefings — without waiting for the full review cycle.
 - The review committee is informed of the opt-in at the start of the review cycle.
-- **Peer review begins at provisional publication**, not when automated compliance passes. Reviewers and the public see the result at the same time.
+- **Peer review begins at provisional publication**, not when automated compliance passes. Reviewers and the public see the result at the same time. In this case, the review eligibility date is now defined as the date of provisional publication. 
+
 
 **Embargo under provisional publication.** A submitter who opts in may additionally declare an **embargo date** — a hold on when the "peer review pending" result first becomes publicly visible. The embargo date may be any date before the finalization of results. Because peer review begins at provisional publication, an embargo under this mode **also defers the start of peer review**, and therefore defers finalization by the same amount. See [§4.2](#42-publication-cohorts-and-embargo) for general embargo rules, including how to change the embargo date after submission.
 
@@ -412,25 +413,25 @@ Submitters may **opt in** to provisional publication at the time of submission. 
 
 ### 6.3 Peer Review (Weeks 1–3)
 
-Once automated compliance checks pass, the submission enters the peer review phase, which runs through the end of Week 3. Review committee members may:
+Once automated compliance checks pass, the submission enters the peer review phase, which runs for 21 days (3 weeks) after the review eligibility date. Review committee members may:
 
 - Examine the submission materials, run logs, and configuration files.
 - File objections as GitHub issues on the submission repository (see [§6.7 Filing Objections](#67-filing-objections)).
 - Request clarification from the submitter via the issue thread.
 
-**No new objections may be filed after the close of the peer review window (end of Week 3).** Objections not filed during this window are not eligible for the objection resolution phase and may only be raised through the late objection process (see [§6.6](#66-late-objections-post-week-6)).
+**No new objections may be filed after the close of the peer review window, defined as 21 days after the review eligibility date, at 11:59PM PT.** Objections not filed during this window are not eligible for the objection resolution phase and may only be raised through the late objection process (see [§6.6](#66-late-objections-post-week-6)).
 
 **Response timelines within the peer review window:**
 
-- Once an objection is filed, the **submitter must post an initial response within 3 business days**, counting from the day the objection is filed. Business day counting accounts for local public holidays in the submitter's primary operating jurisdiction — days falling on a local holiday do not count against the window. The response must either acknowledge the issue and include a **schedule for resolution** — which may extend into the objection resolution window if needed — or contest the objection with a counter-argument and supporting evidence.
-- After the submitter responds, the **objecting party has 2 business days** to acknowledge the response, retract the objection, or indicate that the issue remains unresolved and will carry into the objection resolution window. The objecting party may also provide a **schedule or timeline** for testing and validating the proposed resolution, in which case the objection remains open until that validation is complete or the stated timeline has elapsed.
+- Once an objection is filed, the **submitter must post an initial response within 3 business days (by 11:59PM PT on the 3rd business day)**, counting from the day the objection is filed. Business day counting accounts for local public holidays in the submitter's primary operating jurisdiction — days falling on a local holiday do not count against the window. The response must either acknowledge the issue and include a **schedule for resolution** — which may extend into the objection resolution window if needed — or contest the objection with a counter-argument and supporting evidence.  
+- After the submitter responds, the **objecting party has 2 business days (by 11:59PM PT on the 2nd business day)** to acknowledge the response, retract the objection, or indicate that the issue remains unresolved and will carry into the objection resolution window. The objecting party may also provide a **schedule or timeline** for testing and validating the proposed resolution, in which case the objection remains open until that validation is complete or the stated timeline has elapsed.
 
 **Submitter non-response penalties.** Failure to respond to a filed objection triggers automatic penalties based on elapsed business days since the objection was filed. Business day counting follows the same local holiday rule as the response window. These penalties apply throughout both the peer review and objection resolution windows and are enforced by the review chair without requiring a separate motion.
 
 | Business days elapsed without submitter response | Penalty |
 |---|---|
-| 3 business days | Results finalization is automatically delayed by **1 publication cohort**. |
-| 6 business days | Delay increases to **2 publication cohorts**. |
+| 3 business days | Results finalization is automatically delayed by **1 cohort date** after finalization.|
+| 6 business days | Delay increases to **2 cohort dates** after finalization. |
 | 10 business days | The submission is **withdrawn**. The submitter may correct the issues and resubmit as a new submission. |
 
 Penalties are cumulative and non-reversible — responding after a penalty threshold has been crossed does not remove the penalty, though subsequent response may prevent further escalation. The review chair must notify the submitter and all review committee members when a penalty threshold is crossed.
@@ -447,8 +448,8 @@ From Week 4 through Week 6, all filed objections carried over from the peer revi
 
 **Response timelines within the resolution window:**
 
-- For each open objection entering the resolution window, the **submitter must provide a fix or formal resolution response within 3 business days**, accounting for local holidays, consistent with the resolution schedule declared during peer review. Non-response penalties from [§6.3](#63-peer-review-weeks-13) continue to apply.
-- After the submitter's resolution response, the **objecting party has 2 business days** to either acknowledge resolution, explicitly explain — with specificity — why the response is not sufficient to close the objection, or provide a **schedule or timeline** for testing and validating the resolution. Silence after 3 business days is treated as acknowledgment of resolution and the objection is automatically retracted.
+- For each open objection entering the resolution window, the **submitter must provide a fix or formal resolution response within 3 business days (by 11:59PM PT on the 3rd business day)**, accounting for local holidays, consistent with the resolution schedule declared during peer review. Non-response penalties from [§6.3](#63-peer-review-weeks-13) continue to apply.  
+- After the submitter's resolution response, the **objecting party has 2 business days (by 11:59PM PT on the 2nd business day)** to either acknowledge resolution, explicitly explain — with specificity — why the response is not sufficient to close the objection, or provide a **schedule or timeline** for testing and validating the resolution. Silence after 2business days is treated as acknowledgment of resolution and the objection is automatically retracted.  
 - If the review chair determines that a resolution timeline is not being met, they may intervene to set a binding deadline or call a resolution meeting.
 
 **Meeting escalation.** If an objection is not close to resolution **12 business days after it was first filed**, or if any open objection is entering Week 5 of the review cycle, the review chairs may call a meeting with the relevant parties to expedite and close the issue. Attendance at such a meeting is expected of both the objector and the submitter.
@@ -460,7 +461,7 @@ An objection is considered resolved when:
 - The objecting party retracts the objection, or
 - The objecting party does not respond within 3 business days of the submitter's resolution response.
 
-Unresolved objections at the end of Week 6 are escalated to the dispute resolution process. Escalation is **automatic**: the review chair certifies which objections remain open and refers them, without requiring a motion from either party. A submission with an escalated objection does not finalize until the dispute concludes. The process and its deadlines are set out in [§9.2](#92-escalation-path).
+Unresolved objections at the end of 42 days (6 weeks) after the review eligibility date are escalated to the dispute resolution process. Escalation is **automatic**: the review chair certifies which objections remain open and refers them, without requiring a motion from either party. A submission with an escalated objection does not finalize until the dispute concludes. The process and its deadlines are set out in [§9.2](#92-escalation-path).
 
 Once all objections are resolved or retracted, the "peer review pending" tag is removed and the submission's results are finalized.
 
@@ -469,15 +470,12 @@ Once all objections are resolved or retracted, the "peer review pending" tag is 
 | Phase | Window | Key Actions |
 |---|---|---|
 | Automated Compliance | Week 0 (up to 1 week; may complete in as little as 1 day) | Automated checks run. Pass → advances to peer review immediately. Fail by end of Week 0 → **rejected**; submitter may resubmit. Results remain confidential by default; provisional publication if submitter opted in (subject to embargo). |
-| Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 cohort at 3 biz days, +2 cohorts at 6, withdrawn at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
+| Peer Review | Weeks 1–3 | Committee reviews; objections filed via GitHub (no new objections after end of Week 3); submitter has 3 business days (local holidays exempt) to respond with a resolution schedule; non-response penalties: +1 cohort dates at 3 biz days, +2 cohort dates at 6, withdrawn at 10; objector has 2 business days to respond or provide a validation schedule. If all objections resolved before end of Week 3 → eligible for early finalization. |
 | Objection Resolution | Weeks 4–6 | Open objections must be resolved; same non-response penalty schedule applies; objector has 2 business days to explain insufficiency or provide validation schedule (silence = objection retracted after 3 days); chairs may call meeting if objection is 12+ biz days old or entering Week 5; submission finalized or escalated to dispute resolution. |
 | Dispute Resolution | From end of Week 6, ~5 weeks | Escalation is automatic for objections still open at Week 6; the submission does not finalize. Chair certifies and names a panel within 2 business days; written statements within 10; panel convenes within 15; recommendation +5; binding decision +5. One investigation extension. 8-week backstop, after which the chair decides on the record. Appeal within 14 days. |
-| Late Objections ⚠️ | Post Week 6 | Availability, validity, model-equivalence, and division-rule objections only, via the dispute resolution process. Reproducibility is not eligible. **[WIP — pending WG approval]** |
+| Late Objections ⚠️ | Post Week 6 | Availability, validity, model-equivalence, and division-rule objections only, via the dispute resolution process. Reproducibility is not eligible. |
 
 ### 6.6 Late Objections (Post Week 6)
-
-> [!WARNING]
-> **[WIP — Pending Working Group Approval]** — The late objection policy is under active discussion and has not yet been ratified by the working group. The grounds, process, and time limits described below are a current proposal and are subject to change.
 
 After Week 6, late objections may be raised only on the following grounds:
 
@@ -709,7 +707,7 @@ Preview results are published with a **"Preview — Available by [date]"** tag. 
 
 #### 7.3.1 Preview Window and Clock
 
-- **Clock start:** The date of the cohort in which the result *first appears* — not the raw submission date.
+- **Clock start:** The date of the cohort in which the result *first appears in the visualizer* — not the raw submission date.
 - **Clock duration:** 180 calendar days from the clock start.
 - **Clock anchor:** Anchored to the first publication date. Pareto updates, corrections, or system description amendments do not reset the clock.
 
@@ -783,7 +781,7 @@ An **RDI** system contains one or more components that do not meet the Available
 
 An RDI component may not be submitted as Available or Preview until the later of:
 
-- The cohort after next (i.e., at least two cohorts after the RDI submission), or
+- The cohort date after next (i.e., at least two cohort dates after the first publication as RDI), or  
 - **221 days** after first publication as RDI.
 
 This cooling-off period prevents misuse of RDI status to pre-publish results on unavailable hardware and then immediately reclassify as Available.
@@ -997,11 +995,11 @@ Random Audit Selection
 * **Selection Mechanism:**
   * A round is randomly selected with a probability of 1/6 (e.g., rolling a 6-sided die).
   * Once a round is chosen, a submission is selected from the corresponding cohort (the set of submissions in that round) using a uniform probability of selection.
-  * **Proposal: Avoiding streaks of round selection (Needs WG Approval)**
-    * Reroll-on-repeat: If consecutive round is selected, a six sided die will be rolled again.
-      * For a selection streak of length 2, a 6-sided die would be rolled twice and the result of the second die roll will be accepted.
-      * For a selection streak of length 3, a 6-sided die would be rolled thrice and the result of the third die roll will be accepted.
-      * After a selection streak of length 3, there is budget for only one more random audit in the annual budget. The audit committee will make decision on how to proceed.
+* **Proposal: Avoiding streaks of round selection (Needs WG Approval)**  
+  * Reroll-on-repeat: If a consecutive round is selected, a six sided die will be rolled again.  
+    * For a selection streak of length 2, a 6-sided die would be rolled twice and the result of the second die roll will be accepted.  
+      * For a selection streak of length 3, a 6-sided die would be rolled thrice and the result of the third die roll will be accepted.  
+      * After a selection streak of length 3, there is a budget for only one more random audit in the annual budget. The audit committee will make a decision on how to proceed.  
       * A non-selection streak has higher probability. After a non-selection streak of length 3, the audit committee will decide based on the available annual budget and the time left in the current year. The audit committee has the final authority on all the audit decisions.
 
 * **Hardware retention:** From selection until the audit is complete ([§10.5](#105-audit-compliance-and-resolution-rules)), on the same terms as [§10.2](#102-audit-votes).
