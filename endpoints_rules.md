@@ -2416,7 +2416,7 @@ indivisible system; `nodes_provisioned` counts submitted units of the granularit
 
 The NVIDIA DGX B300 node of [C.8](#c8-real-system-air-cooled-nvidia-dgx-b300).
 The component sum is 15.11 kW; the published figure of 14.5 kW is lower and verifiable, so it is
-declared and governs. The component block is retained as the cross-check.
+declared and governs. The component block is retained as the cross-check but is optional.
 
 ```json
 {
@@ -2474,6 +2474,66 @@ declared and governs. The component block is retained as the cross-check.
   "mlc_estimated_power": false
 }
 ```
+
+Note that the component block is retained as the cross-check but is optional. Submitters may leave it as NULL instead. Eg:
+
+```json
+{
+  "system_desc_id": "dgx_b300_1node",
+  "cooling": "air",
+  "node_sets": [
+    {
+      "node_set_id": 0,
+      "system_node_ensemble_id": 0,
+      "nodes_provisioned": 1,
+      "power_method": "component_sum",
+      "components": {
+        "cpu": {
+          "model": "Intel Xeon 6776P",
+          "count_per_node": NULL,
+          "tdp_per_unit": {
+            "value_w": NULL,
+            "source_type": "vendor_spec",
+            "source": NULL
+          }
+        },
+        "accelerator": {
+          "model": "NVIDIA B300",
+          "count_per_node": 8,
+          "tdp_per_unit": {
+            "value_w": NULL,
+            "source_type": "vendor_spec",
+            "source": NULL
+          }
+        },
+        "scale_up_network": {
+          "method": "declared",
+          "switch_count": NULL,
+          "aggregate_bandwidth_tbps": NULL,
+          "energy_per_bit_pj": { "value_pj": 5, "source_type": "mlc_default", "source": "D.1" }
+        }
+      }
+    }
+  ],
+  "scale_out": { "present": false },
+  "declared_provisioned_power": {
+    "value_kw": 14.50,
+    "source_type": "vendor_spec",
+    "source": "https://docs.nvidia.com/dgx/dgxb300-user-guide/introduction-to-dgxb300.html"
+  },
+  "computed": {
+    "major_components_w": 0,
+    "overhead_fraction": 0.50,
+    "other_components_w": 0,
+    "published_node_power_w": ,
+    "scale_out_switch_power_w": 0,
+    "total_system_power_w": 0
+  },
+  "provisioned_power_kw": 14.50,
+  "mlc_estimated_power": false
+}
+```
+
 
 `aggregate_bandwidth_tbps` is the fabric's aggregate across both switches, counted once. It is **not**
 multiplied by `switch_count` ([C.8](#c8-real-system-air-cooled-nvidia-dgx-b300)).
