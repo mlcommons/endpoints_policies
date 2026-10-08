@@ -371,7 +371,7 @@ Each benchmark has a **reference implementation** published in the MLPerf Endpoi
 - The **dataset** used for performance and accuracy runs (Hugging Face dataset ID or download URL, plus the canonical split and any preprocessing recipe).
 - The **reference chat template** (Hugging Face chat-template string or the equivalent message-formatting spec). Submissions MUST use the reference chat template; alternative templates that produce different tokenized output are not permitted.
 - The **reference server / sampling parameters**: temperature, top-k, top-p, repetition penalty, greedy-vs-stochastic decoding flag, max output tokens, stop sequences. These MUST be set per the benchmark definition; submissions MUST NOT modify them.
-- The **approved drafter list** for the benchmark, if any — one or more approved draft models/heads, each with its ID, precision, algorithm, and default per-point configuration. Submitters select any approved drafter; the list is published and versioned per submission round alongside the model list (see [§3.2](#32-supported-models)). See [§2.9.4](#294-speculative-decoding) for eligibility, approval, and verification requirements.
+- The **approved drafter list** for the benchmark, if any — one or more approved draft models/heads, each with its ID, precision, algorithm, and default per-point configuration. A native head shipped inside one of the benchmark's approved checkpoints is approved with that checkpoint and need not be listed separately ([§2.9.4](#294-speculative-decoding)). Submitters select any approved drafter; the list is published and versioned per submission round alongside the model list (see [§3.2](#32-supported-models)). See [§2.9.4](#294-speculative-decoding) for eligibility, approval, and verification requirements.
 - The accuracy evaluation methodology and quality target.
 - The endpoint API interface.
 - **Fixed configuration:** Configuration parameters explicitly designated as fixed by the reference implementation MUST NOT be modified by submitters.
@@ -432,7 +432,7 @@ Memory footprint is a legitimate dimension of a serving configuration, and the a
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-10-12]`**
 
-**v1.0 change.** Speculative decoding is now governed by a **curated approved-drafter-list model, per benchmark**, rather than a single fixed drafter designated by the benchmark definition. Speculative decoding is permitted for any benchmark for which the benchmark task force has approved one or more drafters, following the process below. Benchmarks with no approved drafter continue to disallow speculative decoding entirely.
+**v1.0 change.** Speculative decoding is now governed by a **curated approved-drafter-list model, per benchmark**, rather than a single fixed drafter designated by the benchmark definition. Speculative decoding is permitted for any benchmark for which the benchmark task force has approved one or more drafters, following the process below, or whose approved checkpoint ships a native head (see *Native heads* below). Benchmarks with no approved drafter continue to disallow speculative decoding entirely.
 
 **Approved drafter list.** Each benchmark's set of eligible drafters (MTP head, EAGLE-style head, or analogous module) is a **curated, published list**, not a single fixed drafter:
 
@@ -441,6 +441,15 @@ Memory footprint is a legitimate dimension of a serving configuration, and the a
 - A newly approved drafter may first be used in a submission where the review eligibility date for a submission is **at least two cohorts dates after** the cohort in which the drafter was approved. Approval is recorded against the cohort in which the updated list is published.
 - The approved list is published in the reference repository, versioned per submission round, alongside the model list (see [§3.2](#32-supported-models)).
 
+**Native heads.** A speculative-decoding head that the model publisher ships inside a checkpoint approved for the benchmark — the canonical checkpoint, or a quantized checkpoint pre-approved under [§2.9.3](#293-model-weight-rules) — and documents as that model's own draft module (for example an MTP, DSpark, or EAGLE-style head) is **approved with that checkpoint**:
+
+- It needs no separate proposal or list entry. The reference implementation MAY still list it for clarity.
+- Its approval is recorded against the cohort in which its checkpoint was approved for the benchmark, the model-list publication of [§3.2](#32-supported-models), and the two-cohort lead time above runs from that cohort.
+- It is weight-identified by the model ID and checksum of the checkpoint that ships it. A submitter's own derived checkpoint ([§2.9.3](#293-model-weight-rules)) carries the canonical checkpoint's native head under *PTQ on drafter weights* below.
+- Every other requirement of this section applies unchanged: the eligibility criteria, exact verification, the prohibition on modifying a drafter (PTQ excepted), and the disclosure requirements.
+
+A head of a checkpoint that is not approved for the benchmark, or a head published separately from the target's weights, still requires an entry on the approved list.
+
 **Drafter eligibility.** The following disqualify a drafter from the approved list:
 
 - **Not open-weight.** The weights are not downloadable by anyone who agrees to the publisher's license terms — private hosting, or access requiring manual/discretionary approval, disqualifies. An automatic license click-through with the same terms and instant access for anyone (e.g., Meta's Llama license gate) does not disqualify.
@@ -448,7 +457,7 @@ Memory footprint is a legitimate dimension of a serving configuration, and the a
 - **Trained for benchmark performance.** A drafter trained, fine-tuned, or distilled specifically to perform well on this benchmark — including against benchmark-like traffic that reproduces its task mix, prompt style, or length distribution — even where the benchmark dataset itself was never used. A drafter published for general use, and adopted for the benchmark because it happens to suit it, does not disqualify.
 - **Undisclosed or QAT-style quantization.** Quantization-aware training, or post-training quantization without disclosure of the calibration set and methodology, per [§2.9.3](#293-model-weight-rules).
 
-Submitters select any drafter from the benchmark's approved list. Using a drafter **not on the approved list** is not permitted.
+Submitters select any drafter from the benchmark's approved list, or a native head of one of its approved checkpoints. Using any other drafter is not permitted.
 
 A list entry identifies a drafter in one of two ways:
 
@@ -468,7 +477,7 @@ The following are **also disallowed** at run time:
 
 **PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same conditions as the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, disclosed in the submission YAML, and subject to the accuracy gate. The drafter MUST NOT be modified in any other training-side sense — see *Drafter eligibility* above.
 
-**Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark has no approved drafter ([§2.9.1](#291-reference-implementation)), speculative decoding is not available for that benchmark at all — and a drafter shipped with the canonical checkpoint but absent from the approved list may not be used.
+**Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark has no approved drafter — no list entry and no native head of an approved checkpoint ([§2.9.1](#291-reference-implementation)) — speculative decoding is not available for that benchmark at all.
 
 **Model equivalence for drafters.** No drafter-specific equivalence standard applies. A speculative-decoding submission is model equivalent on the same two general tests as any other optimization:
 
@@ -669,7 +678,7 @@ The set of supported benchmark models is defined per submission round and mainta
 > [!NOTE]
 > The model list for each submission round is published in the MLPerf Endpoints reference repository at least 6 weeks before the submission round opens. New models may be proposed to the working group per the benchmark roadmap process defined in the MLPerf General Submission Rules §4.3.
 
-**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding).
+**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the listed checkpoints are approved with them and need not appear on the list ([§2.9.4](#294-speculative-decoding)).
 
 ### 3.3 Weight Transformations
 
@@ -1679,8 +1688,8 @@ The compliance validator — run by the submitter before submission and by MLCom
 | **Accuracy** | Accuracy results are present for all points required by §5.3 and satisfy the applicable single-turn or multi-turn gate in §4.3. | Reject submission. |
 | **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |
-| **Approved drafter** | For points using speculative decoding, the disclosed drafter matches an entry on the benchmark's published approved drafter list — by weight checksum, or by target checksum plus configuration for a configuration-identified entry ([§2.9.4](#294-speculative-decoding)/[§3.2](#32-supported-models)). | Reject non-conforming points. |
-| **Drafter approval lead time** | The drafter used was approved at least two cohorts before the submission's `target_cohort` ([§2.9.4](#294-speculative-decoding)). | Reject non-conforming points. |
+| **Approved drafter** | For points using speculative decoding, the disclosed drafter matches an entry on the benchmark's published approved drafter list — by weight checksum, or by target checksum plus configuration for a configuration-identified entry — or is a native head, identified by the model ID and checksum of an approved checkpoint that ships it ([§2.9.4](#294-speculative-decoding)/[§3.2](#32-supported-models)). | Reject non-conforming points. |
+| **Drafter approval lead time** | The drafter used was approved at least two cohorts before the submission's `target_cohort`; a native head counts from its checkpoint's approval cohort ([§2.9.4](#294-speculative-decoding)). | Reject non-conforming points. |
 
 ### 9.2 Manual Review Focus Areas
 
