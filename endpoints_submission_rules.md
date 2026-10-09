@@ -432,7 +432,7 @@ Once automated compliance checks pass, the submission enters the peer review pha
 | 6 business days | Delay increases to **2 cohort dates** after finalization. |
 | 10 business days | The submission is **withdrawn**. The submitter may correct the issues and resubmit as a new submission. |
 
-Penalties are cumulative and non-reversible — responding after a penalty threshold has been crossed does not remove the penalty, though subsequent response may prevent further escalation. The review chair must notify the submitter and all review committee members when a penalty threshold is crossed. 
+Penalties are non-reversible — responding after a penalty threshold has been crossed does not remove the penalty, though subsequent response may prevent further escalation. The review chair must notify the submitter and all review committee members when a penalty threshold is crossed. 
 
 Penalties are assessed per objection independently per submission. When multiple objections each carry a penalty, only the most severe applies — penalties across objections are not additive. For example, if a submitter was non-responsive for 5 business days on one objection (1 cohort delay) and 7 business days on another (2 cohort delay), the resulting penalty for the submission is a 2 cohort date delay, not 3.
 
