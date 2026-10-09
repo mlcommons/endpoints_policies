@@ -441,14 +441,14 @@ Memory footprint is a legitimate dimension of a serving configuration, and the a
 - A newly approved drafter may first be used in a submission where the review eligibility date for a submission is **at least two cohorts dates after** the cohort in which the drafter was approved. Approval is recorded against the cohort in which the updated list is published.
 - The approved list is published in the reference repository, versioned per submission round, alongside the model list (see [§3.2](#32-supported-models)).
 
-**Native heads.** A speculative-decoding head that the model publisher ships inside a checkpoint approved for the benchmark — the canonical checkpoint, or a quantized checkpoint pre-approved under [§2.9.3](#293-model-weight-rules) — and documents as that model's own draft module (for example an MTP, DSpark, or EAGLE-style head) is **approved with that checkpoint**:
+**Native heads.** A speculative-decoding head (for example an MTP, DSpark, or EAGLE-style head) that the model publisher ships inside a checkpoint approved for the benchmark is **approved with that checkpoint**, in the checkpoint's approval cohort, and needs no separate list entry. The reference repository's list of approved checkpoints notes which of them ship a native head — for Agentic Inference, see [Approved Checkpoints and Speculative-Decoding Heads](https://github.com/mlcommons/endpoints/blob/main/examples/10_Agentic_Inference/README.md#approved-checkpoints-and-speculative-decoding-heads).
 
-- It needs no separate proposal or list entry. The reference implementation MAY still list it for clarity.
-- Its approval is recorded against the cohort in which its checkpoint was approved for the benchmark, the model-list publication of [§3.2](#32-supported-models), and the two-cohort lead time above runs from that cohort.
-- It is weight-identified by the model ID and checksum of the checkpoint that ships it. A submitter's own derived checkpoint ([§2.9.3](#293-model-weight-rules)) carries the canonical checkpoint's native head under *PTQ on drafter weights* below.
-- Every other requirement of this section applies unchanged: the eligibility criteria, exact verification, the prohibition on modifying a drafter (PTQ excepted), and the disclosure requirements.
+The following are **not allowed** with a native head:
 
-A head of a checkpoint that is not approved for the benchmark, or a head published separately from the target's weights, still requires an entry on the approved list.
+- **A head that is not the canonical checkpoint's own.** A head added, replaced, or retrained by anyone other than the canonical model's publisher — including in a third-party quantized checkpoint — or added after the approved revision, is not native and requires an entry on the approved list.
+- **Modifying the head**, other than *PTQ on drafter weights* below.
+- **Using it as a different kind of drafter** than its publisher documents (e.g., running an MTP head as an EAGLE-style head). Per-point configuration may vary as for any approved drafter.
+- **A head the WG has excluded** for failing *Drafter eligibility* below.
 
 **Drafter eligibility.** The following disqualify a drafter from the approved list:
 
