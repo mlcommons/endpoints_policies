@@ -69,57 +69,97 @@
 
 ## 1. Basics
 
-These rules define the technical requirements for MLPerf Endpoints benchmark submissions: what to measure, how to measure it, which division to submit under, and what evidence is required for each publication status category.
+These rules define the technical requirements for MLPerf Endpoints benchmark submissions: what to
+measure, how to measure it, which division to submit under, and what evidence is required for each
+publication status category.
 
-The submission, review, and publication *process* are defined separately in the companion [MLPerf Endpoints Submission Rules](endpoints_submission_rules.md) document.
+The submission, review, and publication *process* are defined separately in the companion
+[MLPerf Endpoints Submission Rules](endpoints_submission_rules.md) document.
 
 > [!NOTE]
-> **Rule Stability.** These rules are *tentative* until the **v1.0** submission round opens on **2026-10-12**, after which rolling submission begins. Sections explicitly marked **`[TENTATIVE — Subject to change after 2026-10-12]`** are the most likely to evolve, based on submitter feedback from the v0.7 round (which closed on 2026-06-26) and on working-group discussion. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones) for the full milestone table.
+> **Rule Stability.** These rules are *tentative* until the **v1.0** submission round opens on
+> **2026-10-12**, after which rolling submission begins. Sections explicitly marked
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** are the most likely to evolve, based on
+> submitter feedback from the v0.7 round (which closed on 2026-06-26) and on working-group
+> discussion. See [Submission Rules §4.0](endpoints_submission_rules.md#40-submission-milestones)
+> for the full milestone table.
 
-MLPerf Endpoints measures the performance of *inference endpoints* serving generative AI models. Unlike traditional MLPerf Inference benchmarks — which measure latency or throughput at a single operating point — MLPerf Endpoints characterizes the full performance *envelope* of a serving system as a Pareto curve across a range of concurrency levels.
+MLPerf Endpoints measures the performance of *inference endpoints* serving generative AI models.
+Unlike traditional MLPerf Inference benchmarks — which measure latency or throughput at a single
+operating point — MLPerf Endpoints characterizes the full performance *envelope* of a serving system
+as a Pareto curve across a range of concurrency levels.
 
 The benchmark is designed to be:
 
 - **Fair** — standardized measurement methodology with compliance validation.
-- **Inclusive** — minimum 7 measurement points with flexible placement to accommodate systems of all scales.
-- **Relevant** — covering operating points valued by real users: single-user interactive latency through high-throughput batch serving.
+- **Inclusive** — minimum 7 measurement points with flexible placement to accommodate systems of all
+  scales.
+- **Relevant** — covering operating points valued by real users: single-user interactive latency
+  through high-throughput batch serving.
 - **Extensible** — modular rules that can accommodate new models, metrics, and divisions without redesign.
 
 ---
 
 ## 2. Divisions and Deployment Scenarios
 
-MLPerf Endpoints replaces the traditional Closed/Open division structure from MLPerf Inference with three divisions tailored to endpoint benchmarking: **Standardized**, **Serviced**, and **RDI**. All divisions use the same pareto collection methodology ([§5](#5-pareto-collection-methodology)) and run requirements ([§6](#6-run-requirements-per-measurement-point)). A submission must declare exactly one division.
+MLPerf Endpoints replaces the traditional Closed/Open division structure from MLPerf Inference with
+three divisions tailored to endpoint benchmarking: **Standardized**, **Serviced**, and **RDI**. All
+divisions use the same pareto collection methodology ([§5](#5-pareto-collection-methodology)) and
+run requirements ([§6](#6-run-requirements-per-measurement-point)). A submission must declare
+exactly one division.
 
-For readers familiar with MLPerf Inference's Closed/Open structure: **Standardized** plays the role of *Closed* (strict equivalence, full disclosure); **Serviced** is a new division for commercial endpoint services with no direct MLPerf Inference analog; **RDI** (Research / Development / Internal) plays the role of *Open*. The Available/Preview/RDI **publication status** dimension is *orthogonal* to the division; see [Submission Rules §7](endpoints_submission_rules.md#7-publication) for which (division, status) combinations are valid.
+For readers familiar with MLPerf Inference's Closed/Open structure: **Standardized** plays the role
+of *Closed* (strict equivalence, full disclosure); **Serviced** is a new division for commercial
+endpoint services with no direct MLPerf Inference analog; **RDI** (Research / Development /
+Internal) plays the role of *Open*. The Available/Preview/RDI **publication status** dimension is
+*orthogonal* to the division; see [Submission Rules §7](endpoints_submission_rules.md#7-publication)
+for which (division, status) combinations are valid.
 
 ### 2.1 Client Deployment Scenarios
 
-MLPerf Endpoints defines two scenarios that determine how the client infrastructure connects to the System Under Test (SUT).
+MLPerf Endpoints defines two scenarios that determine how the client infrastructure connects to the
+System Under Test (SUT).
 
 #### 2.1.1 Client on Prem (CoP)
 
-The submitter hosts both the client infrastructure and the endpoint server infrastructure. The client and server may be co-located in the same data center or connected via a local network.
+The submitter hosts both the client infrastructure and the endpoint server infrastructure. The
+client and server may be co-located in the same data center or connected via a local network.
 
 - The submitter provides and operates both client and server infrastructure.
-- The client must use the MLPerf Endpoints reference client (`inference_endpoint` from `github.com/mlcommons/endpoints`) without source-code modification, compiled from a commit accessible to the MLCommons review committee. Submitters MAY configure runtime behavior via the YAML configuration file the client accepts; everything that changes behavior MUST be expressible via that YAML. The client logs the commit SHA used for the run; review may additionally use a seeded RNG check (analogous to LoadGen's RNG-output check in MLPerf Inference) to detect undisclosed client modifications.
-  The seeded RNG check uses the submission's bound seed set, selected from the sets MLCommons make available every publication date ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)); the client's request-issue / sample-order RNG and the per-query salt MUST each be seeded from that set, and the seed set MUST be set through the YAML configuration.
+- The client must use the MLPerf Endpoints reference client (`inference_endpoint` from
+  `github.com/mlcommons/endpoints`) without source-code modification, compiled from a commit
+  accessible to the MLCommons review committee. Submitters MAY configure runtime behavior via the
+  YAML configuration file the client accepts; everything that changes behavior MUST be expressible
+  via that YAML. The client logs the commit SHA used for the run; review may additionally use a
+  seeded RNG check (analogous to LoadGen's RNG-output check in MLPerf Inference) to detect
+  undisclosed client modifications.
+  The seeded RNG check uses the submission's bound seed set, selected from the sets MLCommons make
+  available every publication date
+  ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)); the client's
+  request-issue / sample-order RNG and the per-query salt MUST each be seeded from that set, and the
+  seed set MUST be set through the YAML configuration.
 - Network latency between client and server is included in all timing measurements.
-- The submitter must document the network topology between client and server, including type of interconnect, number of hops, and measured baseline network latency.
-- On-prem submissions must be self-contained: all components required to replicate the result must be documented and provided.
+- The submitter must document the network topology between client and server, including type of
+  interconnect, number of hops, and measured baseline network latency.
+- On-prem submissions must be self-contained: all components required to replicate the result must
+  be documented and provided.
 
 #### 2.1.2 Client over Network (CoN)
 
-MLCommons is responsible for the client infrastructure, which interrogates the System Under Test via an endpoint accessed over the public Internet.
+MLCommons is responsible for the client infrastructure, which interrogates the System Under Test via
+an endpoint accessed over the public Internet.
 
 - MLCommons operates the client infrastructure at a designated location.
 - The submitter provides a publicly accessible endpoint URL that the MLCommons client can reach.
-- All timing measurements include public Internet network latency between the MLCommons client and the submitter's endpoint.
-- CoN submitters must provide equivalent containers and code to replicate the server in alternative locations, clusters, or data centers for identical hardware and software configurations.
+- All timing measurements include public Internet network latency between the MLCommons client and
+  the submitter's endpoint.
+- CoN submitters must provide equivalent containers and code to replicate the server in alternative
+  locations, clusters, or data centers for identical hardware and software configurations.
 - The endpoint must conform to the MLPerf Endpoints reference API specification.
 
 > [!NOTE]
-> The specific MLCommons client locations, network requirements, and scheduling procedures for CoN submissions will be published separately by the working group.
+> The specific MLCommons client locations, network requirements, and scheduling procedures for CoN
+> submissions will be published separately by the working group.
 
 #### 2.1.3 Scenario Summary
 
@@ -135,46 +175,100 @@ MLCommons is responsible for the client infrastructure, which interrogates the S
 
 ### 2.2 Standardized Division
 
-The Standardized division is the primary benchmark division, requiring strict adherence to model equivalence rules and full software disclosure. It replaces the traditional "Closed" division from MLPerf Inference.
+The Standardized division is the primary benchmark division, requiring strict adherence to model
+equivalence rules and full software disclosure. It replaces the traditional "Closed" division from
+MLPerf Inference.
 
-**Transparency:** Whitebox — model weights, configurations, optimization details, and launch / integration scripts must be disclosed. The serving framework and low-level software stack must satisfy the **Available** definition in the Submission Rules ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)); they need not be open-sourced verbatim if the Available criteria are met.
+**Transparency:** Whitebox — model weights, configurations, optimization details, and launch /
+integration scripts must be disclosed. The serving framework and low-level software stack must
+satisfy the **Available** definition in the Submission Rules
+([Submission Rules §7.2](endpoints_submission_rules.md#72-available)); they need not be open-sourced
+verbatim if the Available criteria are met.
 
 **Available Scenarios:** Client on Prem (CoP) and Client over Network (CoN), reported as separate sub-divisions.
 
 #### 2.2.1 General Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section ports the MLPerf Inference optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed entries below may be revised after v0.7 submitter feedback.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section ports the MLPerf Inference
+> optimization framing to a strictly disallowed-list ("blacklist") style. The exact disallowed
+> entries below may be revised after v0.7 submitter feedback.
 
-**Inheritance.** Standardized division submissions inherit the model-equivalence and optimization rules of [MLPerf Inference §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). **This document is the source of truth and overrides upstream wherever the two conflict.** Where upstream uses a non-exhaustive list of allowed examples followed by a disallowed list, Endpoints uses a single **disallowed-only** formulation: anything not listed below and not in conflict with the [§2.9 Model Equivalence Rules](#29-model-equivalence-rules-standardized-division) is permitted. See [§2.9.6 Sparsity and Approximate Computation](#296-sparsity-and-approximate-computation) for the treatment of sparse and approximate execution, and [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) for clarifying examples.
+**Inheritance.** Standardized division submissions inherit the model-equivalence and optimization
+rules of
+[MLPerf Inference §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence).
+**This document is the source of truth and overrides upstream wherever the two conflict.** Where
+upstream uses a non-exhaustive list of allowed examples followed by a disallowed list, Endpoints
+uses a single **disallowed-only** formulation: anything not listed below and not in conflict with
+the [§2.9 Model Equivalence Rules](#29-model-equivalence-rules-standardized-division) is permitted.
+See [§2.9.6 Sparsity and Approximate Computation](#296-sparsity-and-approximate-computation) for the
+treatment of sparse and approximate execution, and
+[§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) for clarifying examples.
 
 **Operative requirements:**
 
-- Pre-processing, post-processing, and the model executed by the SUT must be equivalent to the reference implementation, per [§2.9](#29-model-equivalence-rules-standardized-division).
-- Submissions must be reproducible: configuration, server launch scripts, and client integration scripts must be submitted. For numerical recipes such as calibration, the submission must either (a) describe the recipe in sufficient detail for an external team to reproduce it, or (b) provide the scripts / software that implement it. The underlying serving framework and low-level software stack must satisfy the **Available** definition in the Submission Rules ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
+- Pre-processing, post-processing, and the model executed by the SUT must be equivalent to the
+  reference implementation, per [§2.9](#29-model-equivalence-rules-standardized-division).
+- Submissions must be reproducible: configuration, server launch scripts, and client integration
+  scripts must be submitted. For numerical recipes such as calibration, the submission must either
+  (a) describe the recipe in sufficient detail for an external team to reproduce it, or (b) provide
+  the scripts / software that implement it. The underlying serving framework and low-level software
+  stack must satisfy the **Available** definition in the Submission Rules
+  ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
 - On-prem (CoP) submissions must be self-contained.
 
 **Disallowed optimizations** (Standardized division):
 
 - Wholesale weight replacement or supplements.
-- Discarding non-zero weight elements (pruning), except where the operation is *mathematically equivalent* to the dense reference (see [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision)).
+- Discarding non-zero weight elements (pruning), except where the operation is *mathematically
+  equivalent* to the dense reference (see
+  [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision)).
 - Knowledge distillation to a different architecture.
-- Retraining, fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update — applied to the canonical model or to any draft model used in speculative decoding (see [§2.9.4](#294-speculative-decoding)).
-- **Speculative decoding** using a drafter or algorithm other than one approved for the benchmark — governed by the approval process and eligibility requirements in [§2.9.4](#294-speculative-decoding). (Per-point *configuration* of an approved drafter may vary; see §2.9.4.)
-- Response caching: returning a cached response *verbatim* to a request that matches a previous request, bypassing the forward pass. Every request must execute the forward pass. (Note: this is distinct from cross-query KV-cache reuse, which still executes the forward pass on a per-query, salt-uniquified token stream — see [§2.9.5 KV Cache Rules](#295-kv-cache-rules) for the operative rule.)
+- Retraining, fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update — applied
+  to the canonical model or to any draft model used in speculative decoding (see
+  [§2.9.4](#294-speculative-decoding)).
+- **Speculative decoding** using a drafter or algorithm other than one approved for the benchmark —
+  governed by the approval process and eligibility requirements in
+  [§2.9.4](#294-speculative-decoding). (Per-point *configuration* of an approved drafter may vary;
+  see §2.9.4.)
+- Response caching: returning a cached response *verbatim* to a request that matches a previous
+  request, bypassing the forward pass. Every request must execute the forward pass. (Note: this is
+  distinct from cross-query KV-cache reuse, which still executes the forward pass on a per-query,
+  salt-uniquified token stream — see [§2.9.5 KV Cache Rules](#295-kv-cache-rules) for the operative
+  rule.)
 - Coalescing identical queries (deduplicating duplicate queries in flight to amortize work across them).
 - Modifying weights during the timed portion of an inference run (online learning).
 - Benchmark detection: the framework or system must not detect a benchmark workload and behave differently.
-- Input-based optimization: the submission's *implementation* (the framework, model artifacts, kernels, calibration outputs, and build-time configuration) must not encode any information about the content of the benchmark input dataset. This rule targets static / build-time dataset awareness (e.g., baking dataset statistics into kernel selection, embedding tables, or compile-time constants). It does **not** prohibit *runtime* serving-stack behavior that derives cache keys from the live token stream — KV-cache reuse based on shared prefixes (governed by [§2.9.5 KV Cache Rules](#295-kv-cache-rules)) is permitted, since it operates on the request data rather than on prior knowledge of the dataset.
-- Client-side dispatch manipulation: the reference client must not be modified to delay, batch, or reorder the dispatching of queries in order to manipulate TTFT, TPS/User, or other measured metrics. Server-side scheduling of received requests is governed by the normal serving rules and is not constrained by this bullet.
+- Input-based optimization: the submission's *implementation* (the framework, model artifacts,
+  kernels, calibration outputs, and build-time configuration) must not encode any information about
+  the content of the benchmark input dataset. This rule targets static / build-time dataset
+  awareness (e.g., baking dataset statistics into kernel selection, embedding tables, or
+  compile-time constants). It does **not** prohibit *runtime* serving-stack behavior that derives
+  cache keys from the live token stream — KV-cache reuse based on shared prefixes (governed by
+  [§2.9.5 KV Cache Rules](#295-kv-cache-rules)) is permitted, since it operates on the request data
+  rather than on prior knowledge of the dataset.
+- Client-side dispatch manipulation: the reference client must not be modified to delay, batch, or
+  reorder the dispatching of queries in order to manipulate TTFT, TPS/User, or other measured
+  metrics. Server-side scheduling of received requests is governed by the normal serving rules and
+  is not constrained by this bullet.
 - Modification of the request/response stream outside the reference API specification.
-- Weight-quantization algorithms whose specification is similar in size to the non-zero weights they produce (inherited from upstream — defeats principled-quantization intent).
-- Hard-coding the total number of queries; techniques that boost performance for fixed-length experiments but are inapplicable to long-running services.
+- Weight-quantization algorithms whose specification is similar in size to the non-zero weights they
+  produce (inherited from upstream — defeats principled-quantization intent).
+- Hard-coding the total number of queries; techniques that boost performance for fixed-length
+  experiments but are inapplicable to long-running services.
 
 > [!NOTE]
-> **Why blacklist-only?** Submitters frequently ask "is X allowed?" for techniques that don't exist yet (new quantization formats, novel kernels, alternative attention impls). A closed whitelist forces a rule change every time. Endpoints maintains a single disallowed list together with the Model Equivalence rules ([§2.9](#29-model-equivalence-rules-standardized-division)); anything not banned and consistent with model equivalence is permitted. The [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) provides interpretive guidance.
+> **Why blacklist-only?** Submitters frequently ask "is X allowed?" for techniques that don't exist
+> yet (new quantization formats, novel kernels, alternative attention impls). A closed whitelist
+> forces a rule change every time. Endpoints maintains a single disallowed list together with the
+> Model Equivalence rules ([§2.9](#29-model-equivalence-rules-standardized-division)); anything not
+> banned and consistent with model equivalence is permitted. The
+> [§2.9.9 Q&A](#299-qa-model-equivalence-clarifications) provides interpretive guidance.
 
-**Divergences from upstream.** Inheritance is not wholesale. Endpoints both **narrows** and **widens** the upstream allowances, and where the two disagree this document governs. A submitter who reads only the upstream allowed list will get the wrong answer on the following, each of which is a deliberate Endpoints decision rather than an oversight:
+**Divergences from upstream.** Inheritance is not wholesale. Endpoints both **narrows** and
+**widens** the upstream allowances, and where the two disagree this document governs. A submitter
+who reads only the upstream allowed list will get the wrong answer on the following, each of which
+is a deliberate Endpoints decision rather than an oversight:
 
 | Upstream §Model Equivalence | Endpoints position | Where |
 |---|---|---|
@@ -185,42 +279,69 @@ The Standardized division is the primary benchmark division, requiring strict ad
 | Allows speculative decoding for an enumerated set of upstream workloads. | **Replaced.** Governed by the Endpoints approved-drafter list and its own eligibility and approval process. | [§2.9.4](#294-speculative-decoding) |
 | Permits sparse execution only where mathematically equivalent to the dense reference. | **Widened.** Dynamic, run-time-derived approximate sparsity is permitted under the accuracy gate. | [§2.9.6.4](#2964-dynamic-approximate-sparsity) |
 
-*Why the tuning rule is narrowed:* upstream is in tension with itself on this point — its allowed list permits *empirical performance and accuracy tuning based on the performance and accuracy set*, while its disallowed list prohibits *incorporating explicit statistical information about the performance or accuracy sets*. Endpoints resolves that tension toward the prohibition. Upstream's allowance is workable where a benchmark's accuracy is a pass/fail threshold on a fixed task. Endpoints reports a curve across concurrency, and [§2.9.6.4](#2964-dynamic-approximate-sparsity) admits approximations whose aggressiveness is set by a tunable threshold. Permitting that threshold to be tuned against the benchmark's own accuracy set would let a submitter walk the approximation right up to the pass line on the data it is scored against, which is a materially different rule from choosing a batch size experimentally. The accuracy gate only means something if the threshold was not fitted to it.
+*Why the tuning rule is narrowed:* upstream is in tension with itself on this point — its allowed
+list permits *empirical performance and accuracy tuning based on the performance and accuracy set*,
+while its disallowed list prohibits *incorporating explicit statistical information about the
+performance or accuracy sets*. Endpoints resolves that tension toward the prohibition. Upstream's
+allowance is workable where a benchmark's accuracy is a pass/fail threshold on a fixed task.
+Endpoints reports a curve across concurrency, and [§2.9.6.4](#2964-dynamic-approximate-sparsity)
+admits approximations whose aggressiveness is set by a tunable threshold. Permitting that threshold
+to be tuned against the benchmark's own accuracy set would let a submitter walk the approximation
+right up to the pass line on the data it is scored against, which is a materially different rule
+from choosing a batch size experimentally. The accuracy gate only means something if the threshold
+was not fitted to it.
 
 #### 2.2.2 Client over Network (CoN) — Additional Rules
 
 When submitting to the Standardized division via the CoN scenario, the following additional rules apply:
 
-- CoN submitters may choose to submit to CoP instead, but must follow all CoN compliance rules when doing so.
-- Servers must not modify incoming or outgoing request/response streams outside the provided MLPerf Endpoints reference API specification.
-- The reference client performs all request pre-processing (e.g., tokenization, packing, precision conversion) and all response post-processing (e.g., detokenization, ArgMax, reduction). The SUT executes the model and the reference's serving path only; it does not transform request/response payloads beyond what the reference API specifies.
+- CoN submitters may choose to submit to CoP instead, but must follow all CoN compliance rules when
+  doing so.
+- Servers must not modify incoming or outgoing request/response streams outside the provided MLPerf
+  Endpoints reference API specification.
+- The reference client performs all request pre-processing (e.g., tokenization, packing, precision
+  conversion) and all response post-processing (e.g., detokenization, ArgMax, reduction). The SUT
+  executes the model and the reference's serving path only; it does not transform request/response
+  payloads beyond what the reference API specifies.
 - Server must not deliberately delay token dispatch to manipulate TTFT or TPS/User metrics.
 - Server must not cache responses or requests across queries.
 
 > [!NOTE]
-> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Standardized CoN scenario is under development by the working group.
+> **[WIP]** — A comprehensive list of allowed techniques and optimizations for the Standardized CoN
+> scenario is under development by the working group.
 
 #### 2.2.3 Result Naming
 
-Unqualified use of "MLPerf Endpoints" refers to results from the Standardized division. Example: *"MLPerf Endpoints result of 5,000 tokens/s at concurrency 64."*
+Unqualified use of "MLPerf Endpoints" refers to results from the Standardized division. Example:
+*"MLPerf Endpoints result of 5,000 tokens/s at concurrency 64."*
 
 ---
 
 ### 2.3 Serviced Division
 
-The Serviced division benchmarks publicly available, generally accessible inference-as-a-service endpoints. This is a new division unique to MLPerf Endpoints, designed to benchmark commercial Gen AI API offerings.
+The Serviced division benchmarks publicly available, generally accessible inference-as-a-service
+endpoints. This is a new division unique to MLPerf Endpoints, designed to benchmark commercial Gen
+AI API offerings.
 
-**Transparency:** Greybox — the endpoint behavior must be reproducible and auditable, but full internal implementation details need not be disclosed. The API interface, model identity, and pricing must be public.
+**Transparency:** Greybox — the endpoint behavior must be reproducible and auditable, but full
+internal implementation details need not be disclosed. The API interface, model identity, and
+pricing must be public.
 
 **Available Scenarios:** Client over Network (CoN) only.
 
 #### 2.3.1 Rules
 
-- The endpoint must be a publicly available, generally accessible commercial service. "Generally accessible" means any customer meeting standard terms of service can obtain access.
-- Performance must be reproducible: the endpoint must deliver consistent results when benchmarked at different times within a reasonable window.
+- The endpoint must be a publicly available, generally accessible commercial service. "Generally
+  accessible" means any customer meeting standard terms of service can obtain access.
+- Performance must be reproducible: the endpoint must deliver consistent results when benchmarked at
+  different times within a reasonable window.
 - Audit and accuracy tests are required to verify the endpoint produces correct outputs.
-- The submitter must disclose: the model name and version as advertised by the service, the API endpoint URL, the pricing model and rates at time of submission, and any rate limits or quotas that apply.
-- Serviced submissions may augment the base reference model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms. Any such augmentations must be disclosed.
+- The submitter must disclose: the model name and version as advertised by the service, the API
+  endpoint URL, the pricing model and rates at time of submission, and any rate limits or quotas
+  that apply.
+- Serviced submissions may augment the base reference model by pruning, sparsification, quantizing,
+  fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms. Any
+  such augmentations must be disclosed.
 - Response caching across queries is not allowed.
 
 **Optimization transparency:**
@@ -233,31 +354,41 @@ The Serviced division benchmarks publicly available, generally accessible infere
 
 #### 2.3.2 Result Naming
 
-Results must use the qualified name "MLPerf Endpoints Serviced." Example: *"MLPerf Endpoints Serviced result of 3,200 tokens/s at concurrency 32."*
+Results must use the qualified name "MLPerf Endpoints Serviced." Example: *"MLPerf Endpoints
+Serviced result of 3,200 tokens/s at concurrency 32."*
 
 ---
 
 ### 2.4 RDI (Research, Development, and Internal) Division
 
-The RDI division provides a category for experimental, pre-release, or internal systems that do not meet Standardized or Serviced requirements. It replaces the traditional "Open" division.
+The RDI division provides a category for experimental, pre-release, or internal systems that do not
+meet Standardized or Serviced requirements. It replaces the traditional "Open" division.
 
-**Transparency:** Blackbox — no audit or compliance tests required. Internal implementation details need not be disclosed.
+**Transparency:** Blackbox — no audit or compliance tests required. Internal implementation details
+need not be disclosed.
 
-**Available Scenarios:** Client on Prem (CoP) or Client over Network (CoN). Server may be self-hosted, hybrid, or cloud-hosted. CoP and CoN are not reported as separate sub-divisions.
+**Available Scenarios:** Client on Prem (CoP) or Client over Network (CoN). Server may be
+self-hosted, hybrid, or cloud-hosted. CoP and CoN are not reported as separate sub-divisions.
 
 #### 2.4.1 Rules
 
 - Must use the standard MLPerf Endpoints performance and accuracy datasets.
-- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT P50/P90) using the same measurement methodology.
-- Must use the same base reference model. RDI submissions may augment the model by pruning, sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and alternative attention mechanisms.
+- Must report the same metrics as Standardized and Serviced divisions (System TPS, TPS/User, TTFT
+  P50/P90) using the same measurement methodology.
+- Must use the same base reference model. RDI submissions may augment the model by pruning,
+  sparsification, quantizing, fine-tuning, modification of speculative decoding heads, and
+  alternative attention mechanisms.
 - No audit or compliance tests required. No code visibility requirement.
 - Submitters must report achieved accuracy on the accuracy dataset.
 
-For RDI publication status and the cooling-off period for RDI hardware transitioning to Available or Preview, see [Submission Rules §7.4](endpoints_submission_rules.md#74-rdi-research-development-or-internal).
+For RDI publication status and the cooling-off period for RDI hardware transitioning to Available or
+Preview, see
+[Submission Rules §7.4](endpoints_submission_rules.md#74-rdi-research-development-or-internal).
 
 #### 2.4.2 Result Naming
 
-Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf Endpoints RDI result of 8,000 tokens/s at concurrency 128."*
+Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf Endpoints RDI result
+of 8,000 tokens/s at concurrency 128."*
 
 ---
 
@@ -284,9 +415,15 @@ Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf En
 | Serviced — CoN | Required | Optional | Required |
 | RDI | Optional | Optional | Optional |
 
-- **By Any 3rd Party (MLC Peer):** A review committee member or designated auditor can reproduce the benchmark result using the submitted materials. For Standardized, this means building from provided source code and configurations. For Serviced, this means running the benchmark against the public endpoint.
-- **On 3rd Party System / Datacenter:** For Standardized, the submitter must provide containers, drivers, and code sufficient to replicate the setup. For Serviced, this is optional because the endpoint is accessed remotely regardless of client location.
-- **On Publicly Available Endpoint:** Only applicable to the Serviced division, where the endpoint must be a generally accessible commercial service.
+- **By Any 3rd Party (MLC Peer):** A review committee member or designated auditor can reproduce the
+  benchmark result using the submitted materials. For Standardized, this means building from
+  provided source code and configurations. For Serviced, this means running the benchmark against
+  the public endpoint.
+- **On 3rd Party System / Datacenter:** For Standardized, the submitter must provide containers,
+  drivers, and code sufficient to replicate the setup. For Serviced, this is optional because the
+  endpoint is accessed remotely regardless of client location.
+- **On Publicly Available Endpoint:** Only applicable to the Serviced division, where the endpoint
+  must be a generally accessible commercial service.
 
 ---
 
@@ -310,30 +447,84 @@ Results must use the qualified name "MLPerf Endpoints RDI." Example: *"MLPerf En
 | Serviced — CoN | Optional | Required | Optional |
 | RDI | Required | Required | Optional |
 
-**Hardware details:** accelerator model, count, memory capacity, host CPU/memory, and the interconnect type and topology (e.g., NVLink, InfiniBand, Ethernet, routing layer). For Serviced submissions, full rack hardware disclosure is optional, but the primary accelerator must be identified.
+**Hardware details:** accelerator model, count, memory capacity, host CPU/memory, and the
+interconnect type and topology (e.g., NVLink, InfiniBand, Ethernet, routing layer). For Serviced
+submissions, full rack hardware disclosure is optional, but the primary accelerator must be
+identified.
 
-**Software / deployment configuration:** parallelism mapping (e.g., tensor parallelism `TP`, expert parallelism `EP`, pipeline parallelism `PP`, sequence parallelism, data parallelism), batch sizes, scheduling parameters, KV cache configuration, and any other parameters that materially affect throughput or latency. These must be fully disclosed for Standardized division submissions.
+**Software / deployment configuration:** parallelism mapping (e.g., tensor parallelism `TP`, expert
+parallelism `EP`, pipeline parallelism `PP`, sequence parallelism, data parallelism), batch sizes,
+scheduling parameters, KV cache configuration, and any other parameters that materially affect
+throughput or latency. These must be fully disclosed for Standardized division submissions.
 
 ---
 
 ### 2.8 Tokenizer Rules
 
-Tokenizers can produce different token counts depending on how text is fed to them — the same output text tokenized as a single string versus tokenized as a sequence of streamed chunks can yield different counts, even with the same tokenizer. To ensure consistent and representative measurement across divisions:
+Tokenizers can produce different token counts depending on how text is fed to them — the same output
+text tokenized as a single string versus tokenized as a sequence of streamed chunks can yield
+different counts, even with the same tokenizer. To ensure consistent and representative measurement
+across divisions:
 
-- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its canonical Hugging Face repository — produces the canonical token count for the system under measurement. Complete-response token-count metrics such as `system_tps` are computed from the reference tokenizer applied to the fully reconstructed assistant response through the benchmark model's official reference chat template, not from any tokenizer used internally by the SUT.
-- **Complete-response token counts are obtained by applying the reference tokenizer once per completed assistant response.** Visible-output and reasoning fragments are reassembled in arrival order, while tool-call fragments are reassembled by tool-call list index as defined below. The reconstructed visible output, reasoning, and structured tool calls are supplied together as one assistant message to the official reference chat template and tokenized once. Counts are *not* the sum of per-chunk or per-streamed-token counts observed during generation.
-  - *Fairness:* every submitter is scored against the same tokenizer applied the same way, independent of how their system batches, chunks, or streams during generation.
-  - *Representativeness:* this measures the benchmark model's canonical representation of the completed assistant response, rather than implementation artifacts of streamed token boundaries that can produce different token counts across submitters.
+- The **reference tokenizer** — defined as the tokenizer published with the benchmarked model in its
+  canonical Hugging Face repository — produces the canonical token count for the system under
+  measurement. Complete-response token-count metrics such as `system_tps` are computed from the
+  reference tokenizer applied to the fully reconstructed assistant response through the benchmark
+  model's official reference chat template, not from any tokenizer used internally by the SUT.
+- **Complete-response token counts are obtained by applying the reference tokenizer once per
+  completed assistant response.** Visible-output and reasoning fragments are reassembled in arrival
+  order, while tool-call fragments are reassembled by tool-call list index as defined below. The
+  reconstructed visible output, reasoning, and structured tool calls are supplied together as one
+  assistant message to the official reference chat template and tokenized once. Counts are *not* the
+  sum of per-chunk or per-streamed-token counts observed during generation.
+  - *Fairness:* every submitter is scored against the same tokenizer applied the same way,
+    independent of how their system batches, chunks, or streams during generation.
+  - *Representativeness:* this measures the benchmark model's canonical representation of the
+    completed assistant response, rather than implementation artifacts of streamed token boundaries
+    that can produce different token counts across submitters.
 
-**Input sequence length (ISL).** For each request, the reference client first applies all benchmark-required input preprocessing, including request construction, salting where required, and the benchmark model's official reference chat template. The fully preprocessed input is then tokenized with the reference tokenizer using the generation-prompt and special-token behavior defined by the reference implementation. If the reference implementation truncates the tokenized input, ISL is the length after that truncation. This sequence replicates the input tokenization expected on the server side; special tokens inserted by the reference chat template are included in ISL. Where model-equivalence rules apply, a submitter may use a different implementation only if it produces the same effective prompt and token IDs. The generated benchmark report includes ISL statistics computed from these per-request values.
+**Input sequence length (ISL).** For each request, the reference client first applies all
+benchmark-required input preprocessing, including request construction, salting where required, and
+the benchmark model's official reference chat template. The fully preprocessed input is then
+tokenized with the reference tokenizer using the generation-prompt and special-token behavior
+defined by the reference implementation. If the reference implementation truncates the tokenized
+input, ISL is the length after that truncation. This sequence replicates the input tokenization
+expected on the server side; special tokens inserted by the reference chat template are included in
+ISL. Where model-equivalence rules apply, a submitter may use a different implementation only if it
+produces the same effective prompt and token IDs. The generated benchmark report includes ISL
+statistics computed from these per-request values.
 
-**Response categories and what is counted.** A model response can carry three kinds of content — user-visible **output**, **tool-call** content, and **reasoning** (thinking) traces. Serving frameworks convert the raw generation into structured OpenAI chat-completion objects received by the reference client. For visible output and reasoning, the client concatenates all text fragments in arrival order. Tool calls are reassembled into structured objects by list index as described below. The client supplies all three reconstructed fields together as one assistant message to the benchmark model's official reference chat template and tokenizes the rendered message once.
+**Response categories and what is counted.** A model response can carry three kinds of content —
+user-visible **output**, **tool-call** content, and **reasoning** (thinking) traces. Serving
+frameworks convert the raw generation into structured OpenAI chat-completion objects received by the
+reference client. For visible output and reasoning, the client concatenates all text fragments in
+arrival order. Tool calls are reassembled into structured objects by list index as described below.
+The client supplies all three reconstructed fields together as one assistant message to the
+benchmark model's official reference chat template and tokenizes the rendered message once.
 
-Category assignment is mutually exclusive: the reference client MUST assign each received text fragment to exactly one response field, and a fragment MUST NOT contribute more than once to the reconstructed assistant message. Deliberately duplicating substantially identical content across fields, or adding padding content to any field, for the purpose of increasing reported token counts is prohibited and invalidates the affected measurement point.
+Category assignment is mutually exclusive: the reference client MUST assign each received text
+fragment to exactly one response field, and a fragment MUST NOT contribute more than once to the
+reconstructed assistant message. Deliberately duplicating substantially identical content across
+fields, or adding padding content to any field, for the purpose of increasing reported token counts
+is prohibited and invalidates the affected measurement point.
 
-For parallel tool calls, the client maintains a list keyed by the tool-call index supplied by the response protocol. Function-argument fragments are appended in arrival order within their corresponding index; the protocol-provided call ID, type, and function name are retained. After the response completes, the structured tool calls are ordered by ascending list index. If `function.arguments` is a JSON string encoding an object, the client parses it to that object for the reference chat template; otherwise, it preserves the received value. If the transport provides separate streams for parallel tool calls, each stream is reassembled independently before the completed calls are ordered. The resulting structured tool-call list is supplied, together with assistant visible output and reasoning, to the official reference chat template.
+For parallel tool calls, the client maintains a list keyed by the tool-call index supplied by the
+response protocol. Function-argument fragments are appended in arrival order within their
+corresponding index; the protocol-provided call ID, type, and function name are retained. After the
+response completes, the structured tool calls are ordered by ascending list index. If
+`function.arguments` is a JSON string encoding an object, the client parses it to that object for
+the reference chat template; otherwise, it preserves the received value. If the transport provides
+separate streams for parallel tool calls, each stream is reassembled independently before the
+completed calls are ordered. The resulting structured tool-call list is supplied, together with
+assistant visible output and reasoning, to the official reference chat template.
 
-The assistant-payload token count excludes empty chat-template framing. The reference client renders and tokenizes both (a) a minimal reference conversation containing an empty user message followed by the reconstructed assistant response and (b) the same conversation with an empty assistant message. The official output-token count is `max(0, count(a) - count(b))`. Both renders use `add_generation_prompt = false`. Tokens introduced specifically to represent the reconstructed assistant payload, including model-defined reasoning or tool-call framing, are counted; framing already present for an empty assistant message is not.
+The assistant-payload token count excludes empty chat-template framing. The reference client renders
+and tokenizes both (a) a minimal reference conversation containing an empty user message followed by
+the reconstructed assistant response and (b) the same conversation with an empty assistant message.
+The official output-token count is `max(0, count(a) - count(b))`. Both renders use
+`add_generation_prompt = false`. Tokens introduced specifically to represent the reconstructed
+assistant payload, including model-defined reasoning or tool-call framing, are counted; framing
+already present for an empty assistant message is not.
 
 | Content category | Counted? | How it is measured |
 |---|---|---|
@@ -342,9 +533,23 @@ The assistant-payload token count excludes empty chat-template framing. The refe
 | Reasoning / thinking | Yes | Text fragments concatenated in arrival order and supplied as the assistant reasoning field expected by the reference chat template |
 | Chat-template framing / special tokens | Conditional | Payload-specific reasoning and tool-call framing inserted by the official reference chat template is counted; framing present for an empty assistant message is excluded by the baseline subtraction above |
 
-- Because frameworks differ in their internal serialization, the reconstructed assistant message may not be byte-identical to the server's raw generation. Rendering the received structured response with the official reference chat template provides one model-specific, reproducible representation for scoring every submitter.
-- Complete-response token-count metrics such as System TPS are derived from this single assistant-payload count. TPOT instead uses the suffix after the first output-bearing streamed chunk; that suffix is tokenized once with the reference tokenizer, and non-positive or non-finite samples and non-streaming responses are excluded. TTFT remains a latency measurement and is not derived from token counts: it is measured from query issuance until the client receives the first non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or reasoning).
-- Submitters may use any tokenizer internally for output generation or accounting; that output-side choice does not affect scoring. The official output-token count is always produced by the **client-side reference tokenizer applied once to the reconstructed assistant message through the official reference chat template**. No equivalence demonstration or mapping factor is required for an internal output tokenizer. This output-scoring rule does not waive the input tokenization and preprocessing equivalence requirements in [§2.9.2](#292-pre-processing-equivalence).
+- Because frameworks differ in their internal serialization, the reconstructed assistant message may
+  not be byte-identical to the server's raw generation. Rendering the received structured response
+  with the official reference chat template provides one model-specific, reproducible representation
+  for scoring every submitter.
+- Complete-response token-count metrics such as System TPS are derived from this single
+  assistant-payload count. TPOT instead uses the suffix after the first output-bearing streamed
+  chunk; that suffix is tokenized once with the reference tokenizer, and non-positive or non-finite
+  samples and non-streaming responses are excluded. TTFT remains a latency measurement and is not
+  derived from token counts: it is measured from query issuance until the client receives the first
+  non-empty text fragment (`len(s) > 0`) in any response category (visible-output, tool-call, or
+  reasoning).
+- Submitters may use any tokenizer internally for output generation or accounting; that output-side
+  choice does not affect scoring. The official output-token count is always produced by the
+  **client-side reference tokenizer applied once to the reconstructed assistant message through the
+  official reference chat template**. No equivalence demonstration or mapping factor is required for
+  an internal output tokenizer. This output-scoring rule does not waive the input tokenization and
+  preprocessing equivalence requirements in [§2.9.2](#292-pre-processing-equivalence).
 
 > [!NOTE]
 > **[WIP]** — One edge case remains under working-group development: partial Unicode at chunk boundaries.
@@ -354,67 +559,138 @@ The assistant-payload token count excludes empty chat-template framing. The refe
 ### 2.9 Model Equivalence Rules (Standardized Division)
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-10-12]`** Endpoints model-equivalence and optimization rules **inherit from** [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence). The subsections below restate the inheritance and call out the Endpoints-specific deltas (most notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules), dynamic approximate sparsity in [§2.9.6.4](#2964-dynamic-approximate-sparsity), and drafter PTQ in [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is the source of truth for Endpoints submissions.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** Endpoints model-equivalence and
+> optimization rules **inherit from**
+> [MLPerf Inference Rules §Model Equivalence](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc#model-equivalence).
+> The subsections below restate the inheritance and call out the Endpoints-specific deltas (most
+> notably KV-cache reuse in [§2.9.5](#295-kv-cache-rules), dynamic approximate sparsity in
+> [§2.9.6.4](#2964-dynamic-approximate-sparsity), and drafter PTQ in
+> [§2.9.4](#294-speculative-decoding)). Where this section conflicts with upstream, this section is
+> the source of truth for Endpoints submissions.
 
-These rules define what it means for a Standardized division submission to be "model equivalent" to the reference implementation. The subsections below define which implementation choices are permitted; the accuracy quality target (§4.3) then determines whether a permitted approximation is acceptable in a given submission. Passing the accuracy gate is necessary but not sufficient — see [§2.9.8](#298-accuracy-gate).
+These rules define what it means for a Standardized division submission to be "model equivalent" to
+the reference implementation. The subsections below define which implementation choices are
+permitted; the accuracy quality target (§4.3) then determines whether a permitted approximation is
+acceptable in a given submission. Passing the accuracy gate is necessary but not sufficient — see
+[§2.9.8](#298-accuracy-gate).
 
 #### 2.9.1 Reference Implementation
 
 > [!NOTE]
 > **[WIP — align with inference_rules.adoc §reference-implementation]**
 
-Each benchmark has a **reference implementation** published in the MLPerf Endpoints reference repository. The reference implementation defines:
+Each benchmark has a **reference implementation** published in the MLPerf Endpoints reference
+repository. The reference implementation defines:
 
-- The canonical model weights and the reference tokenizer (the tokenizer published with the model on Hugging Face).
-- The **canonical attention pattern**, including any architecture-native sparsity configuration — block size, token-selection rule, local/global window structure, and any learned or heuristic selection module — where the canonical architecture specifies sparse attention. See [§2.9.6.3](#2963-canonical-architectural-sparsity).
+- The canonical model weights and the reference tokenizer (the tokenizer published with the model on
+  Hugging Face).
+- The **canonical attention pattern**, including any architecture-native sparsity configuration —
+  block size, token-selection rule, local/global window structure, and any learned or heuristic
+  selection module — where the canonical architecture specifies sparse attention. See
+  [§2.9.6.3](#2963-canonical-architectural-sparsity).
 - The required input and output format.
-- The **dataset** used for performance and accuracy runs (Hugging Face dataset ID or download URL, plus the canonical split and any preprocessing recipe).
-- The **reference chat template** (Hugging Face chat-template string or the equivalent message-formatting spec). Submissions MUST use the reference chat template; alternative templates that produce different tokenized output are not permitted.
-- The **reference server / sampling parameters**: temperature, top-k, top-p, repetition penalty, greedy-vs-stochastic decoding flag, max output tokens, stop sequences. These MUST be set per the benchmark definition; submissions MUST NOT modify them.
-- The **approved drafter list** for the benchmark, if any — one or more approved draft models/heads, each with its ID, precision, algorithm, and default per-point configuration. A native head shipped inside one of the benchmark's approved checkpoints is approved with that checkpoint and need not be listed separately ([§2.9.4](#294-speculative-decoding)). Submitters select any approved drafter; the list is published and versioned per submission round alongside the model list (see [§3.2](#32-supported-models)). See [§2.9.4](#294-speculative-decoding) for eligibility, approval, and verification requirements.
+- The **dataset** used for performance and accuracy runs (Hugging Face dataset ID or download URL,
+  plus the canonical split and any preprocessing recipe).
+- The **reference chat template** (Hugging Face chat-template string or the equivalent
+  message-formatting spec). Submissions MUST use the reference chat template; alternative templates
+  that produce different tokenized output are not permitted.
+- The **reference server / sampling parameters**: temperature, top-k, top-p, repetition penalty,
+  greedy-vs-stochastic decoding flag, max output tokens, stop sequences. These MUST be set per the
+  benchmark definition; submissions MUST NOT modify them.
+- The **approved drafter list** for the benchmark, if any — one or more approved draft models/heads,
+  each with its ID, precision, algorithm, and default per-point configuration. A native head shipped
+  inside one of the benchmark's approved checkpoints is approved with that checkpoint and need not
+  be listed separately ([§2.9.4](#294-speculative-decoding)). Submitters select any approved
+  drafter; the list is published and versioned per submission round alongside the model list (see
+  [§3.2](#32-supported-models)). See [§2.9.4](#294-speculative-decoding) for eligibility, approval,
+  and verification requirements.
 - The accuracy evaluation methodology and quality target.
 - The endpoint API interface.
-- **Fixed configuration:** Configuration parameters explicitly designated as fixed by the reference implementation MUST NOT be modified by submitters.
+- **Fixed configuration:** Configuration parameters explicitly designated as fixed by the reference
+  implementation MUST NOT be modified by submitters.
 
-An **alternative reference implementation** may be designated by the working group for a specific architecture or hardware class, subject to passing the same accuracy quality target as the primary reference implementation.
+An **alternative reference implementation** may be designated by the working group for a specific
+architecture or hardware class, subject to passing the same accuracy quality target as the primary
+reference implementation.
 
 #### 2.9.2 Pre-Processing Equivalence
 
 > [!NOTE]
 > **[WIP — align with inference_rules.adoc closed division pre-processing rules]**
 
-The server-side processing of each incoming request — both input pre-processing and output post-processing — must be functionally equivalent to the reference implementation:
+The server-side processing of each incoming request — both input pre-processing and output
+post-processing — must be functionally equivalent to the reference implementation:
 
-- **Tokenization:** Must produce the same token IDs as the reference tokenizer for the same input text. Submitters using an alternative tokenizer implementation must demonstrate token-for-token equivalence on the accuracy dataset.
-- **Chat template / prompt formatting:** The system prompt, user turn formatting, special tokens (BOS, EOS, role markers), and chat-template flags (for example, `enable_thinking`, `clear_thinking`, and `preserve_thinking`) must match the benchmark specification. Modifications that change the effective input to the model are not permitted.
-- **Input truncation:** If the reference implementation truncates inputs that exceed the model's context window, the submitter's truncation method must produce the same result.
+- **Tokenization:** Must produce the same token IDs as the reference tokenizer for the same input
+  text. Submitters using an alternative tokenizer implementation must demonstrate token-for-token
+  equivalence on the accuracy dataset.
+- **Chat template / prompt formatting:** The system prompt, user turn formatting, special tokens
+  (BOS, EOS, role markers), and chat-template flags (for example, `enable_thinking`,
+  `clear_thinking`, and `preserve_thinking`) must match the benchmark specification. Modifications
+  that change the effective input to the model are not permitted.
+- **Input truncation:** If the reference implementation truncates inputs that exceed the model's
+  context window, the submitter's truncation method must produce the same result.
 
 #### 2.9.3 Model Weight Rules
 
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-10-12]`**
 
-All Standardized division submissions must begin from the **canonical model weights** specified in the benchmark definition (identified by Hugging Face model ID or a published checksum).
+All Standardized division submissions must begin from the **canonical model weights** specified in
+the benchmark definition (identified by Hugging Face model ID or a published checksum).
 
-Per [§2.2.1](#221-general-rules), weight transformations are governed by the inherited MLPerf Inference rules. The following transformations of the canonical weights are **disallowed**:
+Per [§2.2.1](#221-general-rules), weight transformations are governed by the inherited MLPerf
+Inference rules. The following transformations of the canonical weights are **disallowed**:
 
-- **Block-sparse weight pruning, unstructured pruning, or any operation that discards non-zero weight elements *without* a mathematically equivalent replacement.** Pruning that produces mathematically equivalent results to a dense reference (e.g., a dense matmul replaced by a sparse matmul that yields the same outputs) inherits the upstream "Replacing dense operations with mathematically equivalent sparse operations" allowance and is *not* a disallowed pruning. See [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision).
-- **Fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based update of weights.** Applies equally to the canonical model and to any draft model used in speculative decoding (see [§2.9.4](#294-speculative-decoding)).
+- **Block-sparse weight pruning, unstructured pruning, or any operation that discards non-zero
+  weight elements *without* a mathematically equivalent replacement.** Pruning that produces
+  mathematically equivalent results to a dense reference (e.g., a dense matmul replaced by a sparse
+  matmul that yields the same outputs) inherits the upstream "Replacing dense operations with
+  mathematically equivalent sparse operations" allowance and is *not* a disallowed pruning. See
+  [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision).
+- **Fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based update of weights.** Applies
+  equally to the canonical model and to any draft model used in speculative decoding (see
+  [§2.9.4](#294-speculative-decoding)).
 - **Retraining from scratch, continued pre-training, or knowledge distillation to a different architecture.**
 - **Modifying weights during the timed portion of an inference run** (online learning).
-- **Weight-quantization algorithms whose specification is similar in size to the non-zero weights they produce** (inherited from upstream — defeats principled-quantization intent).
+- **Weight-quantization algorithms whose specification is similar in size to the non-zero weights
+  they produce** (inherited from upstream — defeats principled-quantization intent).
 
-**Post-training quantization (PTQ).** PTQ is the canonical *permitted* weight transformation, inherited from upstream. PTQ-style methods (AWQ, GPTQ, bitsandbytes) and arbitrary numerical formats (INT8/INT4/FP8 and similar) are permitted provided they (a) use only the published calibration set, (b) are publicly described to a level at which they could be reproduced, (c) pass the accuracy gate ([§2.9.8](#298-accuracy-gate)), and (d) are disclosed in the submission YAML. The same conditions govern PTQ applied to a speculative-decoding drafter ([§2.9.4](#294-speculative-decoding)).
+**Post-training quantization (PTQ).** PTQ is the canonical *permitted* weight transformation,
+inherited from upstream. PTQ-style methods (AWQ, GPTQ, bitsandbytes) and arbitrary numerical formats
+(INT8/INT4/FP8 and similar) are permitted provided they (a) use only the published calibration set,
+(b) are publicly described to a level at which they could be reproduced, (c) pass the accuracy gate
+([§2.9.8](#298-accuracy-gate)), and (d) are disclosed in the submission YAML. The same conditions
+govern PTQ applied to a speculative-decoding drafter ([§2.9.4](#294-speculative-decoding)).
 
-Submitters may either derive a quantized checkpoint from the reference checkpoint using only the MLPerf-provided calibration data set, or use a publicly available checkpoint pre-approved by the MLPerf Endpoints Rules Task Force or Working Group. 
+Submitters may either derive a quantized checkpoint from the reference checkpoint using only the
+MLPerf-provided calibration data set, or use a publicly available checkpoint pre-approved by the
+MLPerf Endpoints Rules Task Force or Working Group.
 
-**Components of the canonical checkpoint.** Permitted weight transformations MUST preserve the component set of the canonical checkpoint. A submission's derived checkpoint — quantized or otherwise transformed — MUST contain every component the reference checkpoint ships, including auxiliary prediction heads and speculative-decoding modules such as MTP or EAGLE-style heads. **Stripping such a component from the derived checkpoint is not permitted**, even where the component does not participate in producing output and even where the submission does not intend to use it. The derived checkpoint must remain a faithful transformation of the canonical one, so that reviewers can verify provenance against the published model ID or checksum and, where applicable, re-run the submission with the component enabled.
+**Components of the canonical checkpoint.** Permitted weight transformations MUST preserve the
+component set of the canonical checkpoint. A submission's derived checkpoint — quantized or
+otherwise transformed — MUST contain every component the reference checkpoint ships, including
+auxiliary prediction heads and speculative-decoding modules such as MTP or EAGLE-style heads.
+**Stripping such a component from the derived checkpoint is not permitted**, even where the
+component does not participate in producing output and even where the submission does not intend to
+use it. The derived checkpoint must remain a faithful transformation of the canonical one, so that
+reviewers can verify provenance against the published model ID or checksum and, where applicable,
+re-run the submission with the component enabled.
 
-Declining to *use* a component at run time is a separate matter, governed by [§2.9.4](#294-speculative-decoding): a submission MAY disable speculative decoding at some or all measurement points, provided the drafter remains present in the submitted checkpoint and the per-point configuration is declared in the submission YAML.
+Declining to *use* a component at run time is a separate matter, governed by
+[§2.9.4](#294-speculative-decoding): a submission MAY disable speculative decoding at some or all
+measurement points, provided the drafter remains present in the submitted checkpoint and the
+per-point configuration is declared in the submission YAML.
 
-Statically removing weights that *do* participate in the forward pass for some inputs is pruning, and is disallowed above and in [§2.9.6.5](#2965-disallowed).
+Statically removing weights that *do* participate in the forward pass for some inputs is pruning,
+and is disallowed above and in [§2.9.6.5](#2965-disallowed).
 
-**Residency is not required.** The rule above governs the checkpoint *artifact*. It does not require a component to be loaded into accelerator memory during measurement. A submitter is **not obligated to load or copy every weight in the checkpoint to the accelerator** where the component is not needed for the configuration being measured — a submission that has legitimately disabled speculative decoding at a point ([§2.9.4](#294-speculative-decoding)) need not reserve memory for the drafter at that point.
+**Residency is not required.** The rule above governs the checkpoint *artifact*. It does not require
+a component to be loaded into accelerator memory during measurement. A submitter is **not obligated
+to load or copy every weight in the checkpoint to the accelerator** where the component is not
+needed for the configuration being measured — a submission that has legitimately disabled
+speculative decoding at a point ([§2.9.4](#294-speculative-decoding)) need not reserve memory for
+the drafter at that point.
 
 The two obligations are therefore distinct, and both hold:
 
@@ -423,139 +699,308 @@ The two obligations are therefore distinct, and both hold:
 | **Checkpoint artifact** | MUST contain every component of the canonical checkpoint. Stripping is not permitted, whether or not the component is used ([§2.9.6.5](#2965-disallowed)). |
 | **Accelerator residency** | Not required. What is loaded at run time is a submitter configuration choice, constrained only by the equivalence rules governing what is *computed*. |
 
-Memory footprint is a legitimate dimension of a serving configuration, and the artifact requirement is what preserves provenance and the ability to re-run the submission with the component enabled. Nothing here licenses any change to the computation: a component that participates in the forward pass for the configuration being measured must be present and used.
+Memory footprint is a legitimate dimension of a serving configuration, and the artifact requirement
+is what preserves provenance and the ability to re-run the submission with the component enabled.
+Nothing here licenses any change to the computation: a component that participates in the forward
+pass for the configuration being measured must be present and used.
 
-**Dead code elimination does not reach the checkpoint.** Upstream §Model Equivalence lists *dead code elimination* among its permitted optimizations, without qualification. An unused auxiliary component — an MTP or EAGLE-style head at a point where speculative decoding is disabled — is dead code in the ordinary compiler sense, and the upstream allowance might be read to license deleting it from the derived checkpoint. **It does not.** Under [§2.2.1](#221-general-rules) this document overrides upstream wherever the two conflict, and the allowance is confined to the executed graph ([§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision)). The submitted artifact is not code and is not subject to elimination: it is the evidence of provenance against which the submission is verified. Eliminating such a component from the *loaded* graph is the residency question answered above, and is permitted.
+**Dead code elimination does not reach the checkpoint.** Upstream §Model Equivalence lists *dead
+code elimination* among its permitted optimizations, without qualification. An unused auxiliary
+component — an MTP or EAGLE-style head at a point where speculative decoding is disabled — is dead
+code in the ordinary compiler sense, and the upstream allowance might be read to license deleting it
+from the derived checkpoint. **It does not.** Under [§2.2.1](#221-general-rules) this document
+overrides upstream wherever the two conflict, and the allowance is confined to the executed graph
+([§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision)). The submitted artifact is not code
+and is not subject to elimination: it is the evidence of provenance against which the submission is
+verified. Eliminating such a component from the *loaded* graph is the residency question answered
+above, and is permitted.
 
 #### 2.9.4 Speculative Decoding
 
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-10-12]`**
 
-**v1.0 change.** Speculative decoding is now governed by a **curated approved-drafter-list model, per benchmark**, rather than a single fixed drafter designated by the benchmark definition. Speculative decoding is permitted for any benchmark for which the benchmark task force has approved one or more drafters, following the process below, or whose approved checkpoint ships a native head (see *Native heads* below). Benchmarks with no approved drafter continue to disallow speculative decoding entirely.
+**v1.0 change.** Speculative decoding is now governed by a **curated approved-drafter-list model,
+per benchmark**, rather than a single fixed drafter designated by the benchmark definition.
+Speculative decoding is permitted for any benchmark for which the benchmark task force has approved
+one or more drafters, following the process below, or whose approved checkpoint ships a native head
+(see *Native heads* below). Benchmarks with no approved drafter continue to disallow speculative
+decoding entirely.
 
 List of approved drafter list is available [here](https://github.com/mlcommons/endpoints-submission-cli/blob/main/src/submission_checker/data/approved_drafters.yaml).
 
-**Approved drafter list.** Each benchmark's set of eligible drafters (MTP head, EAGLE-style head, or analogous module) is a **curated, published list**, not a single fixed drafter:
+**Approved drafter list.** Each benchmark's set of eligible drafters (MTP head, EAGLE-style head, or
+analogous module) is a **curated, published list**, not a single fixed drafter:
 
 - The benchmark task force seeds the list with ≥ 1 approved head/drafter per benchmark model where feasible.
-- Submitters (and any WG member) may propose additional drafters via a standing intake process. Proposal review is **WG review by default**; on escalation, the benchmark task force takes over the review and returns its recommendation to the WG for ratification.
-- A newly approved drafter may first be used in a submission where the review eligibility date for a submission is **at least two cohorts dates after** the cohort in which the drafter was approved. Approval is recorded against the cohort in which the updated list is published.
-- The approved list is published in the reference repository, versioned per submission round, alongside the model list (see [§3.2](#32-supported-models)).
+- Submitters (and any WG member) may propose additional drafters via a standing intake process.
+  Proposal review is **WG review by default**; on escalation, the benchmark task force takes over
+  the review and returns its recommendation to the WG for ratification.
+- A newly approved drafter may first be used in a submission where the review eligibility date for a
+  submission is **at least two cohorts dates after** the cohort in which the drafter was approved.
+  Approval is recorded against the cohort in which the updated list is published.
+- The approved list is published in the reference repository, versioned per submission round,
+  alongside the model list (see [§3.2](#32-supported-models)).
 
-**Native heads.** A speculative-decoding head (for example an MTP, DSpark, or EAGLE-style head) that the model publisher ships inside a checkpoint approved for the benchmark is **approved with that checkpoint**, in the checkpoint's approval cohort, and needs no separate list entry. The reference repository's list of approved checkpoints notes which of them ship a native head — for Agentic Inference, see [Approved Checkpoints and Speculative-Decoding Heads](https://github.com/mlcommons/endpoints/blob/main/examples/10_Agentic_Inference/README.md#approved-checkpoints-and-speculative-decoding-heads).
+**Native heads.** A speculative-decoding head (for example an MTP, DSpark, or EAGLE-style head) that
+the model publisher ships inside a checkpoint approved for the benchmark is **approved with that
+checkpoint**, in the checkpoint's approval cohort, and needs no separate list entry. The reference
+repository's list of approved checkpoints notes which of them ship a native head — for Agentic
+Inference, see
+[Approved Checkpoints and Speculative-Decoding Heads](https://github.com/mlcommons/endpoints/blob/main/examples/10_Agentic_Inference/README.md#approved-checkpoints-and-speculative-decoding-heads).
 
 The following are **not allowed** with a native head:
 
-- **A head that is not the canonical checkpoint's own.** A head added, replaced, or retrained by anyone other than the canonical model's publisher — including in a third-party quantized checkpoint — or added after the approved revision, is not native and requires an entry on the approved list.
+- **A head that is not the canonical checkpoint's own.** A head added, replaced, or retrained by
+  anyone other than the canonical model's publisher — including in a third-party quantized
+  checkpoint — or added after the approved revision, is not native and requires an entry on the
+  approved list.
 - **Modifying the head**, other than *PTQ on drafter weights* below.
-- **Using it as a different kind of drafter** than its publisher documents (e.g., running an MTP head as an EAGLE-style head). Per-point configuration may vary as for any approved drafter.
+- **Using it as a different kind of drafter** than its publisher documents (e.g., running an MTP
+  head as an EAGLE-style head). Per-point configuration may vary as for any approved drafter.
 - **A head the WG has excluded** for failing *Drafter eligibility* below.
 
 **Drafter eligibility.** The following disqualify a drafter from the approved list:
 
-- **Not open-weight.** The weights are not downloadable by anyone who agrees to the publisher's license terms — private hosting, or access requiring manual/discretionary approval, disqualifies. An automatic license click-through with the same terms and instant access for anyone (e.g., Meta's Llama license gate) does not disqualify.
-- **Input-based optimization ([§2.2.1](#221-general-rules)).** Build-time incorporation of the benchmark performance dataset's content — deliberate fine-tuning or distillation on it. (Incidental pretraining-corpus overlap does not disqualify; a corpus-disclosure or release-date test is not required of the proposer.)
-- **Trained for benchmark performance.** A drafter trained, fine-tuned, or distilled specifically to perform well on this benchmark — including against benchmark-like traffic that reproduces its task mix, prompt style, or length distribution — even where the benchmark dataset itself was never used. A drafter published for general use, and adopted for the benchmark because it happens to suit it, does not disqualify.
-- **Undisclosed or QAT-style quantization.** Quantization-aware training, or post-training quantization without disclosure of the calibration set and methodology, per [§2.9.3](#293-model-weight-rules).
+- **Not open-weight.** The weights are not downloadable by anyone who agrees to the publisher's
+  license terms — private hosting, or access requiring manual/discretionary approval, disqualifies.
+  An automatic license click-through with the same terms and instant access for anyone (e.g., Meta's
+  Llama license gate) does not disqualify.
+- **Input-based optimization ([§2.2.1](#221-general-rules)).** Build-time incorporation of the
+  benchmark performance dataset's content — deliberate fine-tuning or distillation on it.
+  (Incidental pretraining-corpus overlap does not disqualify; a corpus-disclosure or release-date
+  test is not required of the proposer.)
+- **Trained for benchmark performance.** A drafter trained, fine-tuned, or distilled specifically to
+  perform well on this benchmark — including against benchmark-like traffic that reproduces its task
+  mix, prompt style, or length distribution — even where the benchmark dataset itself was never
+  used. A drafter published for general use, and adopted for the benchmark because it happens to
+  suit it, does not disqualify.
+- **Undisclosed or QAT-style quantization.** Quantization-aware training, or post-training
+  quantization without disclosure of the calibration set and methodology, per
+  [§2.9.3](#293-model-weight-rules).
 
-Submitters select any drafter from the benchmark's approved list, or a native head of one of its approved checkpoints. Using any other drafter is not permitted.
+Submitters select any drafter from the benchmark's approved list, or a native head of one of its
+approved checkpoints. Using any other drafter is not permitted.
 
 A list entry identifies a drafter in one of two ways:
 
 - **Weight-identified** — a distinct draft model or head, identified by its model ID and weight checksum.
-- **Configuration-identified** — a drafter that introduces no separate weights, such as a self-speculative or early-exit pass through a subset of the target's own layers. It is identified by the target checksum together with the exit-layer and any other configuration defining the draft pass. See [§2.9.9 Q7](#299-qa-model-equivalence-clarifications).
+- **Configuration-identified** — a drafter that introduces no separate weights, such as a
+  self-speculative or early-exit pass through a subset of the target's own layers. It is identified
+  by the target checksum together with the exit-layer and any other configuration defining the draft
+  pass. See [§2.9.9 Q7](#299-qa-model-equivalence-clarifications).
 
 The following are **also disallowed** at run time:
 
-- **Approximate speculative-decoding methods that alter the output distribution.** The verification step MUST NOT introduce acceptance criteria that would cause the model to accept tokens the target would not have generated. Outputs MUST be token-for-token identical to what the target model would generate without speculation.
-- **Approximating, skipping, or replacing the verification step**, including replacing the target with a secondary drafter for verification. The target model in the verification step MUST be the canonical model with the permitted transformations of [§2.9.3](#293-model-weight-rules) applied.
-- **Modifying an approved drafter.** Fine-tuning, LoRA, adapter layers, RLHF, continued pre-training, or any other gradient-based update to a drafter by the submitter. The drafter is used as published on the approved list; a modified drafter is no longer that drafter, and is therefore not on the list. Post-training quantization is the one permitted transformation — see *PTQ on drafter weights* below.
+- **Approximate speculative-decoding methods that alter the output distribution.** The verification
+  step MUST NOT introduce acceptance criteria that would cause the model to accept tokens the target
+  would not have generated. Outputs MUST be token-for-token identical to what the target model would
+  generate without speculation.
+- **Approximating, skipping, or replacing the verification step**, including replacing the target
+  with a secondary drafter for verification. The target model in the verification step MUST be the
+  canonical model with the permitted transformations of [§2.9.3](#293-model-weight-rules) applied.
+- **Modifying an approved drafter.** Fine-tuning, LoRA, adapter layers, RLHF, continued
+  pre-training, or any other gradient-based update to a drafter by the submitter. The drafter is
+  used as published on the approved list; a modified drafter is no longer that drafter, and is
+  therefore not on the list. Post-training quantization is the one permitted transformation — see
+  *PTQ on drafter weights* below.
 
 **Disclosure and run-time requirements:**
 
-- The drafter identity (name, version, source URL), precision, algorithm, and per-point configuration MUST be declared in the submission YAML.
-- All measurement points on a submission's pareto curve for a given benchmark MUST use the same drafter (same head, same algorithm). Different **configurations** of the same drafter (e.g., varying `speculative-num-steps` or `speculative-eagle-topk`) are permitted across pareto points, including disabling speculation entirely at some points. The drafter itself is fixed across the curve. The configuration values used at each point MUST be declared in the submission YAML, and any dynamic variation within a single point's run MUST be reported as a distribution.
+- The drafter identity (name, version, source URL), precision, algorithm, and per-point
+  configuration MUST be declared in the submission YAML.
+- All measurement points on a submission's pareto curve for a given benchmark MUST use the same
+  drafter (same head, same algorithm). Different **configurations** of the same drafter (e.g.,
+  varying `speculative-num-steps` or `speculative-eagle-topk`) are permitted across pareto points,
+  including disabling speculation entirely at some points. The drafter itself is fixed across the
+  curve. The configuration values used at each point MUST be declared in the submission YAML, and
+  any dynamic variation within a single point's run MUST be reported as a distribution.
 
-**PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same conditions as the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only the published calibration set, no gradient updates, disclosed in the submission YAML, and subject to the accuracy gate. The drafter MUST NOT be modified in any other training-side sense — see *Drafter eligibility* above.
+**PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same
+conditions as the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only
+the published calibration set, no gradient updates, disclosed in the submission YAML, and subject to
+the accuracy gate. The drafter MUST NOT be modified in any other training-side sense — see *Drafter
+eligibility* above.
 
-**Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark has no approved drafter — no list entry and no native head of an approved checkpoint ([§2.9.1](#291-reference-implementation)) — speculative decoding is not available for that benchmark at all.
+**Leaving the drafter unused.** A submission is not required to load or use a drafter shipped with
+the canonical checkpoint; see [§2.9.3](#293-model-weight-rules). Where a benchmark has no approved
+drafter — no list entry and no native head of an approved checkpoint
+([§2.9.1](#291-reference-implementation)) — speculative decoding is not available for that benchmark
+at all.
 
-**Model equivalence for drafters.** No drafter-specific equivalence standard applies. A speculative-decoding submission is model equivalent on the same two general tests as any other optimization:
+**Model equivalence for drafters.** No drafter-specific equivalence standard applies. A
+speculative-decoding submission is model equivalent on the same two general tests as any other
+optimization:
 
-- The **submission** must meet the accuracy quality target ([§2.9.8](#298-accuracy-gate)) with its speculative-decoding configuration in force. Because exact verification requires token-for-token identity with the unspeculated target, a compliant configuration does not move accuracy; a failure here indicates the verification requirement above was not met.
+- The **submission** must meet the accuracy quality target ([§2.9.8](#298-accuracy-gate)) with its
+  speculative-decoding configuration in force. Because exact verification requires token-for-token
+  identity with the unspeculated target, a compliant configuration does not move accuracy; a failure
+  here indicates the verification requirement above was not met.
 - The drafter must be free of **input-based optimization**, per the eligibility criteria above and [§2.2.1](#221-general-rules).
 
 #### 2.9.5 KV Cache Rules
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section **intentionally diverges from MLPerf Inference §KV-Cache**, which prohibits cross-query KV reuse. Endpoints targets agentic-style workloads where a shared system prompt across queries is the norm; prohibiting cross-query reuse would force submitters to artificially cripple production-style serving stacks. The salt mechanism in [§2.9.5.1](#2951-salting-mechanism) preserves measurement validity by ensuring caches cannot leak context beyond the system-prompt prefix.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section **intentionally diverges from
+> MLPerf Inference §KV-Cache**, which prohibits cross-query KV reuse. Endpoints targets
+> agentic-style workloads where a shared system prompt across queries is the norm; prohibiting
+> cross-query reuse would force submitters to artificially cripple production-style serving stacks.
+> The salt mechanism in [§2.9.5.1](#2951-salting-mechanism) preserves measurement validity by
+> ensuring caches cannot leak context beyond the system-prompt prefix.
 
-Per [§2.2.1](#221-general-rules), KV-cache management is governed by the inherited MLPerf Inference rules with the Endpoints-specific cross-query-reuse delta described below. The following KV-cache techniques are **disallowed**:
+Per [§2.2.1](#221-general-rules), KV-cache management is governed by the inherited MLPerf Inference
+rules with the Endpoints-specific cross-query-reuse delta described below. The following KV-cache
+techniques are **disallowed**:
 
-- **Response caching that bypasses the forward pass.** Returning a cached response verbatim to a request that matches a previous request is not permitted. Every request must execute the forward pass. (Cross-query KV-cache reuse — covered by the Endpoints delta below — is *not* response caching: it still executes the forward pass on a salt-uniquified per-query token stream.)
-- **KV-cache compression methods that are not in the reference implementation and that have not been disclosed in the submission.** Compression methods that are part of the reference or a designated alternative implementation are permitted by default; submission-specific compression methods are subject to Methodology objections during peer review even after disclosure.
+- **Response caching that bypasses the forward pass.** Returning a cached response verbatim to a
+  request that matches a previous request is not permitted. Every request must execute the forward
+  pass. (Cross-query KV-cache reuse — covered by the Endpoints delta below — is *not* response
+  caching: it still executes the forward pass on a salt-uniquified per-query token stream.)
+- **KV-cache compression methods that are not in the reference implementation and that have not been
+  disclosed in the submission.** Compression methods that are part of the reference or a designated
+  alternative implementation are permitted by default; submission-specific compression methods are
+  subject to Methodology objections during peer review even after disclosure.
 
-**Endpoints-specific delta — cross-query KV reuse:** Sharing KV cache state across independent requests — including prefix / prompt caching of the shared system prompt — is permitted as a serving optimization, with no requirement of bit-for-bit output identity vs. an un-cached run and no requirement of cross-user partitioning. The performance dataset injects a per-query salt between the shared system prompt and the per-query user context (see [§2.9.5.1](#2951-salting-mechanism)). The salt guarantees that the only prefix two queries can share is the system prompt itself; any KV state derived from the user context cannot be reused across queries with different contexts.
+**Endpoints-specific delta — cross-query KV reuse:** Sharing KV cache state across independent
+requests — including prefix / prompt caching of the shared system prompt — is permitted as a serving
+optimization, with no requirement of bit-for-bit output identity vs. an un-cached run and no
+requirement of cross-user partitioning. The performance dataset injects a per-query salt between the
+shared system prompt and the per-query user context (see [§2.9.5.1](#2951-salting-mechanism)). The
+salt guarantees that the only prefix two queries can share is the system prompt itself; any KV state
+derived from the user context cannot be reused across queries with different contexts.
 
 **Disclosure requirements:**
 
-- If the KV cache is stored at reduced precision (e.g., INT8, INT4, FP8 KV), the precision and quantization method MUST be disclosed in the submission YAML.
-- Any KV-cache compression method that is not part of the reference implementation MUST be disclosed in the submission YAML.
-- Paged / virtual KV cache implementations (e.g., vLLM's PagedAttention) are inherited as permitted under the upstream "Different in-memory representations" allowance and do not require separate disclosure beyond what is already captured in the serving-framework / software-stack disclosure.
+- If the KV cache is stored at reduced precision (e.g., INT8, INT4, FP8 KV), the precision and
+  quantization method MUST be disclosed in the submission YAML.
+- Any KV-cache compression method that is not part of the reference implementation MUST be disclosed
+  in the submission YAML.
+- Paged / virtual KV cache implementations (e.g., vLLM's PagedAttention) are inherited as permitted
+  under the upstream "Different in-memory representations" allowance and do not require separate
+  disclosure beyond what is already captured in the serving-framework / software-stack disclosure.
 
 ##### 2.9.5.1 Salting Mechanism
 
-The performance benchmark workload prepends a unique, deterministic-but-pseudorandom **salt** to each per-query user prompt at request-construction time. The salt:
+The performance benchmark workload prepends a unique, deterministic-but-pseudorandom **salt** to
+each per-query user prompt at request-construction time. The salt:
 
 - **MUST** carry at least 64 bits of entropy per query.
-- **MUST** be generated from a seeded pseudo-random sequence (e.g., `random.Random(seed)`) where the seed is declared in the run configuration. This makes the salt sequence reproducible across runs with the same seed while still preventing cross-query KV reuse beyond the system prompt.
-- **MUST** be inserted *between* the system prompt and the user-context portion of the prompt, so the system prompt remains a shared prefix across queries (and is therefore cacheable as the legitimate optimization this section permits) while the user-context portion becomes per-query-unique.
-- **MUST** be generated at request-construction time, **not** stored in the dataset on disk, so that repeated runs of the same dataset always produce a per-query-unique salt sequence regardless of how many times the dataset is replayed. (Storing salt in the dataset would lose uniqueness across replays — see [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the reference rationale.)
-- **SHOULD** use the reference implementation in `mlcommons/endpoints` (`Dataset.with_salt(random.Random(seed))`, introduced in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305)).
+- **MUST** be generated from a seeded pseudo-random sequence (e.g., `random.Random(seed)`) where the
+  seed is declared in the run configuration. This makes the salt sequence reproducible across runs
+  with the same seed while still preventing cross-query KV reuse beyond the system prompt.
+- **MUST** be inserted *between* the system prompt and the user-context portion of the prompt, so
+  the system prompt remains a shared prefix across queries (and is therefore cacheable as the
+  legitimate optimization this section permits) while the user-context portion becomes
+  per-query-unique.
+- **MUST** be generated at request-construction time, **not** stored in the dataset on disk, so that
+  repeated runs of the same dataset always produce a per-query-unique salt sequence regardless of
+  how many times the dataset is replayed. (Storing salt in the dataset would lose uniqueness across
+  replays — see [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the
+  reference rationale.)
+- **SHOULD** use the reference implementation in `mlcommons/endpoints`
+  (`Dataset.with_salt(random.Random(seed))`, introduced in
+  [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305)).
 
-The operative requirement is that the token stream actually seen by the SUT contains a unique per-query salt between the system prompt and the user context — not the *means* by which the client constructs that stream.
+The operative requirement is that the token stream actually seen by the SUT contains a unique
+per-query salt between the system prompt and the user context — not the *means* by which the client
+constructs that stream.
 
-**Clients that pre-tokenize.** A client that pre-tokenizes prompts (e.g., SGLang-style adapters that send `input_tokens` rather than text) MUST ensure the *token stream* it sends to the SUT contains the unique per-query salt between the system-prompt tokens and the user-context tokens. Two conforming approaches: (a) apply the salt to the text and re-tokenize the result before sending, or (b) reserve a salt-marker token ID (or short sequence) and emit it inline. Applying the salt only to a `prompt` text field while sending the original `input_tokens` will *not* prevent KV reuse — the SUT never sees the text — and is non-compliant. The reference implementation in `mlcommons/endpoints` follows path (a); see the warning logged by `Dataset._apply_salt` in [endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the contract.
+**Clients that pre-tokenize.** A client that pre-tokenizes prompts (e.g., SGLang-style adapters that
+send `input_tokens` rather than text) MUST ensure the *token stream* it sends to the SUT contains
+the unique per-query salt between the system-prompt tokens and the user-context tokens. Two
+conforming approaches: (a) apply the salt to the text and re-tokenize the result before sending, or
+(b) reserve a salt-marker token ID (or short sequence) and emit it inline. Applying the salt only to
+a `prompt` text field while sending the original `input_tokens` will *not* prevent KV reuse — the
+SUT never sees the text — and is non-compliant. The reference implementation in
+`mlcommons/endpoints` follows path (a); see the warning logged by `Dataset._apply_salt` in
+[endpoints PR #305](https://github.com/mlcommons/endpoints/pull/305) for the contract.
 
-**Accuracy runs use the un-salted reference dataset** to ensure model output matches the canonical implementation exactly. Submissions are not required to disable cross-query KV reuse in their serving stack for accuracy runs; the accuracy dataset simply omits the salt prefix, and the serving stack reuses KV as it would in production. This split (salted performance dataset, un-salted accuracy dataset) is the operational mechanism that allows blanket cross-query KV reuse without compromising the accuracy gate's role as a model-output check.
+**Accuracy runs use the un-salted reference dataset** to ensure model output matches the canonical
+implementation exactly. Submissions are not required to disable cross-query KV reuse in their
+serving stack for accuracy runs; the accuracy dataset simply omits the salt prefix, and the serving
+stack reuses KV as it would in production. This split (salted performance dataset, un-salted
+accuracy dataset) is the operational mechanism that allows blanket cross-query KV reuse without
+compromising the accuracy gate's role as a model-output check.
 
 > [!NOTE]
-> Agentic benchmarks use benchmark-specific random salting to control KV-cache reuse. The mechanism is controlled by benchmark-specific flags and MUST be enabled for submissions.
+> Agentic benchmarks use benchmark-specific random salting to control KV-cache reuse. The mechanism
+> is controlled by benchmark-specific flags and MUST be enabled for submissions.
 
 > [!NOTE]
-> **Backward compatibility note.** This rule intentionally diverges from MLPerf Inference's KV-cache FAQ, which states KV state "does not apply across queries". Endpoints submissions are not portable to standard MLPerf Inference without disabling cross-query KV reuse; conversely, MLPerf Inference submissions that already prohibit cross-query reuse are trivially compliant with this section. Submitters should treat the two rule sets as **not** mutually compatible for code paths that rely on this delta.
+> **Backward compatibility note.** This rule intentionally diverges from MLPerf Inference's KV-cache
+> FAQ, which states KV state "does not apply across queries". Endpoints submissions are not portable
+> to standard MLPerf Inference without disabling cross-query KV reuse; conversely, MLPerf Inference
+> submissions that already prohibit cross-query reuse are trivially compliant with this section.
+> Submitters should treat the two rule sets as **not** mutually compatible for code paths that rely
+> on this delta.
 
 #### 2.9.6 Sparsity and Approximate Computation
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section consolidates the Endpoints treatment of sparse execution, softmax elision, and runtime approximation. It **intentionally diverges from MLPerf Inference**, which admits only mathematically equivalent sparse operations: [§2.9.6.4](#2964-dynamic-approximate-sparsity) permits bounded runtime approximation under the accuracy gate.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** This section consolidates the Endpoints
+> treatment of sparse execution, softmax elision, and runtime approximation. It **intentionally
+> diverges from MLPerf Inference**, which admits only mathematically equivalent sparse operations:
+> [§2.9.6.4](#2964-dynamic-approximate-sparsity) permits bounded runtime approximation under the
+> accuracy gate.
 
 ##### 2.9.6.1 Scope and Operative Test
 
-This section governs techniques that skip, elide, or approximate part of the computation at run time — sparse execution paths, softmax elision, attention-score thresholding, and activation thresholding. It does not govern transformations of the stored weights, which remain subject to [§2.9.3](#293-model-weight-rules).
+This section governs techniques that skip, elide, or approximate part of the computation at run time
+— sparse execution paths, softmax elision, attention-score thresholding, and activation
+thresholding. It does not govern transformations of the stored weights, which remain subject to
+[§2.9.3](#293-model-weight-rules).
 
-The operative test throughout is whether the technique **changes the tokens the model emits for any input**:
+The operative test throughout is whether the technique **changes the tokens the model emits for any
+input**:
 
-- Techniques that provably do not are permitted without an accuracy-gate condition ([§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision), [§2.9.6.3](#2963-canonical-architectural-sparsity)).
-- Techniques that may are permitted only under [§2.9.6.4](#2964-dynamic-approximate-sparsity): they must pass the accuracy gate and be disclosed.
-- Techniques that change the model's structure rather than approximating its computation are disallowed ([§2.9.6.5](#2965-disallowed)).
+- Techniques that provably do not are permitted without an accuracy-gate condition
+  ([§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision),
+  [§2.9.6.3](#2963-canonical-architectural-sparsity)).
+- Techniques that may are permitted only under [§2.9.6.4](#2964-dynamic-approximate-sparsity): they
+  must pass the accuracy gate and be disclosed.
+- Techniques that change the model's structure rather than approximating its computation are
+  disallowed ([§2.9.6.5](#2965-disallowed)).
 
-Whether a technique is implemented in software or accelerated by hardware is not a criterion. Sparse tensor cores, block-sparse kernels, and gather/scatter dispatch are implementation choices governed by what they compute, not by which units execute them; they are permitted on the same basis as arbitrary frameworks and kernels ([§2.2.1](#221-general-rules)) and the upstream "different in-memory representations" allowance inherited in [§2.9.5](#295-kv-cache-rules). Neither the sparsity ratio achieved at run time nor the hardware's supported sparsity granularity is itself a compliance criterion.
+Whether a technique is implemented in software or accelerated by hardware is not a criterion. Sparse
+tensor cores, block-sparse kernels, and gather/scatter dispatch are implementation choices governed
+by what they compute, not by which units execute them; they are permitted on the same basis as
+arbitrary frameworks and kernels ([§2.2.1](#221-general-rules)) and the upstream "different
+in-memory representations" allowance inherited in [§2.9.5](#295-kv-cache-rules). Neither the
+sparsity ratio achieved at run time nor the hardware's supported sparsity granularity is itself a
+compliance criterion.
 
 ##### 2.9.6.2 Exact Sparse Execution and Softmax Elision
 
-The following are mathematically equivalent to the reference computation. They are permitted with no accuracy-gate condition and no disclosure beyond the software-stack listing of [§8.4](#84-software-disclosure). Dead code elimination carries two further constraints, set out after the list:
+The following are mathematically equivalent to the reference computation. They are permitted with no
+accuracy-gate condition and no disclosure beyond the software-stack listing of
+[§8.4](#84-software-disclosure). Dead code elimination carries two further constraints, set out
+after the list:
 
-- **Mathematically equivalent sparse operations.** Replacing a dense operation with a sparse operation that produces the same outputs — for example a dense matmul executed as a sparse matmul, or skipping blocks whose values are exactly zero. Inherited from upstream §Model Equivalence.
-- **Fused, streaming, and online softmax.** FlashAttention-style running max/sum, fused softmax kernels, log-sum-exp rearrangement, and max-subtraction for numerical stability.
-- **Vocabulary softmax elision under greedy decoding.** Softmax is monotonic, so `argmax(softmax(logits)) == argmax(logits)`. Where the benchmark's reference sampling configuration is greedy (temperature = 0, per [§2.9.7](#297-post-processing-equivalence)), taking argmax over raw logits and skipping normalization entirely is exactly equivalent.
-- **Softmax elision in speculative-decoding verification** where the target's sampling configuration is greedy, since acceptance reduces to comparing argmax.
-- **Dead code elimination.** Removing graph nodes, kernels, or branches that cannot affect the output of the configuration being served — constant folding, identity-op removal, elimination of unreachable branches. Inherited from upstream §Model Equivalence, where it is listed without qualification. In Endpoints it is an *execution* allowance and is bounded by [§2.9.3](#293-model-weight-rules) and by the invariance requirement below: it does not extend to the checkpoint artifact.
+- **Mathematically equivalent sparse operations.** Replacing a dense operation with a sparse
+  operation that produces the same outputs — for example a dense matmul executed as a sparse matmul,
+  or skipping blocks whose values are exactly zero. Inherited from upstream §Model Equivalence.
+- **Fused, streaming, and online softmax.** FlashAttention-style running max/sum, fused softmax
+  kernels, log-sum-exp rearrangement, and max-subtraction for numerical stability.
+- **Vocabulary softmax elision under greedy decoding.** Softmax is monotonic, so
+  `argmax(softmax(logits)) == argmax(logits)`. Where the benchmark's reference sampling
+  configuration is greedy (temperature = 0, per [§2.9.7](#297-post-processing-equivalence)), taking
+  argmax over raw logits and skipping normalization entirely is exactly equivalent.
+- **Softmax elision in speculative-decoding verification** where the target's sampling configuration
+  is greedy, since acceptance reduces to comparing argmax.
+- **Dead code elimination.** Removing graph nodes, kernels, or branches that cannot affect the
+  output of the configuration being served — constant folding, identity-op removal, elimination of
+  unreachable branches. Inherited from upstream §Model Equivalence, where it is listed without
+  qualification. In Endpoints it is an *execution* allowance and is bounded by
+  [§2.9.3](#293-model-weight-rules) and by the invariance requirement below: it does not extend to
+  the checkpoint artifact.
 
 Bit-exact identity is not required — ordinary floating-point reassociation is expected.
 
-**Dead code elimination MUST be data-invariant.** The eliminated computation must be incapable of affecting the output for **any admissible input** and for **any checkpoint** satisfying [§2.9.3](#293-model-weight-rules) — not merely for the benchmark's dataset or for the reference checkpoint's particular weight values. Two eliminations that look identical in a profile are treated differently:
+**Dead code elimination MUST be data-invariant.** The eliminated computation must be incapable of
+affecting the output for **any admissible input** and for **any checkpoint** satisfying
+[§2.9.3](#293-model-weight-rules) — not merely for the benchmark's dataset or for the reference
+checkpoint's particular weight values. Two eliminations that look identical in a profile are treated
+differently:
 
 | Elimination | Status |
 |---|---|
@@ -564,45 +1009,100 @@ Bit-exact identity is not required — ordinary floating-point reassociation is 
 | A computation compiled out because a tensor is zero or constant *in this checkpoint*. | **Disallowed.** The artifact is baked into the graph, and the elimination would not survive a re-quantized or re-released checkpoint. |
 | A block skipped at run time because its values are exactly zero on that pass. | **Permitted** (first bullet above). This is a dynamic property of the data being processed, not a static assumption compiled into the implementation. |
 
-The distinction throughout is **static versus dynamic**, the same line drawn in [§2.9.6.3](#2963-canonical-architectural-sparsity) and [§2.9.6.5](#2965-disallowed): deciding once, at build time, on the basis of the benchmark's data or weights is disallowed; deciding per pass, from the values actually present, is permitted.
+The distinction throughout is **static versus dynamic**, the same line drawn in
+[§2.9.6.3](#2963-canonical-architectural-sparsity) and [§2.9.6.5](#2965-disallowed): deciding once,
+at build time, on the basis of the benchmark's data or weights is disallowed; deciding per pass,
+from the values actually present, is permitted.
 
-**Obligation to report data-dependent dead code in the reference.** A submitter who identifies computation in the reference implementation that is dead **only** for the benchmark's data, or only for the reference checkpoint's particular weights, MUST report it to the working group rather than silently eliminating it. Such code is a property of the reference, not of any one submission: its presence may indicate a reference defect, or an unintended advantage for whichever implementations detect it first. It is resolved by changing the reference for every submitter ([§2.9.1](#291-reference-implementation)), not by each submitter's compiler. Reporting is required whether or not the submitter intends to exploit it.
+**Obligation to report data-dependent dead code in the reference.** A submitter who identifies
+computation in the reference implementation that is dead **only** for the benchmark's data, or only
+for the reference checkpoint's particular weights, MUST report it to the working group rather than
+silently eliminating it. Such code is a property of the reference, not of any one submission: its
+presence may indicate a reference defect, or an unintended advantage for whichever implementations
+detect it first. It is resolved by changing the reference for every submitter
+([§2.9.1](#291-reference-implementation)), not by each submitter's compiler. Reporting is required
+whether or not the submitter intends to exploit it.
 
 ##### 2.9.6.3 Canonical Architectural Sparsity
 
-Where the canonical architecture is itself sparse, implementing that sparsity is **required** for equivalence rather than being a disallowed transformation. The reference point is the canonical model's own computation, not a dense idealization of it.
+Where the canonical architecture is itself sparse, implementing that sparsity is **required** for
+equivalence rather than being a disallowed transformation. The reference point is the canonical
+model's own computation, not a dense idealization of it.
 
-- **Native sparse attention.** Architectures that specify sparse attention in the reference architecture define the pattern submissions must implement, including its sparsity configuration ([§2.9.1](#291-reference-implementation)). Substituting a different structural sparse pattern for the canonical one is disallowed under [§2.9.6.5](#2965-disallowed) even where the canonical model is itself sparse.
-- **Canonical sparse routing.** Where the architecture activates a subset of weights per token by design — for example a mixture-of-experts model routing each token to a fraction of its experts — touching only the routed weights on a given forward pass *is* the canonical computation. That the majority of expert weights go untouched on any individual token is not grounds for an objection.
+- **Native sparse attention.** Architectures that specify sparse attention in the reference
+  architecture define the pattern submissions must implement, including its sparsity configuration
+  ([§2.9.1](#291-reference-implementation)). Substituting a different structural sparse pattern for
+  the canonical one is disallowed under [§2.9.6.5](#2965-disallowed) even where the canonical model
+  is itself sparse.
+- **Canonical sparse routing.** Where the architecture activates a subset of weights per token by
+  design — for example a mixture-of-experts model routing each token to a fraction of its experts —
+  touching only the routed weights on a given forward pass *is* the canonical computation. That the
+  majority of expert weights go untouched on any individual token is not grounds for an objection.
 
 ##### 2.9.6.4 Dynamic Approximate Sparsity
 
-Sparsity derived at run time from live attention scores or activations is permitted in the Standardized division even where it does not preserve outputs exactly. This is an Endpoints-specific delta from upstream. It covers:
+Sparsity derived at run time from live attention scores or activations is permitted in the
+Standardized division even where it does not preserve outputs exactly. This is an Endpoints-specific
+delta from upstream. It covers:
 
-- **Attention-score thresholding.** Within the online-softmax loop, a key/value block whose local maximum score falls more than `ln(λ)` below the running maximum is treated as contributing negligible post-softmax mass, and that block's exponential, value-block load from HBM, and attention-weight × value product are skipped. The reference technique is softmax thresholding as described in BLASST ([arXiv:2512.12087](https://arxiv.org/abs/2512.12087)).
-- **Activation thresholding.** Skipping computation because an activation block falls below a magnitude threshold. Skipping computation because an activation block is exactly zero is instead governed by [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision).
+- **Attention-score thresholding.** Within the online-softmax loop, a key/value block whose local
+  maximum score falls more than `ln(λ)` below the running maximum is treated as contributing
+  negligible post-softmax mass, and that block's exponential, value-block load from HBM, and
+  attention-weight × value product are skipped. The reference technique is softmax thresholding as
+  described in BLASST ([arXiv:2512.12087](https://arxiv.org/abs/2512.12087)).
+- **Activation thresholding.** Skipping computation because an activation block falls below a
+  magnitude threshold. Skipping computation because an activation block is exactly zero is instead
+  governed by [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision).
 
 Methods in this category are subject to all of the following:
 
-- They MUST pass the benchmark's accuracy quality target on the un-salted accuracy dataset. The accuracy gate ([§2.9.8](#298-accuracy-gate)) is the arbiter of whether the approximation is acceptable.
-- They MUST NOT be calibrated on the benchmark performance or accuracy dataset. Threshold selection must use the published calibration set or a data-independent procedure; calibrating against benchmark inputs is input-based optimization and is disallowed under [§2.2.1](#221-general-rules).
+- They MUST pass the benchmark's accuracy quality target on the un-salted accuracy dataset. The
+  accuracy gate ([§2.9.8](#298-accuracy-gate)) is the arbiter of whether the approximation is
+  acceptable.
+- They MUST NOT be calibrated on the benchmark performance or accuracy dataset. Threshold selection
+  must use the published calibration set or a data-independent procedure; calibrating against
+  benchmark inputs is input-based optimization and is disallowed under [§2.2.1](#221-general-rules).
 - They MUST be disclosed per [§2.9.6.6](#2966-disclosure).
-- They apply to the computation only. This allowance does not license discarding weight elements; weight transformations remain governed by [§2.9.3](#293-model-weight-rules).
+- They apply to the computation only. This allowance does not license discarding weight elements;
+  weight transformations remain governed by [§2.9.3](#293-model-weight-rules).
 
-**Interaction with speculative decoding.** Where the target model uses an approximate method under this section, the token-for-token identity requirement of [§2.9.4](#294-speculative-decoding) is evaluated against the submission's own target-model configuration: the drafter and verification step must introduce no divergence beyond the disclosed approximation.
+**Interaction with speculative decoding.** Where the target model uses an approximate method under
+this section, the token-for-token identity requirement of [§2.9.4](#294-speculative-decoding) is
+evaluated against the submission's own target-model configuration: the drafter and verification step
+must introduce no divergence beyond the disclosed approximation.
 
 ##### 2.9.6.5 Disallowed
 
-- **Structural attention-pattern changes.** Adding sink tokens not present in the canonical architecture, swapping in a different attention mask, imposing a fixed or precomputed sparsity pattern on a canonically dense attention layer, substituting a different structural sparse pattern for the canonical one, or otherwise changing the pattern the canonical model uses. Dynamic score-derived sparsity is governed by [§2.9.6.4](#2964-dynamic-approximate-sparsity) and is not a structural change.
-- **Normalization substitution.** Replacing softmax with a different normalization not present in the canonical architecture (e.g. linear or ReLU attention) — an architecture substitution rather than an approximation of the canonical attention.
-- **Weight-side sparsity to reach a hardware sparse path.** Pruning, zeroing, or restructuring weights — for example imposing a 2:4 or block-structured pattern — in order to use sparse hardware. Dense weights MAY be dispatched through a sparse kernel; the weights themselves must remain dense. See [§2.9.3](#293-model-weight-rules).
-- **Static removal of weights from the checkpoint.** Dropping experts, layers, or any other weights that participate in the forward pass for some inputs — including experts that are rarely routed to — whether or not the resulting submission passes the accuracy gate. The distinction from [§2.9.6.3](#2963-canonical-architectural-sparsity) is static versus dynamic: canonical routing decides per token at run time; removing an expert from the checkpoint decides once, for every token. Components that do *not* participate in the forward pass, such as speculative-decoding heads, may likewise not be stripped from the derived checkpoint — see [§2.9.3](#293-model-weight-rules).
-- **Softmax elision where the reference sampling configuration is stochastic** (temperature > 0, top-p, top-k), since sampling depends on the normalized probabilities.
-- **Softmax elision where the response returns token logprobs or probabilities**, unless those values are computed exactly as the reference would.
+- **Structural attention-pattern changes.** Adding sink tokens not present in the canonical
+  architecture, swapping in a different attention mask, imposing a fixed or precomputed sparsity
+  pattern on a canonically dense attention layer, substituting a different structural sparse pattern
+  for the canonical one, or otherwise changing the pattern the canonical model uses. Dynamic
+  score-derived sparsity is governed by [§2.9.6.4](#2964-dynamic-approximate-sparsity) and is not a
+  structural change.
+- **Normalization substitution.** Replacing softmax with a different normalization not present in
+  the canonical architecture (e.g. linear or ReLU attention) — an architecture substitution rather
+  than an approximation of the canonical attention.
+- **Weight-side sparsity to reach a hardware sparse path.** Pruning, zeroing, or restructuring
+  weights — for example imposing a 2:4 or block-structured pattern — in order to use sparse
+  hardware. Dense weights MAY be dispatched through a sparse kernel; the weights themselves must
+  remain dense. See [§2.9.3](#293-model-weight-rules).
+- **Static removal of weights from the checkpoint.** Dropping experts, layers, or any other weights
+  that participate in the forward pass for some inputs — including experts that are rarely routed to
+  — whether or not the resulting submission passes the accuracy gate. The distinction from
+  [§2.9.6.3](#2963-canonical-architectural-sparsity) is static versus dynamic: canonical routing
+  decides per token at run time; removing an expert from the checkpoint decides once, for every
+  token. Components that do *not* participate in the forward pass, such as speculative-decoding
+  heads, may likewise not be stripped from the derived checkpoint — see
+  [§2.9.3](#293-model-weight-rules).
+- **Softmax elision where the reference sampling configuration is stochastic** (temperature > 0,
+  top-p, top-k), since sampling depends on the normalized probabilities.
+- **Softmax elision where the response returns token logprobs or probabilities**, unless those
+  values are computed exactly as the reference would.
 
 ##### 2.9.6.6 Disclosure
 
-Techniques permitted under [§2.9.6.4](#2964-dynamic-approximate-sparsity) MUST be declared in the submission YAML:
+Techniques permitted under [§2.9.6.4](#2964-dynamic-approximate-sparsity) MUST be declared in the
+submission YAML:
 
 | Field | Requirement |
 |---|---|
@@ -612,55 +1112,111 @@ Techniques permitted under [§2.9.6.4](#2964-dynamic-approximate-sparsity) MUST 
 | Per-point value | The value in force at each measurement point. |
 | Schedule or distribution | Required where the threshold varies with context length or varies dynamically within a run. |
 
-Techniques permitted under [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision) and [§2.9.6.3](#2963-canonical-architectural-sparsity) require no disclosure beyond the software-stack listing of [§8.4](#84-software-disclosure).
+Techniques permitted under [§2.9.6.2](#2962-exact-sparse-execution-and-softmax-elision) and
+[§2.9.6.3](#2963-canonical-architectural-sparsity) require no disclosure beyond the software-stack
+listing of [§8.4](#84-software-disclosure).
 
 #### 2.9.7 Post-Processing Equivalence
 
 > [!NOTE]
 > **[WIP — align with inference_rules.adoc closed division post-processing rules]**
 
-- **Detokenization.** The response text must be produced by applying the reference detokenizer to the generated token IDs.
-- **Stop token handling.** The generation must halt on the same stop tokens and EOS conditions defined in the benchmark specification.
-- **Sampling.** For benchmarks using greedy decoding (temperature = 0), the submission must also use greedy decoding. For benchmarks specifying a sampling configuration, the submission must use the same sampling parameters as specified in the benchmark definition.
-- **Output stream.** On streaming runs, the SUT must dispatch output to the client incrementally as it is generated. A multi-token **stream interval** is permitted: the SUT may group up to N consecutive generated tokens into one chunk (e.g., `stream_interval` in TensorRT-LLM, SGLang, and vLLM), dispatching each chunk once N tokens have accumulated or generation ends. Holding tokens beyond the configured interval, or buffering the complete response into a single message, is not permitted. This is a SUT requirement and is independent of the client-side `stream_all_chunks` setting (see [§6.5](#65-dataset-considerations)).
+- **Detokenization.** The response text must be produced by applying the reference detokenizer to
+  the generated token IDs.
+- **Stop token handling.** The generation must halt on the same stop tokens and EOS conditions
+  defined in the benchmark specification.
+- **Sampling.** For benchmarks using greedy decoding (temperature = 0), the submission must also use
+  greedy decoding. For benchmarks specifying a sampling configuration, the submission must use the
+  same sampling parameters as specified in the benchmark definition.
+- **Output stream.** On streaming runs, the SUT must dispatch output to the client incrementally as
+  it is generated. A multi-token **stream interval** is permitted: the SUT may group up to N
+  consecutive generated tokens into one chunk (e.g., `stream_interval` in TensorRT-LLM, SGLang, and
+  vLLM), dispatching each chunk once N tokens have accumulated or generation ends. Holding tokens
+  beyond the configured interval, or buffering the complete response into a single message, is not
+  permitted. This is a SUT requirement and is independent of the client-side `stream_all_chunks`
+  setting (see [§6.5](#65-dataset-considerations)).
 
 #### 2.9.8 Accuracy Gate
 
 > [!NOTE]
-> **[WIP — accuracy tolerance values to be specified per benchmark, aligned with inference_rules.adoc accuracy targets]**
+> **[WIP — accuracy tolerance values to be specified per benchmark, aligned with
+> inference_rules.adoc accuracy targets]**
 
-A Standardized division submission meets model equivalence only if it meets the **accuracy quality target** defined for the benchmark, evaluated using the reference evaluation methodology on the accuracy dataset. Passing the accuracy gate is **necessary** for model equivalence, and it is the arbiter of whether an approximation these rules permit — such as those in [§2.9.6.4](#2964-dynamic-approximate-sparsity) — is acceptable in a given submission.
+A Standardized division submission meets model equivalence only if it meets the **accuracy quality
+target** defined for the benchmark, evaluated using the reference evaluation methodology on the
+accuracy dataset. Passing the accuracy gate is **necessary** for model equivalence, and it is the
+arbiter of whether an approximation these rules permit — such as those in
+[§2.9.6.4](#2964-dynamic-approximate-sparsity) — is acceptable in a given submission.
 
-Passing the accuracy gate is **not a general override**. A submission that meets the quality target while violating an operative rule of [§2.2.1](#221-general-rules) or §2.9.x — for example by pruning weights ([§2.9.3](#293-model-weight-rules)), removing experts from the checkpoint ([§2.9.6.5](#2965-disallowed)), or fine-tuning a drafter ([§2.9.4](#294-speculative-decoding)) — is not model equivalent.
+Passing the accuracy gate is **not a general override**. A submission that meets the quality target
+while violating an operative rule of [§2.2.1](#221-general-rules) or §2.9.x — for example by pruning
+weights ([§2.9.3](#293-model-weight-rules)), removing experts from the checkpoint
+([§2.9.6.5](#2965-disallowed)), or fine-tuning a drafter ([§2.9.4](#294-speculative-decoding)) — is
+not model equivalent.
 
-The accuracy quality target and tolerance relative to the reference score are specified per benchmark in the benchmark definition.
+The accuracy quality target and tolerance relative to the reference score are specified per
+benchmark in the benchmark definition.
 
 #### 2.9.9 Q&A: Model Equivalence Clarifications
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-10-12]`** Q&A entries are interpretive guidance. If a Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and the Q&A entry will be revised.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** Q&A entries are interpretive guidance. If a
+> Q&A entry conflicts with the operative rules in §2.2.1 or §2.9.x, the rules take precedence and
+> the Q&A entry will be revised.
 
 **Q1: Is response or query caching allowed?**
-A: No. Returning a cached response verbatim to a request that matches a previous request is prohibited. Every request must go through the forward pass. KV-cache reuse (within or across queries) is a *serving optimization* governed by [§2.9.5](#295-kv-cache-rules), **not** response caching — the distinction is that KV-cache reuse still executes the forward pass on per-query tokens (which include a unique salt; see [§2.9.5.1](#2951-salting-mechanism)), whereas response caching skips compute entirely.
-The salt is itself part of the submission's **bound seed set** ([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)), so it changes when MLCommons refreshes the seed set every two cohorts.
+A: No. Returning a cached response verbatim to a request that matches a previous request is
+prohibited. Every request must go through the forward pass. KV-cache reuse (within or across
+queries) is a *serving optimization* governed by [§2.9.5](#295-kv-cache-rules), **not** response
+caching — the distinction is that KV-cache reuse still executes the forward pass on per-query tokens
+(which include a unique salt; see [§2.9.5.1](#2951-salting-mechanism)), whereas response caching
+skips compute entirely.
+The salt is itself part of the submission's **bound seed set**
+([Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation)), so it changes when
+MLCommons refreshes the seed set every two cohorts.
 
-**Q2: Is iteration coalescing — the server returning multiple generated tokens in a single network message — allowed?**
-A: Yes, as a multi-token stream interval under [§2.9.7](#297-post-processing-equivalence). Serving frameworks expose this to reduce per-token dispatch overhead at large batch sizes. Changing chunk boundaries is not a modification of the response stream under [§2.2.1](#221-general-rules), since the concatenated output is unchanged. No metric adjustment is applied: TTFT is taken at the first chunk, so a larger interval delays it, and TPOT is computed over the post-first-chunk output tokenized once with the reference tokenizer (see [§2.8 Tokenizer Rules](#28-tokenizer-rules)).
+**Q2: Is iteration coalescing — the server returning multiple generated tokens in a single network
+message — allowed?**
+A: Yes, as a multi-token stream interval under [§2.9.7](#297-post-processing-equivalence). Serving
+frameworks expose this to reduce per-token dispatch overhead at large batch sizes. Changing chunk
+boundaries is not a modification of the response stream under [§2.2.1](#221-general-rules), since
+the concatenated output is unchanged. No metric adjustment is applied: TTFT is taken at the first
+chunk, so a larger interval delays it, and TPOT is computed over the post-first-chunk output
+tokenized once with the reference tokenizer (see [§2.8 Tokenizer Rules](#28-tokenizer-rules)).
 
 **Q3: Can I use a different serving framework than the reference (vLLM vs. TensorRT-LLM vs. SGLang)?**
-A: Yes. Arbitrary frameworks and runtimes are inherited from upstream, provided the framework conforms to the rest of the rules (model equivalence, no benchmark detection, no input-based optimization, etc.). The framework must satisfy the **Available** definition ([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
+A: Yes. Arbitrary frameworks and runtimes are inherited from upstream, provided the framework
+conforms to the rest of the rules (model equivalence, no benchmark detection, no input-based
+optimization, etc.). The framework must satisfy the **Available** definition
+([Submission Rules §7.2](endpoints_submission_rules.md#72-available)).
 
 **Q4: How does cross-request KV cache sharing interact with the salt mechanism?**
-A: See [§2.9.5 KV Cache Rules](#295-kv-cache-rules) and [§2.9.5.1 Salting Mechanism](#2951-salting-mechanism). Cross-request KV sharing is **blanket allowed** in Endpoints (this is the primary delta vs. upstream MLPerf Inference). The performance dataset injects a per-query salt between the shared system prompt and the per-query user context, so the only prefix two queries can share is the system prompt itself. Accuracy runs use the un-salted dataset.
+A: See [§2.9.5 KV Cache Rules](#295-kv-cache-rules) and
+[§2.9.5.1 Salting Mechanism](#2951-salting-mechanism). Cross-request KV sharing is **blanket
+allowed** in Endpoints (this is the primary delta vs. upstream MLPerf Inference). The performance
+dataset injects a per-query salt between the shared system prompt and the per-query user context, so
+the only prefix two queries can share is the system prompt itself. Accuracy runs use the un-salted
+dataset.
 
 **Q5: Where did the previous Q&A entries on quantization, sparsity, and softmax elision go?**
-A: They were promoted into the operative rules and are no longer restated here: PTQ and unused checkpoint components are in [§2.9.3](#293-model-weight-rules); drafter PTQ is in [§2.9.4](#294-speculative-decoding); pre-tokenizing clients and the salt are in [§2.9.5.1](#2951-salting-mechanism); sparse execution, attention patterns, softmax elision, hardware sparsity, and expert removal are all in [§2.9.6](#296-sparsity-and-approximate-computation).
+A: They were promoted into the operative rules and are no longer restated here: PTQ and unused
+checkpoint components are in [§2.9.3](#293-model-weight-rules); drafter PTQ is in
+[§2.9.4](#294-speculative-decoding); pre-tokenizing clients and the salt are in
+[§2.9.5.1](#2951-salting-mechanism); sparse execution, attention patterns, softmax elision, hardware
+sparsity, and expert removal are all in [§2.9.6](#296-sparsity-and-approximate-computation).
 
 **Q6: Is tree-structured verification attention permitted for speculative decoding?**
-A: Yes, as an implementation detail of the exact-verification requirement in [§2.9.4](#294-speculative-decoding) — not an exception to it. Any tree/DFlash-style verification attention is fine provided the target-output-distribution guarantee still holds (token-for-token identical to the unspeculated target).
+A: Yes, as an implementation detail of the exact-verification requirement in
+[§2.9.4](#294-speculative-decoding) — not an exception to it. Any tree/DFlash-style verification
+attention is fine provided the target-output-distribution guarantee still holds (token-for-token
+identical to the unspeculated target).
 
 **Q7: Does a drafter implemented as a truncated forward pass through a subset of the target model's own layers (self-speculative / early-exit, no separate weights) satisfy the open-weight requirement in [§2.9.4](#294-speculative-decoding)?**
-A: Yes. There are no separate weights to disclose — the target model's own public checksum already establishes this. It must still appear on the benchmark's approved drafter list, entered as a **configuration-identified** drafter: the target checksum together with the exit-layer and any other configuration that defines the draft pass, rather than a separate weight checksum. The approval process and eligibility criteria of [§2.9.4](#294-speculative-decoding) apply to it unchanged.
+A: Yes. There are no separate weights to disclose — the target model's own public checksum already
+establishes this. It must still appear on the benchmark's approved drafter list, entered as a
+**configuration-identified** drafter: the target checksum together with the exit-layer and any other
+configuration that defines the draft pass, rather than a separate weight checksum. The approval
+process and eligibility criteria of [§2.9.4](#294-speculative-decoding) apply to it unchanged.
 
 ---
 
@@ -668,23 +1224,40 @@ A: Yes. There are no separate weights to disclose — the target model's own pub
 
 ### 3.1 Benchmark Definition
 
-A benchmark in MLPerf Endpoints is defined by a specific model, task, and quality target. Each benchmark has a reference implementation that defines the correct endpoint interface, input/output format, and accuracy evaluation method.
+A benchmark in MLPerf Endpoints is defined by a specific model, task, and quality target. Each
+benchmark has a reference implementation that defines the correct endpoint interface, input/output
+format, and accuracy evaluation method.
 
 ### 3.2 Supported Models
 
-The set of supported benchmark models is defined per submission round and maintained in the MLPerf Endpoints reference repository. The full per-model specification — canonical weights, dataset, chat template, server parameters, accuracy target, and (if applicable) drafter configuration — is given by the [reference implementation](#291-reference-implementation). Each supported model is identified by:
+The set of supported benchmark models is defined per submission round and maintained in the MLPerf
+Endpoints reference repository. The full per-model specification — canonical weights, dataset, chat
+template, server parameters, accuracy target, and (if applicable) drafter configuration — is given
+by the [reference implementation](#291-reference-implementation). Each supported model is identified
+by:
 
 - A Hugging Face model ID (or equivalent checksummed source).
-- The task category (text generation, summarization, reasoning, etc.) and the input/output modality (text, token IDs, streaming, non-streaming).
+- The task category (text generation, summarization, reasoning, etc.) and the input/output modality
+  (text, token IDs, streaming, non-streaming).
 
 > [!NOTE]
-> The model list for each submission round is published in the MLPerf Endpoints reference repository at least 6 weeks before the submission round opens. New models may be proposed to the working group per the benchmark roadmap process defined in the MLPerf General Submission Rules §4.3.
+> The model list for each submission round is published in the MLPerf Endpoints reference repository
+> at least 6 weeks before the submission round opens. New models may be proposed to the working
+> group per the benchmark roadmap process defined in the MLPerf General Submission Rules §4.3.
 
-**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the listed checkpoints are approved with them and need not appear on the list ([§2.9.4](#294-speculative-decoding)).
+**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter
+list is published in the reference repository alongside the model list, versioned per submission
+round. The approval process, eligibility criteria, and the lead time required before a newly
+approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the
+listed checkpoints are approved with them and need not appear on the list
+([§2.9.4](#294-speculative-decoding)).
 
 ### 3.3 Weight Transformations
 
-Submitters may apply quantization, format conversion, or other weight transformations to the reference weights, subject to the accuracy quality target. All transformations must be documented in the submission. For the Standardized division, the full set of permitted and prohibited transformations is defined in [§2.9.3 Model Weight Rules](#293-model-weight-rules).
+Submitters may apply quantization, format conversion, or other weight transformations to the
+reference weights, subject to the accuracy quality target. All transformations must be documented in
+the submission. For the Standardized division, the full set of permitted and prohibited
+transformations is defined in [§2.9.3 Model Weight Rules](#293-model-weight-rules).
 
 ---
 
@@ -693,9 +1266,11 @@ Submitters may apply quantization, format conversion, or other weight transforma
 ### 4.1 Primary Metrics
 
 > [!CAUTION]
-> **`[TENTATIVE — Subject to change after 2026-10-12]`** TTFT framing — see note below the table on percentile selection.
+> **`[TENTATIVE — Subject to change after 2026-10-12]`** TTFT framing — see note below the table on
+> percentile selection.
 
-Each measurement point on the pareto curve captures the following metrics at a specific concurrency level:
+Each measurement point on the pareto curve captures the following metrics at a specific concurrency
+level:
 
 | Metric | Symbol | Definition |
 |---|---|---|
@@ -706,20 +1281,28 @@ Each measurement point on the pareto curve captures the following metrics at a s
 | Concurrency | `concurrency` | The target number of in-flight concurrent queries for this measurement point. |
 
 > [!NOTE]
-> **Genuine first token.** TTFT is triggered by the first non-empty fragment (`len(s) > 0`). Emitting whitespace, control characters, punctuation, or other meaningless leading content solely to stop the TTFT clock — rather than as a genuine part of the model response — is not allowed.
+> **Genuine first token.** TTFT is triggered by the first non-empty fragment (`len(s) > 0`).
+> Emitting whitespace, control characters, punctuation, or other meaningless leading content solely
+> to stop the TTFT clock — rather than as a genuine part of the model response — is not allowed.
 
 > [!NOTE]
-> **TTFT does not apply to the Offline point.** Every query is queued at the start of an Offline run, so TTFT is unbounded in principle and carries no information. `ttft_p90_ms` is not required for the Offline point — see [§5.7](#57-offline-point).
+> **TTFT does not apply to the Offline point.** Every query is queued at the start of an Offline
+> run, so TTFT is unbounded in principle and carries no information. `ttft_p90_ms` is not required
+> for the Offline point — see [§5.7](#57-offline-point).
 
 > [!NOTE]
-> **TTFT versioning.** The historical v0.7 rules used **P95** for the publication plot and as the primary TTFT metric. These v1.0 rules use **P90**; only `ttft_p90_ms` is required to be reported per measurement point. Additional TTFT percentiles (e.g., P50, P99) may be reported in a submission YAML, but they are not plotted in the v1.0 publication chart.
+> **TTFT versioning.** The historical v0.7 rules used **P95** for the publication plot and as the
+> primary TTFT metric. These v1.0 rules use **P90**; only `ttft_p90_ms` is required to be reported
+> per measurement point. Additional TTFT percentiles (e.g., P50, P99) may be reported in a
+> submission YAML, but they are not plotted in the v1.0 publication chart.
 
 ### 4.2 Derived and Presentation Metrics
 
 > [!CAUTION]
 > **`[TENTATIVE — Subject to change after 2026-10-12]`**
 
-The following metrics are derived from primary measurements and used in publication charts. All charts use the percentile metric defined in [§4.1](#41-primary-metrics):
+The following metrics are derived from primary measurements and used in publication charts. All
+charts use the percentile metric defined in [§4.1](#41-primary-metrics):
 
 | Metric | Description |
 |---|---|
@@ -731,28 +1314,54 @@ The following metrics are derived from primary measurements and used in publicat
 
 ### 4.3 Accuracy Metric
 
-Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target are specified in the benchmark definition.
+Each benchmark defines a quality target expressed as a minimum acceptable score on the benchmark's
+accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target
+are specified in the benchmark definition.
 
 
-**Exactly one** accuracy validation run is required, and **exactly one may be submitted**, for each of the mandatory points defined in [§5.3](#53-minimum-submission-requirements) — one in the Ultra Low Concurrency region, one in each of the Low, Medium, and High Concurrency regions, and, for non-agentic benchmarks, one at the Offline point. Accuracy and performance runs MUST use the same server endpoint configuration, model weights, and software stack.
+**Exactly one** accuracy validation run is required, and **exactly one may be submitted**, for each
+of the mandatory points defined in [§5.3](#53-minimum-submission-requirements) — one in the Ultra
+Low Concurrency region, one in each of the Low, Medium, and High Concurrency regions, and, for
+non-agentic benchmarks, one at the Offline point. Accuracy and performance runs MUST use the same
+server endpoint configuration, model weights, and software stack.
 
 | Benchmark type | Required accuracy runs (`N`) | Composition |
 |---|---|---|
 | Non-agentic | **5** | 4 concurrency regions + Offline |
 | Agentic | **4** | 4 concurrency regions; the Offline point does not apply ([§5.7](#57-offline-point)) |
 
-`N` is a fixed count, not a floor. A submission carrying more than one accuracy result for a region, or any accuracy result at a submitter's-choice point, is non-conforming and is rejected at automated compliance ([§9.1](#91-automated-checks)).
+`N` is a fixed count, not a floor. A submission carrying more than one accuracy result for a region,
+or any accuracy result at a submitter's-choice point, is non-conforming and is rejected at automated
+compliance ([§9.1](#91-automated-checks)).
 
-*Rationale:* the multi-turn criterion below is a **mean** over the `N` results. If the number of accuracy runs were at the submitter's discretion, that mean could be shifted by adding runs at favourable operating points, and the threshold would no longer mean the same thing across submissions. Fixing `N` — and fixing *which* points it covers — keeps the accuracy criterion comparable. The three submitter's-choice performance points characterize the curve; they carry no accuracy run.
+*Rationale:* the multi-turn criterion below is a **mean** over the `N` results. If the number of
+accuracy runs were at the submitter's discretion, that mean could be shifted by adding runs at
+favourable operating points, and the threshold would no longer mean the same thing across
+submissions. Fixing `N` — and fixing *which* points it covers — keeps the accuracy criterion
+comparable. The three submitter's-choice performance points characterize the curve; they carry no
+accuracy run.
 
 For both single-turn and multi-turn benchmarks, accuracy is required at exactly those `N` points.
 
-- **Single-turn (per-point):** Each of the `N` required accuracy results MUST meet the quality threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after the corresponding performance run.
-- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn accuracy runs are time- and resource-intensive.
+- **Single-turn (per-point):** Each of the `N` required accuracy results MUST meet the quality
+  threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after
+  the corresponding performance run.
+- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the
+  quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn
+  accuracy runs are time- and resource-intensive.
 
 ### 4.4 Reporting Basis (Steady-State Window)
 
-Until v0.7, a point's metrics ([§4.1](#41-primary-metrics)) were averaged over the whole post-`TEST_STARTED` run, which still included the load-dependent **ramp-up** (inflates the TTFT tail) and the **drain tail** (deflates throughput) that warmup period ([§6.3](#63-warmup-period)) did not remove. For 1.0 and beyond, the **official result is instead computed over the detected steady-state window**, with the whole-run (`total`) metrics kept as supplementary. The window is defined on **issue time** — excluding the drain from the throughput denominator with no end-crop — and the residual ramp is cropped from the data on top of the declared warmup. Detection is a post-processing step over the durable event log (`events.jsonl`, [§4.1](#41-primary-metrics)), off the measured path; methodology and default parameters: [`scripts/steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md).
+Until v0.7, a point's metrics ([§4.1](#41-primary-metrics)) were averaged over the whole
+post-`TEST_STARTED` run, which still included the load-dependent **ramp-up** (inflates the TTFT
+tail) and the **drain tail** (deflates throughput) that warmup period ([§6.3](#63-warmup-period))
+did not remove. For 1.0 and beyond, the **official result is instead computed over the detected
+steady-state window**, with the whole-run (`total`) metrics kept as supplementary. The window is
+defined on **issue time** — excluding the drain from the throughput denominator with no end-crop —
+and the residual ramp is cropped from the data on top of the declared warmup. Detection is a
+post-processing step over the durable event log (`events.jsonl`, [§4.1](#41-primary-metrics)), off
+the measured path; methodology and default parameters:
+[`scripts/steady_state_diagnostics.md`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md).
 
 **Definitions.** The terms used throughout this section:
 
@@ -771,7 +1380,16 @@ Until v0.7, a point's metrics ([§4.1](#41-primary-metrics)) were averaged over 
 | **Coverage `status`** | Sample-count and duration classification of a point — `windowable`, `insufficient_duration`, `insufficient_passes`, `partial_dataset` (see the status table below). |
 | **Detected shape / verdict** | The detector's per-run classification of gating-metric behavior — `STEADY STATE`, `drifting_up`, `drifting_down`, `anomaly`, `not found` (see the shape table below). |
 
-Steady-state is the official result **only where the condition holds**: the steady window spans **≥ 4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes total), every gating metric — TTFT and TPOT at P50/P90 — is a **Plateau**, not **Drifting Up**, **and** the window's **issue-time span meets the [§6.2](#62-minimum-run-duration) minimum run duration** for the point's concurrency region. The effective floor is therefore `max(4 super-passes, §6.2 minimum duration)` — at high concurrency the duration floor binds, since 4 super-passes can complete in well under the minimum. A *super-pass* is a contiguous issue-order block sized to one full-dataset mix — by default one full dataset pass, unless the [benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Otherwise the point falls back by coverage `status`:
+Steady-state is the official result **only where the condition holds**: the steady window spans **≥
+4 super-passes** (the trend-test floor `MIN_TREND_N = 4`, so a run needs more than 4 super-passes
+total), every gating metric — TTFT and TPOT at P50/P90 — is a **Plateau**, not **Drifting Up**,
+**and** the window's **issue-time span meets the [§6.2](#62-minimum-run-duration) minimum run
+duration** for the point's concurrency region. The effective floor is therefore
+`max(4 super-passes, §6.2 minimum duration)` — at high concurrency the duration floor binds, since 4
+super-passes can complete in well under the minimum. A *super-pass* is a contiguous issue-order
+block sized to one full-dataset mix — by default one full dataset pass, unless the
+[benchmark definition](#31-benchmark-definition) specifies a different super-pass size. Otherwise
+the point falls back by coverage `status`:
 
 | `status` | Condition | Official result |
 |---|---|---|
@@ -780,7 +1398,10 @@ Steady-state is the official result **only where the condition holds**: the stea
 | `insufficient_passes` | ≥ 1 super-pass but window < 4 super-passes | `total` (steady-state reported low-confidence, not official) |
 | `partial_dataset` | < 1 super-pass | `total` only (no steady-state claim) |
 
-Beyond the coverage `status` above (which gates on sample count), a point's official result depends on the **shape** the detector finds over the super-passes. The detector ([`steady_state_diagnostics`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md)) emits one verdict per run:
+Beyond the coverage `status` above (which gates on sample count), a point's official result depends
+on the **shape** the detector finds over the super-passes. The detector
+([`steady_state_diagnostics`](https://github.com/mlcommons/endpoints/blob/3a51022c2f52dea27fc0338b91df781c3871f538/scripts/steady_state_diagnostics.md))
+emits one verdict per run:
 
 | Detected shape | Verdict | What is reported | Accepted as steady-state? |
 |---|---|---|---|
@@ -790,37 +1411,66 @@ Beyond the coverage `status` above (which gates on sample count), a point's offi
 | First plateau steps to a later, materially different plateau (change-point confirmed) | `anomaly` (staircase) | **First** plateau reported as the steady state; later shift flagged as `anomaly` (likely degradation) | ✅ Yes (first plateau); anomaly disclosed |
 | No contiguous run of super-passes is steady enough (drifts throughout, or too short) | `not found` | No steady-state claim; falls back to whole-run `total` | ❌ No — `total` only |
 
-**Scope.** Only `ConcurrencyScheduler` points ([§6.1](#61-load-pattern)) are in scope; `MaxThroughput`/`Poisson` and single-pass agentic workloads are handled only by the ad-hoc diagnostic tool. The minimum run duration ([§6.2](#62-minimum-run-duration)) is measured over the steady window's **issue-time span**, not wall-clock; a window shorter than the §6.2 minimum for its concurrency region is `insufficient_duration` and falls back to `total`.
+**Scope.** Only `ConcurrencyScheduler` points ([§6.1](#61-load-pattern)) are in scope;
+`MaxThroughput`/`Poisson` and single-pass agentic workloads are handled only by the ad-hoc
+diagnostic tool. The minimum run duration ([§6.2](#62-minimum-run-duration)) is measured over the
+steady window's **issue-time span**, not wall-clock; a window shorter than the §6.2 minimum for its
+concurrency region is `insufficient_duration` and falls back to `total`.
 
-**Pending ratification.** Whether the super-pass floor is raised above 4, and whether a `not found` run is declared *invalid* versus *reported-with-flags* (the ⚠️/❌ rows assume the latter).
+**Pending ratification.** Whether the super-pass floor is raised above 4, and whether a `not found`
+run is declared *invalid* versus *reported-with-flags* (the ⚠️/❌ rows assume the latter).
 
 ---
 
 ### 4.5 Performance Normalization
 
 > [!CAUTION]
-> **`[TENTATIVE — Pending working-group ratification]`** This section introduces power-based normalization for Endpoints v1.0. Tier definitions, overhead fractions, component references, and the name and units of the reported normalized metric are subject to change.
+> **`[TENTATIVE — Pending working-group ratification]`** This section introduces power-based
+> normalization for Endpoints v1.0. Tier definitions, overhead fractions, component references, and
+> the name and units of the reported normalized metric are subject to change.
 
-MLPerf Endpoints normalizes total system throughput by **provisioned power**, so that systems of different scale can be compared on a common basis. Normalization is what makes results *comparable*: without it a larger system trivially out-performs a smaller one, and a buyer cannot tell which delivers more for a given deployment budget.
+MLPerf Endpoints normalizes total system throughput by **provisioned power**, so that systems of
+different scale can be compared on a common basis. Normalization is what makes results *comparable*:
+without it a larger system trivially out-performs a smaller one, and a buyer cannot tell which
+delivers more for a given deployment budget.
 
-**Scope.** Power normalization applies to **all Standardized division submissions, in both the Client on Prem (CoP) and Client over Network (CoN) scenarios** ([§2.1](#21-client-deployment-scenarios)). Normalization options for the **Serviced** division — managed endpoints, CSP-hosted services, and similar offerings, where provisioned power is not a property the submitter controls or discloses — will be introduced in a later version. RDI submissions MAY report normalized throughput but are not required to.
+**Scope.** Power normalization applies to **all Standardized division submissions, in both the
+Client on Prem (CoP) and Client over Network (CoN) scenarios**
+([§2.1](#21-client-deployment-scenarios)). Normalization options for the **Serviced** division —
+managed endpoints, CSP-hosted services, and similar offerings, where provisioned power is not a
+property the submitter controls or discloses — will be introduced in a later version. RDI
+submissions MAY report normalized throughput but are not required to.
 
 #### 4.5.1 Power Normalization Roadmap and Rationale
 
-**Goal.** MLPerf Endpoints will transition to mandatory provisioned-power-based normalization of performance (total system throughput) in Endpoints v1.0 and beyond. Toward this goal the benchmark adopts a phased approach of increasing provisioned-power fidelity, and will eventually add true measured power as an additional normalization option.
+**Goal.** MLPerf Endpoints will transition to mandatory provisioned-power-based normalization of
+performance (total system throughput) in Endpoints v1.0 and beyond. Toward this goal the benchmark
+adopts a phased approach of increasing provisioned-power fidelity, and will eventually add true
+measured power as an additional normalization option.
 
 **Why provisioned power.** Provisioned power is selected as the normalizing factor because:
 
-- It is a good proxy for **total cost of ownership** (cost of acquisition + cost of operation). In practice a buyer computes the cost of a system and the cost of operating it; this is a rough proxy for that.
-- It correlates with the **capital cost of power delivery** for deploying a system into a rack or data center — UPS, PDUs, generators, and similar.
-- It correlates with **measured power in well-utilized data centers**. Operators generally optimize to keep utilization high, which implies measured power tracks provisioned power.
-- Data center operators are typically **capacity limited by provisioned power** rather than by floor space.
-- CSPs, neoclouds, and others have given feedback that they evaluated provisioned power and find it **more useful than power consumption**.
-- The prior **measured-power approach saw very limited uptake**, because it required additional power meters and extra test time against tight submission deadlines.
-- Modern systems have **configurable power capping**, which lets OEMs and buyers limit consumption — and lets provisioned power be sized correctly for partially populated systems.
-- Provisioned power is **more feasible to obtain or estimate for systems that have not been submitted** to MLPerf, which matters for comprehensive testing.
+- It is a good proxy for **total cost of ownership** (cost of acquisition + cost of operation). In
+  practice a buyer computes the cost of a system and the cost of operating it; this is a rough proxy
+  for that.
+- It correlates with the **capital cost of power delivery** for deploying a system into a rack or
+  data center — UPS, PDUs, generators, and similar.
+- It correlates with **measured power in well-utilized data centers**. Operators generally optimize
+  to keep utilization high, which implies measured power tracks provisioned power.
+- Data center operators are typically **capacity limited by provisioned power** rather than by floor
+  space.
+- CSPs, neoclouds, and others have given feedback that they evaluated provisioned power and find it
+  **more useful than power consumption**.
+- The prior **measured-power approach saw very limited uptake**, because it required additional
+  power meters and extra test time against tight submission deadlines.
+- Modern systems have **configurable power capping**, which lets OEMs and buyers limit consumption —
+  and lets provisioned power be sized correctly for partially populated systems.
+- Provisioned power is **more feasible to obtain or estimate for systems that have not been
+  submitted** to MLPerf, which matters for comprehensive testing.
 
-**Normalization factor by system type.** Provisioned power is the factor for systems whose power a submitter provisions and can evidence. Other deployment types are expected to normalize differently, and are deferred to a later version:
+**Normalization factor by system type.** Provisioned power is the factor for systems whose power a
+submitter provisions and can evidence. Other deployment types are expected to normalize differently,
+and are deferred to a later version:
 
 | System type | Normalizing factor | Status |
 |---|---|---|
@@ -829,7 +1479,8 @@ MLPerf Endpoints normalizes total system throughput by **provisioned power**, so
 | **IaaS-C** (committed capacity) | Provisioned power, optionally price | Deferred |
 | **Managed endpoint** | Cost per token | Deferred |
 
-**Phased tiers.** Provisioned power definition, calculation, and methodology advance through three tiers of increasing fidelity, accuracy, and quality. Endpoints begins at Tier 3 and works upward.
+**Phased tiers.** Provisioned power definition, calculation, and methodology advance through three
+tiers of increasing fidelity, accuracy, and quality. Endpoints begins at Tier 3 and works upward.
 
 | Tier | Definition | Status |
 |---|---|---|
@@ -837,28 +1488,49 @@ MLPerf Endpoints normalizes total system throughput by **provisioned power**, so
 | **Tier 2** | The **nameplate power** of the system's power supplies, accounting for any software-managed power capping. Requires robust verification of system- and rack-level power provisioning. Any power capping must be validated by an MLCommons-defined methodology, which may include Redfish-based logging, independent third-party audit of datacenter deployments, or publicly available documentation of the system's deployment specifications published by the submitting organization. | Target. Requires a dedicated effort to define verification criteria and methodology before it can be rolled out. |
 | **Tier 3** | The **sum of the rated power of the key power-consuming components**, plus an assumed margin. Where publicly available and verifiable data is absent, MLCommons may substitute a proxy value for a component based on public data and analysis. | **In force for Endpoints v1.0** ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)) |
 
-**What provisioned power must account for.** The goal is to capture the key power-consuming elements and the reasonable margins and buffers that vendors, OEMs, ODMs, and customers would themselves employ. Key components include computing elements (CPU, GPU, ASIC), switching, storage, networking, cooling, and any power-correction units.
+**What provisioned power must account for.** The goal is to capture the key power-consuming elements
+and the reasonable margins and buffers that vendors, OEMs, ODMs, and customers would themselves
+employ. Key components include computing elements (CPU, GPU, ASIC), switching, storage, networking,
+cooling, and any power-correction units.
 
 - For **remote-hosted storage**, the power of dedicated storage racks need not be included.
-- For **DC-level liquid cooling**, submitters may provide the power of the entire data center and scale it to the submitted system's size. For an individually hosted rack or system with a dedicated CDU, cooling power MUST be included.
+- For **DC-level liquid cooling**, submitters may provide the power of the entire data center and
+  scale it to the submitted system's size. For an individually hosted rack or system with a
+  dedicated CDU, cooling power MUST be included.
 
-**Why Tier 3 first.** The component-sum definition is less precise than nameplate power, but it works well for comprehensive testing — where the claimed or rated power of the performance-determining devices (CPU, GPU, ASIC) is the information most readily found. It accommodates systems that are partially filled or racks that are not fully used, and it puts every submitter on the same methodology.
+**Why Tier 3 first.** The component-sum definition is less precise than nameplate power, but it
+works well for comprehensive testing — where the claimed or rated power of the
+performance-determining devices (CPU, GPU, ASIC) is the information most readily found. It
+accommodates systems that are partially filled or racks that are not fully used, and it puts every
+submitter on the same methodology.
 
 #### 4.5.2 Proposed Endpoints v1.0 Normalization Methodology
 
 The v1.0 approach normalizes by power using three elements:
 
-1. An **MLC-approved, simplified and consistent method** for calculating the power of a system from the TDP or power consumption of its most significant components.
-2. A mechanism and guidelines for **submitters to provide the inputs** in a verifiable manner. This is the preferred path.
-3. A mechanism and guidelines for a **third party to estimate the inputs**, as a conservative default or fallback path.
+1. An **MLC-approved, simplified and consistent method** for calculating the power of a system from
+   the TDP or power consumption of its most significant components.
+2. A mechanism and guidelines for **submitters to provide the inputs** in a verifiable manner. This
+   is the preferred path.
+3. A mechanism and guidelines for a **third party to estimate the inputs**, as a conservative
+   default or fallback path.
 
 ##### Methodology
 
-- MLCommons provides a defined template for total system power, summing critical component power and adding margins for cooling and PSU overheads.
-- Submitters are **encouraged to provide accurate and publicly verifiable** details for component or system power. In the absence of publicly verifiable sources provided by the submitter, MLCommons will use conservative estimations.
-- If a submitter is not satisfied with an MLCommons power estimate, they must either point to better verified sources or disclose component power directly and publicly, thereby creating a verified and public source. In the abscence of public and verifiable information, MLCommons may not accept the submitter's recommendations. 
-- The MLC default template uses publicly available sources for the TDP/TGP of each component. Where vendor documentation is absent, MLCommons relies on industry and academic sources.
-- Estimation is done conservatively, from components with similar specifications or via an energy-per-unit calculation. For example, for a custom CPU SKU whose TDP is not publicly listed, MLCommons will use CPUs of similar architecture, core count, and memory configuration.
+- MLCommons provides a defined template for total system power, summing critical component power and
+  adding margins for cooling and PSU overheads.
+- Submitters are **encouraged to provide accurate and publicly verifiable** details for component or
+  system power. In the absence of publicly verifiable sources provided by the submitter, MLCommons
+  will use conservative estimations.
+- If a submitter is not satisfied with an MLCommons power estimate, they must either point to better
+  verified sources or disclose component power directly and publicly, thereby creating a verified
+  and public source. In the abscence of public and verifiable information, MLCommons may not accept
+  the submitter's recommendations.
+- The MLC default template uses publicly available sources for the TDP/TGP of each component. Where
+  vendor documentation is absent, MLCommons relies on industry and academic sources.
+- Estimation is done conservatively, from components with similar specifications or via an
+  energy-per-unit calculation. For example, for a custom CPU SKU whose TDP is not publicly listed,
+  MLCommons will use CPUs of similar architecture, core count, and memory configuration.
 
 **Verifiable and unverified sources.**
 
@@ -867,7 +1539,11 @@ The v1.0 approach normalizes by power using three elements:
 | **Verifiable** (preferred) | A spec sheet on the vendor's website; disclosures in an academic or technical conference or publication; statements made to press or media during a keynote or earnings call; other public statements officially sanctioned by the submitting organization. |
 | **Unverified** | Any source not officially stated by a representative of the submitting organization — media speculation, third-party social media posts, industry analyst blogs, videos, and reports. |
 
-**Running below rated TDP.** Any component running below its rated TDP, as stated in publicly verifiable documentation, MUST be accompanied by evidence of the lowered TDP. That evidence must be reproducible by a third-party audit, or the reduced mode must be publicly listed as an alternative production or operational mode. The burden of evidence for custom and low-volume SKUs is identical to that for any other component.
+**Running below rated TDP.** Any component running below its rated TDP, as stated in publicly
+verifiable documentation, MUST be accompanied by evidence of the lowered TDP. That evidence must be
+reproducible by a third-party audit, or the reduced mode must be publicly listed as an alternative
+production or operational mode. The burden of evidence for custom and low-volume SKUs is identical
+to that for any other component.
 
 ##### Power Model
 
@@ -885,43 +1561,102 @@ overhead_fraction = 0.30   liquid-cooled systems
                   = 0.50   air-cooled systems
 ```
 
-- **`CPU_power`** — power required for the CPUs in the system (e.g. Intel Xeon processors, Axion CPUs alongside a Google TPU), calculated as `number of CPUs × TDP`. Where the TDP is not disclosed, public sources may be used to estimate it.
-- **`Accelerator_power`** — power required for the accelerators (e.g. AMD MI355X, Google TPU), calculated as `number of accelerators × TDP`. Where the TDP is not disclosed, public sources may be used to estimate it.
-- In some systems CPU and accelerator power are published as a **single combined value**. That is a valid alternative formulation.
-- **`Network_scale_up_power`** — power for the high-bandwidth network connecting the accelerators, such as NVIDIA NVLink, the TPU Inter-Chip Interconnect, or UALink over Ethernet. The scale-up network accounts for the majority of networking power. Calculated as `number of switches × TDP per switch`; where switch power is not disclosed it may be estimated as `total switch bandwidth × energy per bit`. In systems with no switches this term is zero.
-- **Scale-out fabric** — where the submission spans more than one node, the fabric that connects them is counted in two parts, which enter the model differently. **Both are zero for a single-node submission, and zero where the nodes are joined only by a fabric already counted in `Network_scale_up_power`.**
-  - **`Optional_scale_out_NIC_power`** is a **major component**, and so takes the overhead fraction. A NIC is a card inside the node: its rated TDP is silicon draw, and it needs the same cooling and power-supply headroom as any other component in the chassis.
-  - **`Scale_out_switch_power`** is added to the total **outside the overhead base**. A rack switch figure — whether the submitter's own or a [D.4](#d4-reference-scale-out-network) reference — is already **wall power**, including the switch's own power supply, so applying the overhead fraction to it would double-count.
-  - **Whether NIC power is counted depends on how node power was obtained.** Where node or rack power is **built with the MLC formula**, the formula has no NIC term of its own, so the scale-out NICs' rated TDP **MUST be included** here for a multi-node submission. Where node or rack power is taken from a **published specification**, the NICs are assumed to be part of that figure and MUST NOT be added again. A submitter who believes a published figure excluded the adapters must say so and evidence it. The reference value for a scale-out NIC is in [Appendix D.4](#d4-reference-scale-out-network).
-  - **Rack switch power** is counted in full, and depends on cabling. **The submitter MUST declare whether the fabric uses passive or active (optical) cabling**, because an active-optical deployment can draw more than twice the power of the same switch with passive cables.
-  - **Switch count follows from the bandwidth the fabric must carry**: the sum of per-node NIC bandwidth across the submitted nodes. A ten-node cluster of DGX B300s, each with eight 800 Gb/s NICs, needs `10 × 8 × 800 Gb/s = 64 Tb/s`. The submitter either declares the rack switches actually used, or selects one or more reference switches from [Appendix D.4](#d4-reference-scale-out-network) whose combined bandwidth meets the requirement.
-- **`Other_components`** — storage, power-supply overhead, and cooling. Individually these may not be substantial; in aggregate they are significant and must be accounted for. They are estimated as a fixed fraction of the major-component power, set by cooling method. Scale-out **NICs** are inside that base as major components; scale-out **switches** are not, and must not be counted twice.
+- **`CPU_power`** — power required for the CPUs in the system (e.g. Intel Xeon processors, Axion
+  CPUs alongside a Google TPU), calculated as `number of CPUs × TDP`. Where the TDP is not
+  disclosed, public sources may be used to estimate it.
+- **`Accelerator_power`** — power required for the accelerators (e.g. AMD MI355X, Google TPU),
+  calculated as `number of accelerators × TDP`. Where the TDP is not disclosed, public sources may
+  be used to estimate it.
+- In some systems CPU and accelerator power are published as a **single combined value**. That is a
+  valid alternative formulation.
+- **`Network_scale_up_power`** — power for the high-bandwidth network connecting the accelerators,
+  such as NVIDIA NVLink, the TPU Inter-Chip Interconnect, or UALink over Ethernet. The scale-up
+  network accounts for the majority of networking power. Calculated as
+  `number of switches × TDP per switch`; where switch power is not disclosed it may be estimated as
+  `total switch bandwidth × energy per bit`. In systems with no switches this term is zero.
+- **Scale-out fabric** — where the submission spans more than one node, the fabric that connects
+  them is counted in two parts, which enter the model differently. **Both are zero for a single-node
+  submission, and zero where the nodes are joined only by a fabric already counted in
+  `Network_scale_up_power`.**
+  - **`Optional_scale_out_NIC_power`** is a **major component**, and so takes the overhead fraction.
+    A NIC is a card inside the node: its rated TDP is silicon draw, and it needs the same cooling
+    and power-supply headroom as any other component in the chassis.
+  - **`Scale_out_switch_power`** is added to the total **outside the overhead base**. A rack switch
+    figure — whether the submitter's own or a [D.4](#d4-reference-scale-out-network) reference — is
+    already **wall power**, including the switch's own power supply, so applying the overhead
+    fraction to it would double-count.
+  - **Whether NIC power is counted depends on how node power was obtained.** Where node or rack
+    power is **built with the MLC formula**, the formula has no NIC term of its own, so the
+    scale-out NICs' rated TDP **MUST be included** here for a multi-node submission. Where node or
+    rack power is taken from a **published specification**, the NICs are assumed to be part of that
+    figure and MUST NOT be added again. A submitter who believes a published figure excluded the
+    adapters must say so and evidence it. The reference value for a scale-out NIC is in
+    [Appendix D.4](#d4-reference-scale-out-network).
+  - **Rack switch power** is counted in full, and depends on cabling. **The submitter MUST declare
+    whether the fabric uses passive or active (optical) cabling**, because an active-optical
+    deployment can draw more than twice the power of the same switch with passive cables.
+  - **Switch count follows from the bandwidth the fabric must carry**: the sum of per-node NIC
+    bandwidth across the submitted nodes. A ten-node cluster of DGX B300s, each with eight 800 Gb/s
+    NICs, needs `10 × 8 × 800 Gb/s = 64 Tb/s`. The submitter either declares the rack switches
+    actually used, or selects one or more reference switches from
+    [Appendix D.4](#d4-reference-scale-out-network) whose combined bandwidth meets the requirement.
+- **`Other_components`** — storage, power-supply overhead, and cooling. Individually these may not
+  be substantial; in aggregate they are significant and must be accounted for. They are estimated as
+  a fixed fraction of the major-component power, set by cooling method. Scale-out **NICs** are
+  inside that base as major components; scale-out **switches** are not, and must not be counted
+  twice.
 
-**Composing a multi-node submission from published node power.** Where a node's power is taken from a published *system* figure, that figure already includes that node's own `Other_components` — its cooling, power-supply overhead and storage. The overhead fraction MUST NOT be applied to it a second time. In that case:
+**Composing a multi-node submission from published node power.** Where a node's power is taken from
+a published *system* figure, that figure already includes that node's own `Other_components` — its
+cooling, power-supply overhead and storage. The overhead fraction MUST NOT be applied to it a second
+time. In that case:
 
 ```
 System Power = Σ published node power + Scale_out_switch_power
 ```
 
-The overhead fraction is applied to **neither** term. The published node figure already carries the node's own overhead — including its NICs, which is why they are not counted separately on this path — and published switch power is wall power, an ATIS typical figure already including the switch's power-supply draw. Where node power is instead built from components, the ordinary formula applies to the whole system at once.
+The overhead fraction is applied to **neither** term. The published node figure already carries the
+node's own overhead — including its NICs, which is why they are not counted separately on this path
+— and published switch power is wall power, an ATIS typical figure already including the switch's
+power-supply draw. Where node power is instead built from components, the ordinary formula applies
+to the whole system at once.
 
-**Units and rounding.** Component power is declared in **watts**. `provisioned_power_kw` is the total system power in kilowatts — total watts ÷ 1000 — rounded to **two decimal places**, and `system_tps_per_kw` is reported to **one decimal place**. Rounding is applied once, to the final figures; intermediate sums are not rounded.
+**Units and rounding.** Component power is declared in **watts**. `provisioned_power_kw` is the
+total system power in kilowatts — total watts ÷ 1000 — rounded to **two decimal places**, and
+`system_tps_per_kw` is reported to **one decimal place**. Rounding is applied once, to the final
+figures; intermediate sums are not rounded.
 
 > [!NOTE]
-> Worked examples of the complete calculation — air-cooled and liquid-cooled, full and partial systems, rack-level node scaling, and the declared-provisioned-power override — are in [Appendix C](#appendix-c-worked-power-normalization-examples).
+> Worked examples of the complete calculation — air-cooled and liquid-cooled, full and partial
+> systems, rack-level node scaling, and the declared-provisioned-power override — are in
+> [Appendix C](#appendix-c-worked-power-normalization-examples).
 
 ##### Component Template (`system_power.json`)
 
-The template below is codified into a `system_power.json` descriptor file accompanying the submission. Its field-by-field definition, validation rules, and worked descriptors are in [Appendix E](#appendix-e-system_powerjson-field-reference).
+The template below is codified into a `system_power.json` descriptor file accompanying the
+submission. Its field-by-field definition, validation rules, and worked descriptors are in
+[Appendix E](#appendix-e-system_powerjson-field-reference).
 
 > [!IMPORTANT]
-> **`system_power.json` is mandatory.** Every submission MUST include a `system_power.json` descriptor for **each system**, conforming to the template below and located per [§8.1](#81-directory-structure). A submission without it is incomplete and is rejected at automated compliance ([§9.1](#91-automated-checks)). A submitter who does not supply a value for a given field leaves it to be auto-populated by the MLCommons checker, which triggers the estimated-power tag described below — but the file itself is required either way.
+> **`system_power.json` is mandatory.** Every submission MUST include a `system_power.json`
+> descriptor for **each system**, conforming to the template below and located per
+> [§8.1](#81-directory-structure). A submission without it is incomplete and is rejected at
+> automated compliance ([§9.1](#91-automated-checks)). A submitter who does not supply a value for a
+> given field leaves it to be auto-populated by the MLCommons checker, which triggers the
+> estimated-power tag described below — but the file itself is required either way.
 
-The MLCommons checker auto-populates power values where a submitter does not provide them or where public information is lacking.
+The MLCommons checker auto-populates power values where a submitter does not provide them or where
+public information is lacking.
 
-**Citation requirement.** Every value in `system_power.json` MUST carry a reference to a public, verifiable source meeting the criteria above — **unless** it is an MLCommons default reference value from [Appendix D](#appendix-d-mlcommons-default-power-reference-values), which is its own reference and needs no further citation. **Self-declaration is not sufficient.** A figure asserted by a submitter without a public source is treated as no value at all: the MLCommons default applies, and the result is tagged "MLC Estimated Power".
+**Citation requirement.** Every value in `system_power.json` MUST carry a reference to a public,
+verifiable source meeting the criteria above — **unless** it is an MLCommons default reference value
+from [Appendix D](#appendix-d-mlcommons-default-power-reference-values), which is its own reference
+and needs no further citation. **Self-declaration is not sufficient.** A figure asserted by a
+submitter without a public source is treated as no value at all: the MLCommons default applies, and
+the result is tagged "MLC Estimated Power".
 
-A submitter's own verifiable public reference **overrides** the corresponding MLCommons default. The defaults exist so that a submission is always computable, not to cap what a submitter may evidence.
+A submitter's own verifiable public reference **overrides** the corresponding MLCommons default. The
+defaults exist so that a submission is always computable, not to cap what a submitter may evidence.
 
 | Field group | Fields | Fallback when public information is absent |
 |---|---|---|
@@ -932,55 +1667,106 @@ A submitter's own verifiable public reference **overrides** the corresponding ML
 | **Other components and Cooling** | auto-calculated | `overhead_fraction × (CPU + Accelerator + Scale-up + Scale-out NICs)`, with cooling estimated as a fraction of total power: **30%** for liquid-cooled, **50%** for air-cooled systems. Scale-out **switches** are excluded from this base. |
 | **Total system power** | auto-calculated; used for normalization | `Major_components + Other_components`. |
 
-**A published power figure is specific to the vendor and SKU that published it.** A rack or system power rating applies only to that vendor's implementation of that configuration. Two vendors shipping the same accelerator in the same rack topology may provision differently — power supplies, cooling, redundancy, and integration all differ — so one vendor's published rating MUST NOT be used by another. Each submitter cites a figure published for their own system.
+**A published power figure is specific to the vendor and SKU that published it.** A rack or system
+power rating applies only to that vendor's implementation of that configuration. Two vendors
+shipping the same accelerator in the same rack topology may provision differently — power supplies,
+cooling, redundancy, and integration all differ — so one vendor's published rating MUST NOT be used
+by another. Each submitter cites a figure published for their own system.
 
-**Declaring provisioned power directly.** If the estimated total system power is higher than a submitter believes their system is rated at, they may instead provide a provisioned power number directly. That number is subject to the same verification and publication requirements as every other component. Where a published specification states a range for rack-level power, the **upper bound** is used — for example, a system rated at 132–140 kW is taken as 140 kW.
+**Declaring provisioned power directly.** If the estimated total system power is higher than a
+submitter believes their system is rated at, they may instead provide a provisioned power number
+directly. That number is subject to the same verification and publication requirements as every
+other component. Where a published specification states a range for rack-level power, the **upper
+bound** is used — for example, a system rated at 132–140 kW is taken as 140 kW.
 
-These estimates are deliberately conservative. Submitters are encouraged to be as transparent as possible in order to obtain a more accurate power figure.
+These estimates are deliberately conservative. Submitters are encouraged to be as transparent as
+possible in order to obtain a more accurate power figure.
 
-**Obligation to report a materially wrong estimate.** A submitter who finds that the MLCommons formula or a default reference value diverges **materially** from their system's actual provisioned power MUST report the divergence to MLCommons, **in either direction**, so that the formula or the default can be corrected. The estimates exist to make every submission computable, not to stand in for a figure the submitter knows to be wrong.
+**Obligation to report a materially wrong estimate.** A submitter who finds that the MLCommons
+formula or a default reference value diverges **materially** from their system's actual provisioned
+power MUST report the divergence to MLCommons, **in either direction**, so that the formula or the
+default can be corrected. The estimates exist to make every submission computable, not to stand in
+for a figure the submitter knows to be wrong.
 
-Accepting an estimate known to **understate** actual provisioned power — and so to flatter the normalized result — is a misrepresentation under [Submission Rules §8.4](endpoints_submission_rules.md#84-issues-discovered-after-publication). Reporting an estimate that **overstates** is equally required: an uncorrected overestimate penalizes the submitter and leaves the formula wrong for everyone using it next round.
+Accepting an estimate known to **understate** actual provisioned power — and so to flatter the
+normalized result — is a misrepresentation under
+[Submission Rules §8.4](endpoints_submission_rules.md#84-issues-discovered-after-publication).
+Reporting an estimate that **overstates** is equally required: an uncorrected overestimate penalizes
+the submitter and leaves the formula wrong for everyone using it next round.
 
-**Partially provisioned systems.** Where a system is only partially populated — a rack with sleds unfilled, or a node with accelerator slots empty — provisioned power is established in one of three ways:
+**Partially provisioned systems.** Where a system is only partially populated — a rack with sleds
+unfilled, or a node with accelerator slots empty — provisioned power is established in one of three
+ways:
 
 1. **Verified, publicly available documentation** stating the power of the system as provisioned; or
-2. **Rack-level node scaling** from published rack power, where the partial provisioning is a whole number of nodes ([§4.5.2.1](#4521-rack-level-node-scaling)); or
-3. **The MLC formula above**, applied with the component counts limited to what is actually provisioned. `num_cpu` and `num_accelerator` reflect the populated configuration, not the maximum the chassis or rack could hold.
+2. **Rack-level node scaling** from published rack power, where the partial provisioning is a whole
+   number of nodes ([§4.5.2.1](#4521-rack-level-node-scaling)); or
+3. **The MLC formula above**, applied with the component counts limited to what is actually
+   provisioned. `num_cpu` and `num_accelerator` reflect the populated configuration, not the maximum
+   the chassis or rack could hold.
 
-This describes how the system is *provisioned*, not how heavily it is *used* during a run: `num_cpu` and `num_accelerator` reflect what is installed, and the resulting provisioned power is the same for every measurement point. How much of that provisioned system a given point *engages* is a separate question, answered per point by the node scaling of [§4.5.3](#453-normalized-metric).
+This describes how the system is *provisioned*, not how heavily it is *used* during a run: `num_cpu`
+and `num_accelerator` reflect what is installed, and the resulting provisioned power is the same for
+every measurement point. How much of that provisioned system a given point *engages* is a separate
+question, answered per point by the node scaling of [§4.5.3](#453-normalized-metric).
 
 ##### 4.5.2.1 Rack-Level Node Scaling
 
-A submitter who has published the power of a rack-scale system may scale that published figure down to a partial rack, rather than rebuilding the number from components. For a rack of `N` nodes with published total power `P_rack`, submitting `Y` nodes where `Y < N`:
+A submitter who has published the power of a rack-scale system may scale that published figure down
+to a partial rack, rather than rebuilding the number from components. For a rack of `N` nodes with
+published total power `P_rack`, submitting `Y` nodes where `Y < N`:
 
 ```
 provisioned_power(Y nodes) = P_rack × (Y / N)
 ```
 
-`P_rack` is subject to the same verification and publication requirements as every other power value in this section, and where the published specification states a range, the upper bound is used.
+`P_rack` is subject to the same verification and publication requirements as every other power value
+in this section, and where the published specification states a range, the upper bound is used.
 
-*Rationale:* at rack level, power scales linearly with the number of nodes — the per-node contribution of compute, scale-up switching, cooling, and power-delivery overhead is essentially constant across otherwise identical nodes. This path exists so that submitters who have already been transparent about rack power are not forced back onto component estimation when they submit a smaller configuration.
+*Rationale:* at rack level, power scales linearly with the number of nodes — the per-node
+contribution of compute, scale-up switching, cooling, and power-delivery overhead is essentially
+constant across otherwise identical nodes. This path exists so that submitters who have already been
+transparent about rack power are not forced back onto component estimation when they submit a
+smaller configuration.
 
 > [!NOTE]
-> **This formula is applied twice, for two different purposes.** Here it establishes the **provisioned power of the submitted system** — how much hardware the submission consists of, fixed for the whole submission. In [§4.5.3](#453-normalized-metric) the same `× (Y / N)` scaling is applied again, **per measurement point**, to the nodes a given point engages. The linearity argument above is what licenses both. Keep the two distinct: `N` and the provisioned `Y` describe the system; the per-point `Y_s` describes one point on its curve.
+> **This formula is applied twice, for two different purposes.** Here it establishes the
+> **provisioned power of the submitted system** — how much hardware the submission consists of,
+> fixed for the whole submission. In [§4.5.3](#453-normalized-metric) the same `× (Y / N)` scaling
+> is applied again, **per measurement point**, to the nodes a given point engages. The linearity
+> argument above is what licenses both. Keep the two distinct: `N` and the provisioned `Y` describe
+> the system; the per-point `Y_s` describes one point on its curve.
 
-**`Y` is a whole number of nodes, rounded up.** Any fractional node counts as a whole one. A submitter using 4.5 nodes — because a node is shared or virtualized — declares `Y = 5`. Provisioned power is a property of hardware that must be provisioned in whole units; half a node still requires a whole node to be powered.
+**`Y` is a whole number of nodes, rounded up.** Any fractional node counts as a whole one. A
+submitter using 4.5 nodes — because a node is shared or virtualized — declares `Y = 5`. Provisioned
+power is a property of hardware that must be provisioned in whole units; half a node still requires
+a whole node to be powered.
 
-**The `N` nodes must be identical to each other and to the `Y` being submitted.** Scaling divides a published figure by a node count, which is only valid where every node in the set draws the same power. In particular:
+**The `N` nodes must be identical to each other and to the `Y` being submitted.** Scaling divides a
+published figure by a node count, which is only valid where every node in the set draws the same
+power. In particular:
 
-- A **partially populated node is not identical** to a fully populated one ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). A set containing both cannot be scaled as one set.
+- A **partially populated node is not identical** to a fully populated one
+  ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)). A set containing both cannot be
+  scaled as one set.
 - A node under a TDP cap is not identical to an uncapped node of the same model.
 
-**Heterogeneous racks are partitioned into homogeneous sets.** Where a rack holds more than one kind of node — a mix of H200 and B200 DGX nodes, say — the rack is divided into sets of identical nodes, each set scaled from its own published figure or computed by the formula, and the results summed:
+**Heterogeneous racks are partitioned into homogeneous sets.** Where a rack holds more than one kind
+of node — a mix of H200 and B200 DGX nodes, say — the rack is divided into sets of identical nodes,
+each set scaled from its own published figure or computed by the formula, and the results summed:
 
 ```
 provisioned_power = Σ over homogeneous sets:  P_set × (Y_set / N_set)
 ```
 
-A published *whole-rack* figure cannot be scaled directly in that case, because it does not decompose into per-node shares that are equal across the rack.
+A published *whole-rack* figure cannot be scaled directly in that case, because it does not
+decompose into per-node shares that are equal across the rack.
 
-**This path applies only at node granularity.** It MUST NOT be used for partial provisioning *within* a node. Node power is a function of the accelerator count plus a substantial fixed component — host CPU, memory, NICs, chassis, and power-supply overhead — that does not scale down with accelerator count, so linear scaling materially understates the power of a partly populated node.
+**This path applies only at node granularity.** It MUST NOT be used for partial provisioning
+*within* a node. Node power is a function of the accelerator count plus a substantial fixed
+component — host CPU, memory, NICs, chassis, and power-supply overhead — that does not scale down
+with accelerator count, so linear scaling materially understates the power of a partly populated
+node.
 
 | Configuration | Path |
 |---|---|
@@ -989,9 +1775,14 @@ A published *whole-rack* figure cannot be scaled directly in that case, because 
 | Node or rack running under a TDP cap | Published power for that specific configuration, or the MLC formula using the capped values, with the evidence required for running below rated TDP. Not identical to an uncapped node, so it forms its own set |
 | Rack of mixed node types | Partition into homogeneous sets, scale each separately, and sum |
 
-Vendor documentation describing the power provisioning of specific rack configurations is the preferred source for `P_rack` and `N`. For example, NVIDIA publishes per-configuration power-domain guidance for GB200 / GB300 NVL72 racks in its [Mission Control systems administration guide](https://docs.nvidia.com/mission-control/docs/systems-administration-guide/2.3.1/prs/faq.html#example-1-configuring-a-pd-for-a-gb200-gb300-nvl72-rack).
+Vendor documentation describing the power provisioning of specific rack configurations is the
+preferred source for `P_rack` and `N`. For example, NVIDIA publishes per-configuration power-domain
+guidance for GB200 / GB300 NVL72 racks in its
+[Mission Control systems administration guide](https://docs.nvidia.com/mission-control/docs/systems-administration-guide/2.3.1/prs/faq.html#example-1-configuring-a-pd-for-a-gb200-gb300-nvl72-rack).
 
-**Estimated-power labelling.** Where power values are not provided by the submitter, or where the result arises from comprehensive testing, MLCommons populates the missing values via the fallback paths above and the published result is tagged **"MLC Estimated Power"**.
+**Estimated-power labelling.** Where power values are not provided by the submitter, or where the
+result arises from comprehensive testing, MLCommons populates the missing values via the fallback
+paths above and the published result is tagged **"MLC Estimated Power"**.
 
 #### 4.5.3 Normalized Metric
 
@@ -1000,9 +1791,13 @@ Vendor documentation describing the power provisioning of specific rack configur
 | Total System Throughput per Kilowatt | `system_tps_per_kw` | `system_tps_per_kw = system_tps / point_power_kw`, evaluated **per measurement point**. |
 | Point power | `point_power_kw` | The normalization denominator for a single measurement point: the provisioned power of [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology) scaled to the nodes used at that point, per the rule below. |
 
-**Normalization is per measurement point.** A point that engages only part of a multi-node system is normalized by the power of the part it engages, not by the whole system.
+**Normalization is per measurement point.** A point that engages only part of a multi-node system is
+normalized by the power of the part it engages, not by the whole system.
 
-**Submitters MUST maximize the provisioned hardware engaged at each point.** A point may not be served from a narrow slice of a larger provisioned system while the remainder sits idle. Where the serving configuration admits replication, the submitter MUST replicate it **data-parallel** until no further replica fits:
+**Submitters MUST maximize the provisioned hardware engaged at each point.** A point may not be
+served from a narrow slice of a larger provisioned system while the remainder sits idle. Where the
+serving configuration admits replication, the submitter MUST replicate it **data-parallel** until no
+further replica fits:
 
 ```
 A_replica          = accelerators required by one replica   (TP × PP × EP at that point)
@@ -1010,49 +1805,97 @@ DP                 = floor( A_provisioned / A_replica )
 accelerators_used  = DP × A_replica
 ```
 
-A point whose configuration requires **24** accelerators per replica, on a system provisioning **64**, MUST be run at `DP = floor(64 / 24) = 2`, engaging **48** accelerators. Running that point at `DP = 1` on 24 accelerators, and normalizing by 24 accelerators' worth of power, is not a valid submission of that point.
+A point whose configuration requires **24** accelerators per replica, on a system provisioning
+**64**, MUST be run at `DP = floor(64 / 24) = 2`, engaging **48** accelerators. Running that point
+at `DP = 1` on 24 accelerators, and normalizing by 24 accelerators' worth of power, is not a valid
+submission of that point.
 
-**The remainder is stranded, not charged.** In that example the leftover 16 accelerators cannot form a third replica. They are excluded from the denominator by the node scaling below, and the point divides by the power of the nodes holding the 48. The two rules are complements: maximal engagement stops a submitter *choosing* to under-deploy, and per-point normalization stops them being charged for capacity that genuinely cannot be used.
+**The remainder is stranded, not charged.** In that example the leftover 16 accelerators cannot form
+a third replica. They are excluded from the denominator by the node scaling below, and the point
+divides by the power of the nodes holding the 48. The two rules are complements: maximal engagement
+stops a submitter *choosing* to under-deploy, and per-point normalization stops them being charged
+for capacity that genuinely cannot be used.
 
-*Rationale:* a submission's pareto curve characterizes the system the submitter provisioned. Without this rule, per-point normalization would let a submitter report every point from whatever small slice happens to be most efficient, and publish it as a curve for the full system. Maximal engagement is what keeps `system_tps` and `point_power_kw` descriptions of the *same* machine at every point.
+*Rationale:* a submission's pareto curve characterizes the system the submitter provisioned. Without
+this rule, per-point normalization would let a submitter report every point from whatever small
+slice happens to be most efficient, and publish it as a curve for the full system. Maximal
+engagement is what keeps `system_tps` and `point_power_kw` descriptions of the *same* machine at
+every point.
 
-**Where a further replica genuinely does not fit.** `DP` is bounded by the formula above, so a remainder smaller than one replica needs no justification. Where a submitter runs **fewer** replicas than `floor(A_provisioned / A_replica)`, the shortfall and its reason MUST be declared in the point YAML ([§8.3](#83-measurement-point-yaml)) and is subject to Methodology objection during peer review. Accepted reasons include remaining accelerators that cannot satisfy the replica's interconnect topology — a replica requiring a single NVLink domain cannot be formed from accelerators spread across nodes — or a non-accelerator resource such as host memory or NIC count binding before accelerator count. That the serving framework does not implement data parallelism is not on its own sufficient.
+**Where a further replica genuinely does not fit.** `DP` is bounded by the formula above, so a
+remainder smaller than one replica needs no justification. Where a submitter runs **fewer** replicas
+than `floor(A_provisioned / A_replica)`, the shortfall and its reason MUST be declared in the point
+YAML ([§8.3](#83-measurement-point-yaml)) and is subject to Methodology objection during peer
+review. Accepted reasons include remaining accelerators that cannot satisfy the replica's
+interconnect topology — a replica requiring a single NVLink domain cannot be formed from
+accelerators spread across nodes — or a non-accelerator resource such as host memory or NIC count
+binding before accelerator count. That the serving framework does not implement data parallelism is
+not on its own sufficient.
 
-**Scaling is per node.** The unit of scaling is a whole node, never a fraction of one — the same granularity rule as [§4.5.2.1](#4521-rack-level-node-scaling), and for the same reason: a node's power does not scale down with the accelerators left idle inside it. For each node set `s`:
+**Scaling is per node.** The unit of scaling is a whole node, never a fraction of one — the same
+granularity rule as [§4.5.2.1](#4521-rack-level-node-scaling), and for the same reason: a node's
+power does not scale down with the accelerators left idle inside it. For each node set `s`:
 
 ```
 Y_s = ceil( accelerators_used_s / accelerators_per_node_s )
 ```
 
-`Y_s` is the number of nodes of set `s` engaged at that point, `N_s` the number provisioned. **Any fractional node rounds up to a whole node.** A point engaging 42 accelerators on nodes holding 8 each uses `ceil(42 / 8) = 6` nodes, and is normalized as though all 48 accelerators in those 6 nodes were provisioned to it.
+`Y_s` is the number of nodes of set `s` engaged at that point, `N_s` the number provisioned. **Any
+fractional node rounds up to a whole node.** A point engaging 42 accelerators on nodes holding 8
+each uses `ceil(42 / 8) = 6` nodes, and is normalized as though all 48 accelerators in those 6 nodes
+were provisioned to it.
 
-**The denominator scales by node fraction, uniformly.** Every term of [§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)'s power model scales together, including scale-out switch power:
+**The denominator scales by node fraction, uniformly.** Every term of
+[§4.5.2](#452-proposed-endpoints-v10-normalization-methodology)'s power model scales together,
+including scale-out switch power:
 
 ```
 point_power_kw = Σ over node sets s:  P_s × (Y_s / N_s)   +   S × (Σ Y_s / Σ N_s)
 ```
 
-where `P_s` is node set `s`'s contribution to provisioned power and `S` is the scale-out switch power. For a homogeneous submission — a single node set — this collapses to:
+where `P_s` is node set `s`'s contribution to provisioned power and `S` is the scale-out switch
+power. For a homogeneous submission — a single node set — this collapses to:
 
 ```
 point_power_kw = provisioned_power_kw × (Y / N)
 ```
 
-**Single-node submissions are unaffected.** With `Y = N = 1` the ratio is 1 at every point, so `point_power_kw = provisioned_power_kw` across the whole pareto curve and the normalized curve is the throughput curve scaled by a single constant, exactly as before.
+**Single-node submissions are unaffected.** With `Y = N = 1` the ratio is 1 at every point, so
+`point_power_kw = provisioned_power_kw` across the whole pareto curve and the normalized curve is
+the throughput curve scaled by a single constant, exactly as before.
 
 | Submission | Denominator |
 |---|---|
 | Single node | Constant across the pareto. The full node power, every point. |
 | Multi-node, rack-scale, or heterogeneous | Varies per point with `Y_s`. A complete `system_power.json` ([Appendix E](#appendix-e-system_powerjson-field-reference)) is **required**, since the per-set provisioned power `P_s` and node count `N_s` come from it. |
 
-**Declaring the node count.** A submitter electing per-point normalization declares the nodes used at each point in that point's measurement YAML ([§8.3](#83-measurement-point-yaml)), **by node type**: a single count for a homogeneous system, one count per node type for a heterogeneous one. The declaration is **optional**. Where it is absent for a point, that point is normalized by the **full** provisioned power — `Y_s = N_s` for every set. The conservative figure is the default; scaling it down requires an affirmative, checkable declaration.
+**Declaring the node count.** A submitter electing per-point normalization declares the nodes used
+at each point in that point's measurement YAML ([§8.3](#83-measurement-point-yaml)), **by node
+type**: a single count for a homogeneous system, one count per node type for a heterogeneous one.
+The declaration is **optional**. Where it is absent for a point, that point is normalized by the
+**full** provisioned power — `Y_s = N_s` for every set. The conservative figure is the default;
+scaling it down requires an affirmative, checkable declaration.
 
-**The declaration must match the serving deployment.** The declared node count is the set of nodes holding model weights and able to receive requests for that point. It MUST be consistent with the parallelism configuration declared in `system_desc.json` ([§8.2](#82-system-description-system_descjson)) — `tensor_parallel`, `pipeline_parallel`, `expert_parallel`, and `data_parallel` — and reproducible on a re-run of that point. Declaring fewer nodes than the deployment actually spans is a misrepresentation under [Submission Rules §8.4](endpoints_submission_rules.md#84-issues-discovered-after-publication).
+**The declaration must match the serving deployment.** The declared node count is the set of nodes
+holding model weights and able to receive requests for that point. It MUST be consistent with the
+parallelism configuration declared in `system_desc.json`
+([§8.2](#82-system-description-system_descjson)) — `tensor_parallel`, `pipeline_parallel`,
+`expert_parallel`, and `data_parallel` — and reproducible on a re-run of that point. Declaring fewer
+nodes than the deployment actually spans is a misrepresentation under
+[Submission Rules §8.4](endpoints_submission_rules.md#84-issues-discovered-after-publication).
 
 > [!IMPORTANT]
-> **This is a deployment property, not a utilization measurement.** A node loaded with weights and able to serve counts as used, whether or not it happened to receive a request during the steady-state window. Idle-but-deployed capacity draws power and is counted. A submitter is not credited for uneven load balancing across a deployment that spans every node, and — under the maximal-engagement rule above — may not narrow the deployment to earn a smaller denominator. The only reduction available is the one the hardware forces: a remainder too small to hold another replica.
+> **This is a deployment property, not a utilization measurement.** A node loaded with weights and
+> able to serve counts as used, whether or not it happened to receive a request during the
+> steady-state window. Idle-but-deployed capacity draws power and is counted. A submitter is not
+> credited for uneven load balancing across a deployment that spans every node, and — under the
+> maximal-engagement rule above — may not narrow the deployment to earn a smaller denominator. The
+> only reduction available is the one the hardware forces: a remainder too small to hold another
+> replica.
 
-Provisioned power itself remains a property of the *system*: two otherwise identical systems that differ in provisioned power — because of power capping, for example — are **different systems**, and `P_s` and `N_s` are the same for every point on a submission's pareto curve. Only `Y_s` varies.
+Provisioned power itself remains a property of the *system*: two otherwise identical systems that
+differ in provisioned power — because of power capping, for example — are **different systems**, and
+`P_s` and `N_s` are the same for every point on a submission's pareto curve. Only `Y_s` varies.
 
 
 ---
@@ -1061,21 +1904,31 @@ Provisioned power itself remains a property of the *system*: two otherwise ident
 
 ### 5.1 What Is Measured
 
-Each measurement point is a benchmark run at a specific target concurrency using the benchmark-defined fixed-concurrency load pattern. Replacement queries and dependent turns are issued according to benchmark-defined timing.
+Each measurement point is a benchmark run at a specific target concurrency using the
+benchmark-defined fixed-concurrency load pattern. Replacement queries and dependent turns are issued
+according to benchmark-defined timing.
 
 ### 5.2 Pareto Curve Representation
 
-The pareto curve is represented exclusively as a **step-function** plot. Each submitted measurement point defines a discrete step at its concurrency level; between submitted points, the curve holds constant at the last measured value. No interpolation, curve fitting, or smoothing is applied to the official curve.
+The pareto curve is represented exclusively as a **step-function** plot. Each submitted measurement
+point defines a discrete step at its concurrency level; between submitted points, the curve holds
+constant at the last measured value. No interpolation, curve fitting, or smoothing is applied to the
+official curve.
 
-Visualization tools may optionally overlay interpolated or smoothed curves for readability, but these must be clearly labeled as **"interpolated (not official)"** and must not replace the step-function representation in official publications.
+Visualization tools may optionally overlay interpolated or smoothed curves for readability, but
+these must be clearly labeled as **"interpolated (not official)"** and must not replace the
+step-function representation in official publications.
 
-The Offline point ([§5.7](#57-offline-point)) appears on the curve as the throughput ceiling and is labelled separately; it does not define a step in the fixed-concurrency step function.
+The Offline point ([§5.7](#57-offline-point)) appears on the curve as the throughput ceiling and is
+labelled separately; it does not define a step in the fixed-concurrency step function.
 
 ### 5.3 Minimum Submission Requirements
 
 #### Minimum Point Count
 
-Each submission for a non-agentic benchmark must include a minimum of **8 measurement points**, structured as **1 + 3 + 3 + 1**. Agentic benchmarks require **7 points** (`1 + 3 + 3`), since the Offline point does not apply to them ([§5.7](#57-offline-point)):
+Each submission for a non-agentic benchmark must include a minimum of **8 measurement points**,
+structured as **1 + 3 + 3 + 1**. Agentic benchmarks require **7 points** (`1 + 3 + 3`), since the
+Offline point does not apply to them ([§5.7](#57-offline-point)):
 
 | Points | Placement |
 |---|---|
@@ -1084,20 +1937,31 @@ Each submission for a non-agentic benchmark must include a minimum of **8 measur
 | 3 submitter's-choice points | Any concurrency level in any of the three "concurrency" regions, at the submitter's discretion. |
 | 1 mandatory **Offline** point | The unconstrained-throughput point defined in [§5.7](#57-offline-point). Required for every non-agentic submission; not applicable to agentic benchmarks. Where the submitter elects the $C_{max}$ point as the Offline result ([§5.7.2](#572-relationship-to-maximum-supported-concurrency)), no separate run is required and the minimum is 7. |
 
-Accuracy results are required at exactly `N` points, and at no others: the four mandatory concurrency points — one low-latency point in the Ultra Low Concurrency region and one point in each of the Low Concurrency, Medium Concurrency, and High Concurrency regions — plus the Offline point for non-agentic benchmarks. `N` is therefore **5** for non-agentic benchmarks and **4** for agentic benchmarks. The three submitter's-choice points carry no accuracy run ([§4.3](#43-accuracy-metric)).
+Accuracy results are required at exactly `N` points, and at no others: the four mandatory
+concurrency points — one low-latency point in the Ultra Low Concurrency region and one point in each
+of the Low Concurrency, Medium Concurrency, and High Concurrency regions — plus the Offline point
+for non-agentic benchmarks. `N` is therefore **5** for non-agentic benchmarks and **4** for agentic
+benchmarks. The three submitter's-choice points carry no accuracy run ([§4.3](#43-accuracy-metric)).
 
 #### No Spacing Requirements
 
-There is no requirement to space points evenly within or across regions. Submitters choose the exact concurrency levels that best characterize their system. This freedom enables submitters to cluster points around inflection points, highlight sweet-spot operating points, or demonstrate consistent performance across a region.
+There is no requirement to space points evenly within or across regions. Submitters choose the exact
+concurrency levels that best characterize their system. This freedom enables submitters to cluster
+points around inflection points, highlight sweet-spot operating points, or demonstrate consistent
+performance across a region.
 
 #### Submitter's-Choice Points
 
-The 3 submitter's-choice points may be placed in any of the three "concurrency" regions, including regions that already have a required point. For example, a submitter could place all 3 additional points in the High Concurrency region to demonstrate scaling behavior, or distribute them to show overall consistency.
+The 3 submitter's-choice points may be placed in any of the three "concurrency" regions, including
+regions that already have a required point. For example, a submitter could place all 3 additional
+points in the High Concurrency region to demonstrate scaling behavior, or distribute them to show
+overall consistency.
 
 ### 5.4 Regions of Interest
 
 > [!CAUTION]
-> Regions of Interest (ROIs) are named for either latency or concurrency, and in both cases they are constrained by concurrency. Please read the methodology carefully before proceeding.
+> Regions of Interest (ROIs) are named for either latency or concurrency, and in both cases they are
+> constrained by concurrency. Please read the methodology carefully before proceeding.
 
 The concurrency space is divided into four regions.
 
@@ -1108,29 +1972,41 @@ The concurrency space is divided into four regions.
 | Concurrency range | 1 to 32 (inclusive), fixed across all submissions. |
 | Required points | 1 |
 
-*Rationale:* Low-concurrency operation is critical for interactive applications (chatbots, coding assistants, real-time translation). Fixed boundaries ensure direct cross-submission comparability — every submission has at least one point in the 1–32 range.
+*Rationale:* Low-concurrency operation is critical for interactive applications (chatbots, coding
+assistants, real-time translation). Fixed boundaries ensure direct cross-submission comparability —
+every submission has at least one point in the 1–32 range.
 
 > [!NOTE]
-> Submitters are encouraged — but not required — to include a measurement at concurrency 1 (the single-user baseline) as their Low Latency point. Concurrency 1 represents the best-case per-user experience and is commonly cited in performance comparisons, but any concurrency level in the 1–32 range satisfies the region requirement.
+> Submitters are encouraged — but not required — to include a measurement at concurrency 1 (the
+> single-user baseline) as their Low Latency point. Concurrency 1 represents the best-case per-user
+> experience and is commonly cited in performance comparisons, but any concurrency level in the 1–32
+> range satisfies the region requirement.
 
 > [!WARNING]
-> The bounds of the Ultra Low Concurrency region (currently 1–32) are final for Endpoints v1.0, but they may be adjusted by the working group in a future version of these rules.
+> The bounds of the Ultra Low Concurrency region (currently 1–32) are final for Endpoints v1.0, but
+> they may be adjusted by the working group in a future version of these rules.
 
 #### Maximum Supported Concurrency
 
-The concurrency regions are defined using the **minimum concurrency** value $C_{min}$ (ideally corresponds to the best interactivity on the system) and a **maximum supported concurrency** value $C_{max}$ (this is the highest concurrency level at which the submitter chooses to benchmark their system).
+The concurrency regions are defined using the **minimum concurrency** value $C_{min}$ (ideally
+corresponds to the best interactivity on the system) and a **maximum supported concurrency** value
+$C_{max}$ (this is the highest concurrency level at which the submitter chooses to benchmark their
+system).
 
 Rules:
 
-- $C_{min}$ is derived from the submission points, and $C_{max}$ defines the upper bound of the High Throughput region.
+- $C_{min}$ is derived from the submission points, and $C_{max}$ defines the upper bound of the High
+  Throughput region.
 - $C_{max}$ >> $C_{min}$.
 - There is no compliance test to force a particular value of $C_{max}$.
-- Submitters are incentivized to choose well: $C_{max}$ defines the extent of their published pareto curve, while $C_{min}$ should produce best case interactivity.
+- Submitters are incentivized to choose well: $C_{max}$ defines the extent of their published pareto
+  curve, while $C_{min}$ should produce best case interactivity.
 - The value of $C_{max}$ defines the upper bound of the High Concurrency region.
 
 #### Concurrency Regions <a id="concurrency-regions"></a>
 
-Beyond the Ultra Low Concurrency region (concurrency > $C_{min}$), the remaining concurrency space up to $C_{max}$ is divided into **three equal regions in logarithmic space (base 2)**.
+Beyond the Ultra Low Concurrency region (concurrency > $C_{min}$), the remaining concurrency space
+up to $C_{max}$ is divided into **three equal regions in logarithmic space (base 2)**.
 
 **Region Boundary Computation**
 
@@ -1148,15 +2024,24 @@ The three concurrency regions are:
 | Medium Concurrency | `low_conc_end + 1` | $round(C_{min} + 2^{2I})$ |
 | High Concurrency | `med_conc_end + 1` | $C_{max}$ |
 
-All non-integer boundaries are rounded to the nearest integer using **round-half-to-even (banker's rounding)**, consistent with Python's built-in `round()` function used in the reference implementation.
+All non-integer boundaries are rounded to the nearest integer using **round-half-to-even (banker's
+rounding)**, consistent with Python's built-in `round()` function used in the reference
+implementation.
 
-> **Why logarithmic spacing?** Logarithmic spacing reflects how system behavior changes: the difference between concurrency 1 and 10 is far more significant than between 1000 and 1010. Log-space division ensures each region represents a similarly meaningful range of behavioral change, regardless of absolute concurrency scale.
+> **Why logarithmic spacing?** Logarithmic spacing reflects how system behavior changes: the
+> difference between concurrency 1 and 10 is far more significant than between 1000 and 1010.
+> Log-space division ensures each region represents a similarly meaningful range of behavioral
+> change, regardless of absolute concurrency scale.
 
 **High Concurrency Margin**
 
-The High Concurrency region has a **10% margin** beyond $C_{max}$, extending the valid upper bound to $ceil(1.10 * C_{max})$.
+The High Concurrency region has a **10% margin** beyond $C_{max}$, extending the valid upper bound
+to $ceil(1.10 * C_{max})$.
 
-This margin allows submitters to add points above their initial $C_{max}$ during the post-submission update window (see [Submission Rules §8.1](endpoints_submission_rules.md#81-pareto-updates)) without requiring a complete redefinition of region boundaries. The margin does not affect the required point distribution.
+This margin allows submitters to add points above their initial $C_{max}$ during the post-submission
+update window (see [Submission Rules §8.1](endpoints_submission_rules.md#81-pareto-updates)) without
+requiring a complete redefinition of region boundaries. The margin does not affect the required
+point distribution.
 
 **Worked Examples**
 
@@ -1210,13 +2095,22 @@ Minimum 7-point example: {16, 24, 64, 96, 128, 256, 1000}
 
 **Boundary Edge Cases**
 
-- **$C_{max}$ ≤ 33:** All three concurrency regions collapse to approximately one level each. Submitters with $C_{max} ≤ 33$ must notify the working group and provide written justification. The working group will review and may request additional information before accepting the submission.
-- **$C_{max}$ > 100,000:** The algorithm scales correctly. The Low Concurrency region will be narrow while the High Concurrency region spans most of the range, reflecting the log-scale nature of concurrency scaling.
-- **Region boundary collisions:** If rounding causes two boundaries to be equal, the affected region has zero width and a single valid concurrency level at the boundary value. One point at that level satisfies the region's requirement.
+- **$C_{max}$ ≤ 33:** All three concurrency regions collapse to approximately one level each.
+  Submitters with $C_{max} ≤ 33$ must notify the working group and provide written justification.
+  The working group will review and may request additional information before accepting the
+  submission.
+- **$C_{max}$ > 100,000:** The algorithm scales correctly. The Low Concurrency region will be narrow
+  while the High Concurrency region spans most of the range, reflecting the log-scale nature of
+  concurrency scaling.
+- **Region boundary collisions:** If rounding causes two boundaries to be equal, the affected region
+  has zero width and a single valid concurrency level at the boundary value. One point at that level
+  satisfies the region's requirement.
 
 ### 5.5 Region Boundary Reference Algorithm
 
-The following pseudocode defines the authoritative computation. Submitters must use the reference implementation in the MLCommons Endpoints repository to compute their boundaries and validate their submitted points.
+The following pseudocode defines the authoritative computation. Submitters must use the reference
+implementation in the MLCommons Endpoints repository to compute their boundaries and validate their
+submitted points.
 
 ```python
 def compute_regions(C_max: int, C_min: int) -> dict:
@@ -1251,87 +2145,165 @@ def compute_regions(C_max: int, C_min: int) -> dict:
 
 ### 5.6 Maximum Point Cap
 
-At no point shall the total number of measurement points on a single submission's pareto exceed **32 points** (including post-submission additions).
+At no point shall the total number of measurement points on a single submission's pareto exceed **32
+points** (including post-submission additions).
 
-*Rationale:* The 32-point cap balances comprehensive characterization against review burden and result presentation clarity.
+*Rationale:* The 32-point cap balances comprehensive characterization against review burden and
+result presentation clarity.
 
 The Offline point ([§5.7](#57-offline-point)) counts toward this cap.
 
 ### 5.7 Offline Point
 
 > [!CAUTION]
-> **`[TENTATIVE — Pending working-group ratification]`** The Offline point is newly introduced for Endpoints v1.0.
+> **`[TENTATIVE — Pending working-group ratification]`** The Offline point is newly introduced for
+> Endpoints v1.0.
 
-Every submission for a **non-agentic benchmark** MUST include one **Offline** measurement point. It is the analogue of the **Offline scenario** in [MLPerf Inference](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc): all queries are available to the system under test at once, and the only question asked is how much total throughput the system can sustain when nothing constrains it.
+Every submission for a **non-agentic benchmark** MUST include one **Offline** measurement point. It
+is the analogue of the **Offline scenario** in
+[MLPerf Inference](https://github.com/mlcommons/inference_policies/blob/master/inference_rules.adoc):
+all queries are available to the system under test at once, and the only question asked is how much
+total throughput the system can sustain when nothing constrains it.
 
 > [!NOTE]
-> **Not applicable to agentic benchmarks.** Offline is out of scope for agentic workloads in Endpoints v1.0. An agentic submission neither requires nor may include an Offline point. Extending Offline to agentic workloads — including how "all queries at once" and the reported concurrency would be defined for multi-turn trajectories with tool-call dependencies between turns — is deferred to the working group for ratification in a later version.
+> **Not applicable to agentic benchmarks.** Offline is out of scope for agentic workloads in
+> Endpoints v1.0. An agentic submission neither requires nor may include an Offline point. Extending
+> Offline to agentic workloads — including how "all queries at once" and the reported concurrency
+> would be defined for multi-turn trajectories with tool-call dependencies between turns — is
+> deferred to the working group for ratification in a later version.
 
 #### 5.7.1 Definition
 
-- **All queries are available at once.** The client makes the entire sample set available to the SUT at the start of the run rather than pacing issuance to hold a target concurrency. The SUT drains the queue at whatever rate it can.
-- **Concurrency is the cardinality of the dataset.** Because the whole sample set is made available at once, the Offline point's reported `concurrency` is the **cardinality of the performance dataset** — the number of queries in one full pass over it. It is a property of the benchmark dataset rather than a value the submitter selects.
-- **Throughput is the only metric of interest.** The Offline point reports `system_tps`, together with the `concurrency` defined above. It characterizes the system's peak aggregate capacity.
-- **Latency metrics do not apply.** Because every query is queued at the start, a query at the back of the queue may wait arbitrarily long before its first token. **`ttft_p90_ms` is therefore unbounded in principle, is not required for the Offline point, and MUST NOT be used as a compliance criterion or an objection basis against it.**
-- **Reordering is permitted, but bounded by the dataset.** Having the whole sample set available lets the SUT reorder and batch queries as it sees fit — grouping by sequence length, for example. That freedom is the point of the scenario. **Reordering MUST NOT cross a dataset-pass boundary.** Where a run issues more than one pass over the performance dataset — [§6.4](#64-minimum-completed-queries) requires the total sample count to be a positive integer multiple of the dataset size — each pass is a separate reordering domain, and a query from one pass MUST NOT be batched with, or reordered against, a query from another.
+- **All queries are available at once.** The client makes the entire sample set available to the SUT
+  at the start of the run rather than pacing issuance to hold a target concurrency. The SUT drains
+  the queue at whatever rate it can.
+- **Concurrency is the cardinality of the dataset.** Because the whole sample set is made available
+  at once, the Offline point's reported `concurrency` is the **cardinality of the performance
+  dataset** — the number of queries in one full pass over it. It is a property of the benchmark
+  dataset rather than a value the submitter selects.
+- **Throughput is the only metric of interest.** The Offline point reports `system_tps`, together
+  with the `concurrency` defined above. It characterizes the system's peak aggregate capacity.
+- **Latency metrics do not apply.** Because every query is queued at the start, a query at the back
+  of the queue may wait arbitrarily long before its first token. **`ttft_p90_ms` is therefore
+  unbounded in principle, is not required for the Offline point, and MUST NOT be used as a
+  compliance criterion or an objection basis against it.**
+- **Reordering is permitted, but bounded by the dataset.** Having the whole sample set available
+  lets the SUT reorder and batch queries as it sees fit — grouping by sequence length, for example.
+  That freedom is the point of the scenario. **Reordering MUST NOT cross a dataset-pass boundary.**
+  Where a run issues more than one pass over the performance dataset —
+  [§6.4](#64-minimum-completed-queries) requires the total sample count to be a positive integer
+  multiple of the dataset size — each pass is a separate reordering domain, and a query from one
+  pass MUST NOT be batched with, or reordered against, a query from another.
 
 > [!IMPORTANT]
-> **Why reordering stops at the dataset boundary.** Sorting across the whole multi-pass query set would let a submitter gather the repeated instances of the same underlying sample into one batch — identical or near-identical prompts executed together, with shared prefixes and uniform sequence lengths. That is an artifact of replaying a finite dataset, not a property of the serving system, and it sits immediately adjacent to the prohibition on coalescing identical queries in [§2.2.1](#221-general-rules). Confining reordering to a single pass keeps every batch's composition representative of one dataset.
+> **Why reordering stops at the dataset boundary.** Sorting across the whole multi-pass query set
+> would let a submitter gather the repeated instances of the same underlying sample into one batch —
+> identical or near-identical prompts executed together, with shared prefixes and uniform sequence
+> lengths. That is an artifact of replaying a finite dataset, not a property of the serving system,
+> and it sits immediately adjacent to the prohibition on coalescing identical queries in
+> [§2.2.1](#221-general-rules). Confining reordering to a single pass keeps every batch's
+> composition representative of one dataset.
 
 #### 5.7.2 Relationship to Maximum Supported Concurrency
 
 The Offline requirement is satisfied in one of two ways.
 
-**Option 1 — a dedicated Offline run.** The Offline point is its own run under the Offline load pattern ([§6.1](#61-load-pattern)). Such a run is not a fixed-concurrency point: it cannot serve as the $C_{max}$ point, and it does not satisfy any region-coverage requirement of [§5.3](#53-minimum-submission-requirements). Both of the following MUST hold between it and the $C_{max}$ point:
+**Option 1 — a dedicated Offline run.** The Offline point is its own run under the Offline load
+pattern ([§6.1](#61-load-pattern)). Such a run is not a fixed-concurrency point: it cannot serve as
+the $C_{max}$ point, and it does not satisfy any region-coverage requirement of
+[§5.3](#53-minimum-submission-requirements). Both of the following MUST hold between it and the
+$C_{max}$ point:
 
 | Quantity | Constraint |
 |---|---|
 | System throughput | `system_tps(Offline)` ≥ 0.98 × `system_tps` at the $C_{max}$ point |
 | Concurrency | `concurrency(Offline)` ≥ $C_{max}$ |
 
-**On the 2% throughput margin.** The margin exists to absorb run-to-run variation between the two runs on the same system. It is a *tolerance, not a target*: Offline is expected to meet or exceed the $C_{max}$ point, and the margin only prevents ordinary measurement noise from failing an otherwise sound submission. It is tighter than the 5% same-system reproducibility margin of [Submission Rules §6.6](endpoints_submission_rules.md#reproducibility-expectations) because both runs come from the same submission, on the same configuration, close together in time.
+**On the 2% throughput margin.** The margin exists to absorb run-to-run variation between the two
+runs on the same system. It is a *tolerance, not a target*: Offline is expected to meet or exceed
+the $C_{max}$ point, and the margin only prevents ordinary measurement noise from failing an
+otherwise sound submission. It is tighter than the 5% same-system reproducibility margin of
+[Submission Rules §6.6](endpoints_submission_rules.md#reproducibility-expectations) because both
+runs come from the same submission, on the same configuration, close together in time.
 
-*Rationale:* Offline removes every pacing constraint on the load generator, so it is by construction an upper bound on what the fixed-concurrency points can achieve. An Offline result materially below the $C_{max}$ point indicates either that the run did not saturate the system or that the $C_{max}$ point was measured under conditions the Offline run did not reproduce. Either way the submission does not characterize its own ceiling, and the points are inconsistent.
+*Rationale:* Offline removes every pacing constraint on the load generator, so it is by construction
+an upper bound on what the fixed-concurrency points can achieve. An Offline result materially below
+the $C_{max}$ point indicates either that the run did not saturate the system or that the $C_{max}$
+point was measured under conditions the Offline run did not reproduce. Either way the submission
+does not characterize its own ceiling, and the points are inconsistent.
 
 An Offline point that violates either constraint is flagged at automated compliance ([§9.1](#91-automated-checks)).
 
-**Option 2 — elect the $C_{max}$ point as the Offline result.** A submitter MAY instead **elect** their $C_{max}$ point as the Offline result, declaring that it is already the highest aggregate throughput their system achieves, irrespective of load pattern. Under this election:
+**Option 2 — elect the $C_{max}$ point as the Offline result.** A submitter MAY instead **elect**
+their $C_{max}$ point as the Offline result, declaring that it is already the highest aggregate
+throughput their system achieves, irrespective of load pattern. Under this election:
 
-- The elected run **remains a fixed-concurrency pareto point** and keeps its role as the $C_{max}$ point. It is *additionally* reported as the Offline result. Its latency metrics remain defined and reported as for any other fixed-concurrency point — the [§5.7.1](#571-definition) exemptions for TTFT and the dataset-pass reordering bound apply to a dedicated Offline run, not to an elected point.
-- `system_tps(Offline)` and `concurrency(Offline)` are those of the $C_{max}$ point by definition. The constraints above are met with equality, and the 2% margin does not apply — there is no second run and therefore no run-to-run variation to absorb.
-- The election MUST be declared in the measurement point YAML ([§8.3](#83-measurement-point-yaml)), so that a reader can tell the Offline result was elected rather than measured under the Offline pattern.
-- The submission then contains one fewer distinct run. The [§5.3](#53-minimum-submission-requirements) minimum is met with **7 runs**, the $C_{max}$ point counting once as its region point and once as the Offline result.
+- The elected run **remains a fixed-concurrency pareto point** and keeps its role as the $C_{max}$
+  point. It is *additionally* reported as the Offline result. Its latency metrics remain defined and
+  reported as for any other fixed-concurrency point — the [§5.7.1](#571-definition) exemptions for
+  TTFT and the dataset-pass reordering bound apply to a dedicated Offline run, not to an elected
+  point.
+- `system_tps(Offline)` and `concurrency(Offline)` are those of the $C_{max}$ point by definition.
+  The constraints above are met with equality, and the 2% margin does not apply — there is no second
+  run and therefore no run-to-run variation to absorb.
+- The election MUST be declared in the measurement point YAML ([§8.3](#83-measurement-point-yaml)),
+  so that a reader can tell the Offline result was elected rather than measured under the Offline
+  pattern.
+- The submission then contains one fewer distinct run. The
+  [§5.3](#53-minimum-submission-requirements) minimum is met with **7 runs**, the $C_{max}$ point
+  counting once as its region point and once as the Offline result.
 
-*Why this needs no verification:* electing can only understate the system. An unpaced Offline run is by construction an upper bound on what any fixed-concurrency point can achieve, so a submitter who elects forgoes whatever additional throughput a dedicated Offline run might have shown. The election is a conservative declaration against the submitter's own interest, not an optimization — which is why it is permitted on the submitter's word.
+*Why this needs no verification:* electing can only understate the system. An unpaced Offline run is
+by construction an upper bound on what any fixed-concurrency point can achieve, so a submitter who
+elects forgoes whatever additional throughput a dedicated Offline run might have shown. The election
+is a conservative declaration against the submitter's own interest, not an optimization — which is
+why it is permitted on the submitter's word.
 
 #### 5.7.3 Presentation
 
-A **dedicated** Offline run is plotted on the pareto curve as the system's **throughput ceiling** — the highest `system_tps` the submission reports. It is labelled **"Offline"** and is visually distinguished from the fixed-concurrency points, because it is measured under a different load pattern and carries no meaningful latency coordinate.
+A **dedicated** Offline run is plotted on the pareto curve as the system's **throughput ceiling** —
+the highest `system_tps` the submission reports. It is labelled **"Offline"** and is visually
+distinguished from the fixed-concurrency points, because it is measured under a different load
+pattern and carries no meaningful latency coordinate.
 
-An **elected** Offline result adds no separate marker: the $C_{max}$ point is plotted as the fixed-concurrency point it is, and additionally labelled as the Offline result.
+An **elected** Offline result adds no separate marker: the $C_{max}$ point is plotted as the
+fixed-concurrency point it is, and additionally labelled as the Offline result.
 
-All other run requirements of [§6](#6-run-requirements-per-measurement-point) — minimum duration, minimum completed queries, dataset handling, and the accuracy requirement — apply to the Offline point as they do to any other measurement point, except that the load pattern is the Offline pattern rather than the fixed-concurrency pattern ([§6.1](#61-load-pattern)).
+All other run requirements of [§6](#6-run-requirements-per-measurement-point) — minimum duration,
+minimum completed queries, dataset handling, and the accuracy requirement — apply to the Offline
+point as they do to any other measurement point, except that the load pattern is the Offline pattern
+rather than the fixed-concurrency pattern ([§6.1](#61-load-pattern)).
 
 ---
 
 ## 6. Run Requirements Per Measurement Point
 
 > [!WARNING]
-> **WORK IN PROGRESS** — This entire section is under active development. Final values will be determined through working group discussion and empirical validation.
-> Current constraints, thresholds, and duration values are locked for the v0.7 submission in June 2026 and have been approved by the TaskForce. 
+> **WORK IN PROGRESS** — This entire section is under active development. Final values will be
+> determined through working group discussion and empirical validation.
+> Current constraints, thresholds, and duration values are locked for the v0.7 submission in June
+> 2026 and have been approved by the TaskForce.
 
 ### 6.1 Load Pattern
 
-All measurement points except the Offline point must use the benchmark-defined fixed-concurrency load pattern. The `target_concurrency` setting specifies the exact concurrency level for each point. Other load patterns (`Poisson` and similar) are not valid for fixed-concurrency pareto submission points.
+All measurement points except the Offline point must use the benchmark-defined fixed-concurrency
+load pattern. The `target_concurrency` setting specifies the exact concurrency level for each point.
+Other load patterns (`Poisson` and similar) are not valid for fixed-concurrency pareto submission
+points.
 
-The **Offline point** ([§5.7](#57-offline-point)) instead uses the benchmark-defined Offline load pattern, in which the entire sample set is made available to the SUT at once rather than paced to a target concurrency. It is the only point for which the fixed-concurrency pattern is not used.
+The **Offline point** ([§5.7](#57-offline-point)) instead uses the benchmark-defined Offline load
+pattern, in which the entire sample set is made available to the SUT at once rather than paced to a
+target concurrency. It is the only point for which the fixed-concurrency pattern is not used.
 
 ### 6.2 Minimum Run Duration
 
 *(Example values — subject to ratification.)*
 
-Each measurement point must sustain the target concurrency for a minimum duration of steady-state measurement, excluding warmup. These values correspond to the `min_duration_ms` setting in `RuntimeSettings`.
+Each measurement point must sustain the target concurrency for a minimum duration of steady-state
+measurement, excluding warmup. These values correspond to the `min_duration_ms` setting in
+`RuntimeSettings`.
 
+For Legacy LLM (non-agentic) benchmarks:
 | Concurrency Region | Minimum Duration (steady state) | Rationale |
 |---|---|---|
 | Ultra Low Concurrency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at ultra low concurrency. |
@@ -1339,44 +2311,74 @@ Each measurement point must sustain the target concurrency for a minimum duratio
 | Medium Concurrency | 1200 seconds | Standard duration for statistical confidence at scale. |
 | High Concurrency | 1200 seconds | Standard duration for statistical confidence at scale. |
 
+For all Agentic benchmarks:
+
+| Concurrency Region | Minimum Duration (steady state) | Rationale |
+|---|---|---|
+| Ultra Low Concurrency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at ultra low concurrency. |
+| Low Concurrency | 2400 seconds | Standard duration for statistical confidence at scale. |
+| Medium Concurrency | 2400 seconds | Standard duration for statistical confidence at scale. |
+| High Concurrency | 2400 seconds | Standard duration for statistical confidence at scale. |
+
 ### 6.3 Warmup Period
 
 *(Requirements below are subject to working group ratification.)*
 
-A warmup period may precede every measurement period. Warmup events — all requests issued before `TEST_STARTED` — are excluded from metric computation. The purpose of warmup is to bring the system to steady state (populated connection pools, warm caches, calibrated scheduler) before any data contributing to reported metrics is collected. The warmup period is optional but must not exceed 24 hours, per measurement point.
+A warmup period may precede every measurement period. Warmup events — all requests issued before
+`TEST_STARTED` — are excluded from metric computation. The purpose of warmup is to bring the system
+to steady state (populated connection pools, warm caches, calibrated scheduler) before any data
+contributing to reported metrics is collected. The warmup period is optional but must not exceed 24
+hours, per measurement point.
 
 #### 6.3.1 Prohibited Warmup Data
 
-Warmup requests must not use any sample from the benchmark performance dataset. This prohibition covers direct use, subsets, truncations, or any query whose content was derived from performance dataset samples.
+Warmup requests must not use any sample from the benchmark performance dataset. This prohibition
+covers direct use, subsets, truncations, or any query whose content was derived from performance
+dataset samples.
 If the inference client uses benchmark performance dataset, then *salting must be enabled*.
 
-The accuracy dataset and any other data source not drawn from the performance dataset are permitted for warmup.
+The accuracy dataset and any other data source not drawn from the performance dataset are permitted
+for warmup.
 
 > [!WARNING]
-> For v0.7, the inference client may use performance dataset during warmup. In such case - salting must be enabled. The salting flag is not enabled by default — submitters must manually enable it in the client config and also disable KV cache reuse.
+> For v0.7, the inference client may use performance dataset during warmup. In such case - salting
+> must be enabled. The salting flag is not enabled by default — submitters must manually enable it
+> in the client config and also disable KV cache reuse.
 
 #### 6.3.2 Discard Policy
 
-All requests issued before `TEST_STARTED` are warmup requests and must not appear in any reported metric. Warmup request logs must be retained and available for reviewer inspection.
+All requests issued before `TEST_STARTED` are warmup requests and must not appear in any reported
+metric. Warmup request logs must be retained and available for reviewer inspection.
 
 #### 6.3.3 Documentation Requirements
 
-Beyond the constraints above, warmup is at the submitter's discretion. Because warmup state materially affects the measurement (KV cache population, JIT compilation, scheduler calibration), the full warmup procedure must be documented in sufficient detail for an independent team to reproduce it. Each submission must declare, in the measurement point metadata (see [§8.3](#83-measurement-point-yaml)):
+Beyond the constraints above, warmup is at the submitter's discretion. Because warmup state
+materially affects the measurement (KV cache population, JIT compilation, scheduler calibration),
+the full warmup procedure must be documented in sufficient detail for an independent team to
+reproduce it. Each submission must declare, in the measurement point metadata (see
+[§8.3](#83-measurement-point-yaml)):
 
 - Total warmup duration (seconds from the first warmup request to `TEST_STARTED`).
 - Total warmup requests issued and completed.
-- Warmup data source and content description (e.g., dataset name and split, synthetic generation method and parameters, or fixed prompt text).
+- Warmup data source and content description (e.g., dataset name and split, synthetic generation
+  method and parameters, or fixed prompt text).
 - Concurrency level used during warmup.
-- Any platform-specific initialization steps performed (e.g., CUDA graph capture, engine loading, JIT compilation triggers), and confirmation that initialization was complete before `TEST_STARTED`.
+- Any platform-specific initialization steps performed (e.g., CUDA graph capture, engine loading,
+  JIT compilation triggers), and confirmation that initialization was complete before
+  `TEST_STARTED`.
 
 > [!NOTE]
-> Reviewers may request warmup logs as part of a reproducibility objection. Incomplete or ambiguous warmup documentation is grounds for a Methodology objection under [Submission Rules §6.8](endpoints_submission_rules.md#68-types-of-objections).
+> Reviewers may request warmup logs as part of a reproducibility objection. Incomplete or ambiguous
+> warmup documentation is grounds for a Methodology objection under
+> [Submission Rules §6.8](endpoints_submission_rules.md#68-types-of-objections).
 
 ### 6.4 Minimum Completed Queries
 
 *(Example values — subject to ratification.)*
 
-Each measurement point must complete a minimum number of queries (`min_sample_count` in `RuntimeSettings`). The minimum ensures sufficient statistical confidence in the reported percentile metrics.
+Each measurement point must complete a minimum number of queries (`min_sample_count` in
+`RuntimeSettings`). The minimum ensures sufficient statistical confidence in the reported percentile
+metrics.
 
 | Concurrency Region | Minimum Completed Queries | Rationale |
 |---|---|---|
@@ -1386,31 +2388,47 @@ Each measurement point must complete a minimum number of queries (`min_sample_co
 | High Concurrency | One pass over the dataset | Consistent and comparable accuracy across all runs.  |
 
 > [!NOTE]
-> These minimum query counts require statistical validation against required sample sizes for target confidence intervals. Values are subject to adjustment pending working group ratification.
+> These minimum query counts require statistical validation against required sample sizes for target
+> confidence intervals. Values are subject to adjustment pending working group ratification.
 
-At each measurement point, the total number of samples issued MUST be a positive integer multiple of the dataset size.
+At each measurement point, the total number of samples issued MUST be a positive integer multiple of
+the dataset size.
 
 ### 6.5 Dataset Considerations
 
 *(Example constraints — subject to ratification.)*
 
-- Performance runs use `WithReplacementSampleOrder` (random sampling with replacement from the performance dataset).
+- Performance runs use `WithReplacementSampleOrder` (random sampling with replacement from the
+  performance dataset).
 - Accuracy runs use `WithoutReplacementSampleOrder` (each sample exactly once).
-- For Ultra Low Concurrency region runs, a representative subset of the dataset may be used (configured via `n_samples_from_dataset`) to reduce run time, subject to pre-approval by the working group. The subset must be documented and identical across all submitters.
-- Fixed-concurrency performance runs must use streaming responses (`model_params.streaming` resolves to `on`) so that TTFT and TPOT can be measured. A dedicated Offline run ([§5.7](#57-offline-point)) is exempt, since it reports only `system_tps`. The SUT's streaming behavior, including any multi-token stream interval, is governed by [§2.9.7](#297-post-processing-equivalence).
-- `stream_all_chunks` is a client-side setting; either value is permitted, and the value used is recorded in `runtime_settings` ([§8.3](#83-measurement-point-yaml)).
+- For Ultra Low Concurrency region runs, a representative subset of the dataset may be used
+  (configured via `n_samples_from_dataset`) to reduce run time, subject to pre-approval by the
+  working group. The subset must be documented and identical across all submitters.
+- Fixed-concurrency performance runs must use streaming responses (`model_params.streaming` resolves
+  to `on`) so that TTFT and TPOT can be measured. A dedicated Offline run
+  ([§5.7](#57-offline-point)) is exempt, since it reports only `system_tps`. The SUT's streaming
+  behavior, including any multi-token stream interval, is governed by
+  [§2.9.7](#297-post-processing-equivalence).
+- `stream_all_chunks` is a client-side setting; either value is permitted, and the value used is
+  recorded in `runtime_settings` ([§8.3](#83-measurement-point-yaml)).
 
 ### 6.6 Accuracy Requirement
 
 *(Example constraint — subject to ratification.)*
 
-Accuracy validation is required at the points defined in [§5.3](#53-minimum-submission-requirements). The accuracy runs verify that the system meets the benchmark's quality target and MUST follow the applicable single-turn or multi-turn requirements in [§4.3](#43-accuracy-metric).
+Accuracy validation is required at the points defined in
+[§5.3](#53-minimum-submission-requirements). The accuracy runs verify that the system meets the
+benchmark's quality target and MUST follow the applicable single-turn or multi-turn requirements in
+[§4.3](#43-accuracy-metric).
 
 ---
 
 ## 7. Publication Status
 
-Publication status categories — **Available**, **Preview**, and **RDI** — including the four-point availability test, public evidence rules, software stack requirements, the 180-day Preview commitment, the 221-day RDI cooling-off period, and the [CUSTOM-SKU] open question are defined in [MLPerf Endpoints Submission Rules §7](endpoints_submission_rules.md#7-publication).
+Publication status categories — **Available**, **Preview**, and **RDI** — including the four-point
+availability test, public evidence rules, software stack requirements, the 180-day Preview
+commitment, the 221-day RDI cooling-off period, and the [CUSTOM-SKU] open question are defined in
+[MLPerf Endpoints Submission Rules §7](endpoints_submission_rules.md#7-publication).
 
 ---
 
@@ -1458,8 +2476,10 @@ per-measurement-point:
   instantiation, endpoint setup, client harness) and documentation are not duplicated per Pareto
   point. A submitter that needs different code or documentation for different systems or models adds
   another `src/<implementation_id>/` or a subdirectory under `docs/` rather than duplicating the tree.
-- **Point-specific content** is only what varies with concurrency level: `point.yaml`, the result and metadata
-  JSON files, and the optional `server_configs/`. Adding, replacing, or withdrawing a Pareto point must not
+- **Point-specific content** is only what varies with concurrency level: `point.yaml`, the result
+  and metadata
+  JSON files, and the optional `server_configs/`. Adding, replacing, or withdrawing a Pareto point
+  must not
   require any change under `src/` or `docs/`.
 
 Each point declares which shared content it used via the `shared_src` and `shared_docs` pointers in
@@ -1618,22 +2638,27 @@ Each measurement point must be accompanied by a YAML configuration file specifyi
 
 ### 8.4 Software Disclosure
 
-For **Standardized** and **RDI** division submissions, all software components that substantially determine ML performance must be disclosed. This includes, at minimum:
+For **Standardized** and **RDI** division submissions, all software components that substantially
+determine ML performance must be disclosed. This includes, at minimum:
 
 - Inference serving framework (name, version, commit hash or release tag).
 - ML accelerator library (e.g., TensorRT-LLM, cuDNN — version and build).
 - Driver version.
 - Operating system.
 
-For **Serviced** division submissions, disclose all software information available from public documentation and API metadata.
+For **Serviced** division submissions, disclose all software information available from public
+documentation and API metadata.
 
 ### 8.5 Result ID
 
 Two identifiers are attached to every submission, and they serve different purposes.
 
-The **submission ID** is generated automatically by the submission pipeline as a hash. It is opaque, carries no meaning, and exists so the lifecycle tooling can track a bundle through upload, review, and amendment.
+The **submission ID** is generated automatically by the submission pipeline as a hash. It is opaque,
+carries no meaning, and exists so the lifecycle tooling can track a bundle through upload, review,
+and amendment.
 
-The **result ID** identifies a single published result and is human-readable. A result is one published Pareto curve: one system, one benchmark model, one dataset. It is constructed as:
+The **result ID** identifies a single published result and is human-readable. A result is one
+published Pareto curve: one system, one benchmark model, one dataset. It is constructed as:
 
 ```
 <major-version>.<minor-version>.<cohort-number>.<model_id>.<dataset_id>.<entry-number>
@@ -1648,9 +2673,14 @@ The **result ID** identifies a single published result and is human-readable. A 
 | `dataset_id` | Identifier of the dataset used for the performance and accuracy runs, as named in the benchmark definition ([§3.1](#31-benchmark-definition)) and recorded in each point's `dataset` field ([§8.3](#83-measurement-point-yaml)). |
 | `entry-number` | Sequence number assigned at publication, unique within the preceding four components. |
 
-Example: `1.0.0.deepseek-r1.mmlu-pro.7` — the seventh published DeepSeek-R1 result on MMLU-Pro under the v1.0 rules.
+Example: `1.0.0.deepseek-r1.mmlu-pro.7` — the seventh published DeepSeek-R1 result on MMLU-Pro under
+the v1.0 rules.
 
-Result IDs are assigned by MLCommons at publication; they are not chosen by the submitter and are not part of the submitted bundle. They are stable and never reused — a result that is superseded, withdrawn, or invalidated retains its result ID in the historical record, and the replacement result receives a new entry number (see [Submission Rules §8.1](endpoints_submission_rules.md#versioning-and-historical-record)).
+Result IDs are assigned by MLCommons at publication; they are not chosen by the submitter and are
+not part of the submitted bundle. They are stable and never reused — a result that is superseded,
+withdrawn, or invalidated retains its result ID in the historical record, and the replacement result
+receives a new entry number (see
+[Submission Rules §8.1](endpoints_submission_rules.md#versioning-and-historical-record)).
 
 ---
 
@@ -1658,7 +2688,8 @@ Result IDs are assigned by MLCommons at publication; they are not chosen by the 
 
 ### 9.1 Automated Checks
 
-The compliance validator — run by the submitter before submission and by MLCommons upon receipt — performs the following checks:
+The compliance validator — run by the submitter before submission and by MLCommons upon receipt —
+performs the following checks:
 
 | Check | Validation | Failure Action |
 |---|---|---|
@@ -1697,17 +2728,28 @@ The compliance validator — run by the submitter before submission and by MLCom
 
 Human reviewers should focus on aspects that automation cannot easily verify:
 
-- Whether the pareto curve shape is physically plausible (throughput should generally increase with concurrency up to saturation, then plateau or decrease).
-- Whether metric distributions suggest artificial manipulation (e.g., suspiciously uniform TTFT values across very different concurrency levels).
-- Whether TTFT-triggering fragments are genuine parts of the model response rather than meaningless leading content emitted to stop the TTFT clock.
-- Whether content is duplicated across assistant-response fields or padded to inflate the official output-token count.
-- For the Offline point, whether query reordering stayed within dataset-pass boundaries ([§5.7.1](#571-definition)) — batches composed of repeated instances of the same underlying sample indicate sorting across passes.
-- Whether warmup requests drew on any sample from the performance dataset (prohibited under [§6.3.1](#631-prohibited-warmup-data)); reviewers may cross-check retained warmup logs against the performance dataset.
+- Whether the pareto curve shape is physically plausible (throughput should generally increase with
+  concurrency up to saturation, then plateau or decrease).
+- Whether metric distributions suggest artificial manipulation (e.g., suspiciously uniform TTFT
+  values across very different concurrency levels).
+- Whether TTFT-triggering fragments are genuine parts of the model response rather than meaningless
+  leading content emitted to stop the TTFT clock.
+- Whether content is duplicated across assistant-response fields or padded to inflate the official
+  output-token count.
+- For the Offline point, whether query reordering stayed within dataset-pass boundaries
+  ([§5.7.1](#571-definition)) — batches composed of repeated instances of the same underlying sample
+  indicate sorting across passes.
+- Whether warmup requests drew on any sample from the performance dataset (prohibited under
+  [§6.3.1](#631-prohibited-warmup-data)); reviewers may cross-check retained warmup logs against the
+  performance dataset.
 - Whether the system description accurately reflects the hardware and software used.
 - Cross-submission consistency for the same hardware platform.
 - Division eligibility (especially Serviced division API compliance and availability status).
 - Whether post-submission updates are consistent with the original submission's system configuration.
-- For speculative-decoding submissions: whether the disclosed drafter/algorithm is consistent with the benchmark's approved list — informs a Methodology objection under [Submission Rules §6.8](endpoints_submission_rules.md#68-types-of-objections), not a SpecDec-specific check.
+- For speculative-decoding submissions: whether the disclosed drafter/algorithm is consistent with
+  the benchmark's approved list — informs a Methodology objection under
+  [Submission Rules §6.8](endpoints_submission_rules.md#68-types-of-objections), not a
+  SpecDec-specific check.
 
 ---
 
@@ -1716,15 +2758,21 @@ Human reviewers should focus on aspects that automation cannot easily verify:
 ## Appendix A: Open Questions and Working Group Items
 
 > [!WARNING]
-> **WORK IN PROGRESS** — This appendix collects items that require working group decision before the rules can be finalized. Items marked **Open** do **not** represent current policy; they are placeholders for decisions in progress.
+> **WORK IN PROGRESS** — This appendix collects items that require working group decision before the
+> rules can be finalized. Items marked **Open** do **not** represent current policy; they are
+> placeholders for decisions in progress.
 
-Entries marked **Resolved** record a decision that has been taken and is already reflected in the operative sections; they are retained here for traceability, and the operative section is the source of truth. An entry may carry both — a settled core with a narrower question still open.
+Entries marked **Resolved** record a decision that has been taken and is already reflected in the
+operative sections; they are retained here for traceability, and the operative section is the source
+of truth. An entry may carry both — a settled core with a narrower question still open.
 
 ### \[RDI-COMP\] Comparability Across Publication Status Categories
 
-**Question:** Should RDI results be directly comparable to Available and Preview results on the same charts?
+**Question:** Should RDI results be directly comparable to Available and Preview results on the same
+charts?
 
-**Context:** Currently all three categories are plotted together. RDI systems may have unfair advantages (unavailable hardware, prototype software) that make direct comparison misleading.
+**Context:** Currently all three categories are plotted together. RDI systems may have unfair
+advantages (unavailable hardware, prototype software) that make direct comparison misleading.
 
 **Options under consideration:**
 
@@ -1738,27 +2786,51 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 ### \[SERVICED-REQ\] Serviced Division Requirements
 
-**Question:** What additional disclosure and reproducibility requirements apply to the Serviced division, given that the submitter does not control the underlying stack?
+**Question:** What additional disclosure and reproducibility requirements apply to the Serviced
+division, given that the submitter does not control the underlying stack?
 
-**Context:** Key open items include: what system description fields are required vs. optional for APIs; how to handle API versioning (the underlying model or serving stack may change without notice); and whether Serviced results should carry a permanent disclaimer about reproducibility.
+**Context:** Key open items include: what system description fields are required vs. optional for
+APIs; how to handle API versioning (the underlying model or serving stack may change without
+notice); and whether Serviced results should carry a permanent disclaimer about reproducibility.
 
 ### \[RUN-REQ\] Run Requirements Ratification
 
-**Question:** What are the ratified values and rules for minimum run duration, minimum query count, dataset subset rules, and the warmup data and documentation requirements ([§6.3](#63-warmup-period))?
+**Question:** What are the ratified values and rules for minimum run duration, minimum query count,
+dataset subset rules, and the warmup data and documentation requirements
+([§6.3](#63-warmup-period))?
 
-**Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains illustrative example values, and the [§6.3](#63-warmup-period) warmup model — submitter discretion plus mandatory disclosure, in place of a fixed warmup duration — is itself pending ratification. All constraints in that section are pending working group ratification based on empirical validation data.
+**Context:** [§6 Run Requirements](#6-run-requirements-per-measurement-point) currently contains
+illustrative example values, and the [§6.3](#63-warmup-period) warmup model — submitter discretion
+plus mandatory disclosure, in place of a fixed warmup duration — is itself pending ratification. All
+constraints in that section are pending working group ratification based on empirical validation
+data.
 
 ### \[TOK-COUNT\] Reference-Chat-Template Tokenization and Reported Throughput
 
-**Question:** The reference-chat-template tokenization rule ([§2.8 Tokenizer Rules](#28-tokenizer-rules)) may produce token counts that differ from what individual serving stacks report as "tokens/second" internally. Have MLC stakeholders and submitter organizations agreed that the published metric will use the client-side reference count and not the serving-stack-reported count?
+**Question:** The reference-chat-template tokenization rule
+([§2.8 Tokenizer Rules](#28-tokenizer-rules)) may produce token counts that differ from what
+individual serving stacks report as "tokens/second" internally. Have MLC stakeholders and submitter
+organizations agreed that the published metric will use the client-side reference count and not the
+serving-stack-reported count?
 
-**Context:** Resolution is needed before v1.0 publishes side-by-side comparison charts. The current §2.8 wording—coalesce visible output and reasoning in arrival order, reassemble parallel tool calls by list index, render the complete structured assistant message with the official reference chat template, subtract empty assistant framing, and tokenize once—is the proposed rule. The open question is whether stakeholders accept that the published numbers may differ from internal serving-stack-reported numbers.
+**Context:** Resolution is needed before v1.0 publishes side-by-side comparison charts. The current
+§2.8 wording—coalesce visible output and reasoning in arrival order, reassemble parallel tool calls
+by list index, render the complete structured assistant message with the official reference chat
+template, subtract empty assistant framing, and tokenize once—is the proposed rule. The open
+question is whether stakeholders accept that the published numbers may differ from internal
+serving-stack-reported numbers.
 
 ### \[CKPT-RESIDENCY\] Checkpoint Component Residency
 
-**Question:** Must a component present in the canonical checkpoint — for example a speculative-decoding head such as MTP — be loaded into accelerator memory during measurement, or is it sufficient that it be present in the submitted checkpoint artifact?
+**Question:** Must a component present in the canonical checkpoint — for example a
+speculative-decoding head such as MTP — be loaded into accelerator memory during measurement, or is
+it sufficient that it be present in the submitted checkpoint artifact?
 
-**Resolved — residency is not required.** The checkpoint *artifact* must preserve the full component set of the canonical checkpoint; unused weights MUST NOT be removed from it. Residency is a separate question, and the answer is that submitters are **not obligated to load or copy every weight in the checkpoint to the accelerator** where the component is not needed for the configuration being measured. The operative rule is in [§2.9.3](#293-model-weight-rules).
+**Resolved — residency is not required.** The checkpoint *artifact* must preserve the full component
+set of the canonical checkpoint; unused weights MUST NOT be removed from it. Residency is a separate
+question, and the answer is that submitters are **not obligated to load or copy every weight in the
+checkpoint to the accelerator** where the component is not needed for the configuration being
+measured. The operative rule is in [§2.9.3](#293-model-weight-rules).
 
 | Item | Resolution |
 |---|---|
@@ -1766,17 +2838,31 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 | Loading every component into accelerator memory | **Not required.** A submitter may decline to load a component that the measured configuration does not use. |
 | Memory footprint | A legitimate configuration dimension, consistent with [§2.9.4](#294-speculative-decoding) already permitting speculative decoding to be disabled at any or all measurement points. |
 
-*Rationale:* the artifact requirement is what preserves provenance and lets a reviewer re-run the submission with the component enabled; it does not depend on the component occupying accelerator memory during a run. Requiring residency would force a submitter to reserve HBM for a module the rules explicitly permit them to disable, which the working group did not consider a meaningful comparability gain.
+*Rationale:* the artifact requirement is what preserves provenance and lets a reviewer re-run the
+submission with the component enabled; it does not depend on the component occupying accelerator
+memory during a run. Requiring residency would force a submitter to reserve HBM for a module the
+rules explicitly permit them to disable, which the working group did not consider a meaningful
+comparability gain.
 
-**Open — disclosure of the loaded component set.** This resolution permits non-residency without requiring the loaded component set to be declared per measurement point. For speculative-decoding heads the choice is already visible through the per-point drafter configuration required by [§2.9.4](#294-speculative-decoding); for any other auxiliary component it is not. Whether to extend the [§2.9.6.6](#2966-disclosure) table to cover the general case is left to the working group.
+**Open — disclosure of the loaded component set.** This resolution permits non-residency without
+requiring the loaded component set to be declared per measurement point. For speculative-decoding
+heads the choice is already visible through the per-point drafter configuration required by
+[§2.9.4](#294-speculative-decoding); for any other auxiliary component it is not. Whether to extend
+the [§2.9.6.6](#2966-disclosure) table to cover the general case is left to the working group.
 
 ### \[POWER-NORM\] Power Normalization Open Items
 
 **Question:** What remains to be settled in [§4.5](#45-performance-normalization)?
 
-**Open — Tier 1 definition.** The roadmap runs from Tier 3 up to Tier 1, but only Tiers 3 and 2 are specified ([§4.5.1](#451-power-normalization-roadmap-and-rationale)). The roadmap anticipates true measured power as an additional normalization option; whether that constitutes Tier 1, and what evidence and instrumentation it would require, is to be defined in a later version.
+**Open — Tier 1 definition.** The roadmap runs from Tier 3 up to Tier 1, but only Tiers 3 and 2 are
+specified ([§4.5.1](#451-power-normalization-roadmap-and-rationale)). The roadmap anticipates true
+measured power as an additional normalization option; whether that constitutes Tier 1, and what
+evidence and instrumentation it would require, is to be defined in a later version.
 
-**Open — Serviced division normalization.** Power normalization is mandatory for Standardized (CoP and CoN) and optional for RDI. Normalization options for Serviced — managed endpoints, CSP-hosted services, and similar — are deferred to a later version. Whether RDI should remain optional or be brought into line with Standardized is worth confirming.
+**Open — Serviced division normalization.** Power normalization is mandatory for Standardized (CoP
+and CoN) and optional for RDI. Normalization options for Serviced — managed endpoints, CSP-hosted
+services, and similar — are deferred to a later version. Whether RDI should remain optional or be
+brought into line with Standardized is worth confirming.
 
 **Resolved, recorded here for traceability:**
 
@@ -1794,11 +2880,29 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 
 **Question:** What remains to be settled for the Offline point ([§5.7](#57-offline-point))?
 
-1. **Agentic workloads.** Offline is out of scope for agentic benchmarks in v1.0. Defining it requires deciding what "all queries available at once" means for multi-turn trajectories whose later turns depend on earlier responses and on tool-call results, and what the reported concurrency would be when the query count is not known in advance. To be ratified by the working group for a later version.
-2. **Dataset cardinality below $C_{max}$.** The Offline concurrency is the cardinality of the performance dataset ([§5.7.1](#571-definition)), while [§5.7.2](#572-relationship-to-maximum-supported-concurrency) requires `concurrency(Offline)` ≥ $C_{max}$. A submitter whose declared $C_{max}$ exceeds the dataset cardinality cannot satisfy both. The working group should decide whether $C_{max}$ is capped at the dataset cardinality, whether the dataset is replayed to reach it, or whether the concurrency constraint is waived in that case.
-3. **Steady-state windowing.** [§4.4](#44-reporting-basis-steady-state-window) scopes steady-state detection to fixed-concurrency points, which excludes a dedicated Offline run — so it reports whole-run `total` metrics. That follows from the scope wording rather than being stated outright, and is worth making explicit.
-4. **Minimum run duration.** [§6.2](#62-minimum-run-duration) applies to the Offline point unchanged, but an Offline run ends when the queue drains rather than when a clock expires. Whether a separate duration rule is needed is open.
-5. **Enforcing the pass boundary.** [§5.7.1](#571-definition) bars reordering across dataset passes. The reference client should make pass boundaries explicit in the event log so the constraint is checkable after the fact rather than resting on attestation; today it is a manual review item ([§9.2](#92-manual-review-focus-areas)).
+1. **Agentic workloads.** Offline is out of scope for agentic benchmarks in v1.0. Defining it
+   requires deciding what "all queries available at once" means for multi-turn trajectories whose
+   later turns depend on earlier responses and on tool-call results, and what the reported
+   concurrency would be when the query count is not known in advance. To be ratified by the working
+   group for a later version.
+2. **Dataset cardinality below $C_{max}$.** The Offline concurrency is the cardinality of the
+   performance dataset ([§5.7.1](#571-definition)), while
+   [§5.7.2](#572-relationship-to-maximum-supported-concurrency) requires `concurrency(Offline)` ≥
+   $C_{max}$. A submitter whose declared $C_{max}$ exceeds the dataset cardinality cannot satisfy
+   both. The working group should decide whether $C_{max}$ is capped at the dataset cardinality,
+   whether the dataset is replayed to reach it, or whether the concurrency constraint is waived in
+   that case.
+3. **Steady-state windowing.** [§4.4](#44-reporting-basis-steady-state-window) scopes steady-state
+   detection to fixed-concurrency points, which excludes a dedicated Offline run — so it reports
+   whole-run `total` metrics. That follows from the scope wording rather than being stated outright,
+   and is worth making explicit.
+4. **Minimum run duration.** [§6.2](#62-minimum-run-duration) applies to the Offline point
+   unchanged, but an Offline run ends when the queue drains rather than when a clock expires.
+   Whether a separate duration rule is needed is open.
+5. **Enforcing the pass boundary.** [§5.7.1](#571-definition) bars reordering across dataset passes.
+   The reference client should make pass boundaries explicit in the event log so the constraint is
+   checkable after the fact rather than resting on attestation; today it is a manual review item
+   ([§9.2](#92-manual-review-focus-areas)).
 
 ### Division and Scenario Open Items
 
@@ -1821,7 +2925,8 @@ See [§7.4](#74-open-question-custom-sku-classification-custom-sku).
 <details>
 <summary><strong>Quick-Reference Region Boundaries by $C_{min}$ and $C_{max}$</strong></summary>
 
-Pre-computed region boundaries for common combinations of Minimum Concurrency ($C_{min}$) and Maximum Supported Concurrency ($C_{max}$) values using the reference algorithm.
+Pre-computed region boundaries for common combinations of Minimum Concurrency ($C_{min}$) and
+Maximum Supported Concurrency ($C_{max}$) values using the reference algorithm.
 
 | Max Concurrency <br>($C_{max}$) | Min Concurrency <br>($C_{min}$) | Low Concurrency | Medium Concurrency | High Concurrency | 10% Margin |
 |---|---|---|---|---|---|
@@ -1944,7 +3049,8 @@ declaration is what earns the scaling.
 ### C.4 Partially populated node — why intra-node scaling is barred
 
 The C.1 chassis with only **4** of its 8 accelerator slots populated. Apply the formula with the
-counts limited to what is provisioned ([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology), path 3):
+counts limited to what is provisioned
+([§4.5.2](#452-proposed-endpoints-v10-normalization-methodology), path 3):
 
 | Component | Count | Per-unit | Subtotal |
 |---|---|---|---|
@@ -2235,7 +3341,8 @@ be read against the values in force when it was made.
 | **Ethernet-based** | **3.5 kW per switch at 10.8 TB/s per direction** | [AMD MI400 System Architecture, Hot Chips 2026](https://hc2026.hotchips.org/assets/program/conference/day1/FINAL_AMD%20MI400_System_Arch_Hot_Chips_2026.pdf) |
 
 The two defaults are expressed in different forms because they are applied differently. The NVLink
-default is an **energy-per-bit** figure, applied as `bandwidth × 5 pJ/bit`. The Ethernet default is a
+default is an **energy-per-bit** figure, applied as `bandwidth × 5 pJ/bit`. The Ethernet default is
+a
 **power-at-a-stated-bandwidth** point, applied proportionally to the switch's actual bandwidth.
 
 ### D.2 Processors
@@ -2309,7 +3416,8 @@ This appendix is the normative definition of the `system_power.json` descriptor 
 [§8.1](#81-directory-structure). It is what the automated **Power descriptor** check in
 [§9.1](#91-automated-checks) validates against.
 
-The descriptor records **how provisioned power was established**, not how the system behaved during a
+The descriptor records **how provisioned power was established**, not how the system behaved during
+a
 run. It is written once per system, and the provisioned power it yields is the same for every
 measurement point. What varies per point is how much of that system a point *engages*: each point's
 denominator is this file's figure scaled by the nodes declared in that point's `nodes_used`
@@ -2541,7 +3649,8 @@ declared and governs. The component block is retained as the cross-check but is 
 }
 ```
 
-Note that the component block is retained as the cross-check but is optional. Submitters may leave it as NULL instead. Eg:
+Note that the component block is retained as the cross-check but is optional. Submitters may leave
+it as NULL instead. Eg:
 
 ```json
 {
@@ -2698,11 +3807,15 @@ scaled directly, because it does not decompose into equal per-node shares
 The [§9.1](#91-automated-checks) **Power descriptor** check rejects a submission where:
 
 - the file is absent for any system, or is not valid JSON;
-- a required field of [E.2](#e2-top-level-fields), [E.3](#e3-node-sets) or [E.4](#e4-scale-out-fabric) is missing;
-- any object carrying `value_w`, `value_kw` or `value_pj` lacks a `source_type` and `source`, or gives a `source_type` outside the four permitted values;
+- a required field of [E.2](#e2-top-level-fields), [E.3](#e3-node-sets) or
+  [E.4](#e4-scale-out-fabric) is missing;
+- any object carrying `value_w`, `value_kw` or `value_pj` lacks a `source_type` and `source`, or
+  gives a `source_type` outside the four permitted values;
 - `cooling` disagrees with the `cooling` field of the corresponding `system_desc.json`;
-- `nodes_provisioned` is not a positive integer, or `nodes_in_published_rack` is absent, or is not greater than `nodes_provisioned`, for a `node_scaling` set;
-- `scale_out.present` is `true` and the combined `bandwidth_tbps × count` across `switches` is below `required_bandwidth_tbps`;
+- `nodes_provisioned` is not a positive integer, or `nodes_in_published_rack` is absent, or is not
+  greater than `nodes_provisioned`, for a `node_scaling` set;
+- `scale_out.present` is `true` and the combined `bandwidth_tbps × count` across `switches` is below
+  `required_bandwidth_tbps`;
 - `scale_out.cabling` is absent while `scale_out.present` is `true`;
 - the submitter-supplied `computed` block disagrees with the checker's recomputation.
 
@@ -2715,7 +3828,8 @@ before the result is normalized.
 > v1.0.**
 >
 > 1. **References are carried per value** ([E.1](#e1-sourced-values)), as a three-key object on every
->    power figure, rather than as a single citation list at the top of the file. Per-value sourcing is
+>    power figure, rather than as a single citation list at the top of the file. Per-value sourcing
+>    is
 >    what makes the [§9.1](#91-automated-checks) check mechanical — a checker can assert that every
 >    value has a source — at the cost of some verbosity.
 > 2. **Heterogeneity is expressed as an array of node sets** ([E.3](#e3-node-sets)) rather than a flat
