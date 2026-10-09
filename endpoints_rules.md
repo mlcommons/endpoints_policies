@@ -2550,6 +2550,13 @@ Endpoints submissions must include the following metadata:
 | `config_summary_notes` | Free form field from the submitter to contain information not captured by other fields that concatenate into config_summary. |
 | `tps_utilization` | reported_system_tps / (max of all reported_system_tps for all runs) |
 
+`system_desc.json` does not carry a `submission_id`. The submission ID is assigned by the
+submission pipeline ([§8.5](#85-result-id)) and is recorded only as the `[submission_id]/`
+directory level ([§8.1](#81-directory-structure)), so submitters do not set it. A `submission_id`
+key left over from an earlier round's template is not a defect: the submission tooling drops it
+when it assembles the bundle, and the compliance validator ([§9.1](#91-automated-checks)) does not
+flag it.
+
 #### 8.2.1 Template Structure
 
 `results/<system>/<model_name>/r<N>/system_desc.json` contains the fields defined in the table above.
@@ -2662,7 +2669,9 @@ Two identifiers are attached to every submission, and they serve different purpo
 
 The **submission ID** is generated automatically by the submission pipeline as a hash. It is opaque,
 carries no meaning, and exists so the lifecycle tooling can track a bundle through upload, review,
-and amendment.
+and amendment. It is not a submitter-provided field: it appears in the bundle only as the
+`[submission_id]/` directory ([§8.1](#81-directory-structure)), never in `system_desc.json`
+([§8.2](#82-system-description-system_descjson)).
 
 The **result ID** identifies a single published result and is human-readable. A result is one
 published Pareto curve: one system, one benchmark model, one dataset. It is constructed as:
