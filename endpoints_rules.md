@@ -1332,12 +1332,22 @@ The **Offline point** ([§5.7](#57-offline-point)) instead uses the benchmark-de
 
 Each measurement point must sustain the target concurrency for a minimum duration of steady-state measurement, excluding warmup. These values correspond to the `min_duration_ms` setting in `RuntimeSettings`.
 
+For Legacy LLM (non-agentic) benchmarks:
 | Concurrency Region | Minimum Duration (steady state) | Rationale |
 |---|---|---|
 | Ultra Low Concurrency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at ultra low concurrency. |
 | Low Concurrency | 1200 seconds | Standard duration for statistical confidence at scale. |
 | Medium Concurrency | 1200 seconds | Standard duration for statistical confidence at scale. |
 | High Concurrency | 1200 seconds | Standard duration for statistical confidence at scale. |
+
+For all Agentic benchmarks:
+
+| Concurrency Region | Minimum Duration (steady state) | Rationale |
+|---|---|---|
+| Ultra Low Concurrency (1–32) | 600 seconds | Reduced duration accounts for slower query completion at ultra low concurrency. |
+| Low Concurrency | 2400 seconds | Standard duration for statistical confidence at scale. |
+| Medium Concurrency | 2400 seconds | Standard duration for statistical confidence at scale. |
+| High Concurrency | 2400 seconds | Standard duration for statistical confidence at scale. |
 
 ### 6.3 Warmup Period
 
