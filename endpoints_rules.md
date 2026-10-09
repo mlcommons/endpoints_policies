@@ -1245,12 +1245,19 @@ by:
 > at least 6 weeks before the submission round opens. New models may be proposed to the working
 > group per the benchmark roadmap process defined in the MLPerf General Submission Rules §4.3.
 
-**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter
-list is published in the reference repository alongside the model list, versioned per submission
-round. The approval process, eligibility criteria, and the lead time required before a newly
-approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the
-listed checkpoints are approved with them and need not appear on the list
-([§2.9.4](#294-speculative-decoding)).
+The list of benchmarks, models, and reference implementation for MLPerf Endpoints v1.0 is:
+
+| Benchmark Type | Model Name | Reference Implementation |
+|---|---|---|
+| Legacy LLM | DeepSeek R1 | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/07_DeepSeekR1_Example) |
+| Legacy LLM | GPT-OSS 120B | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/04_GPTOSS120B_Example) |
+| Legacy LLM | Llama-3.1-8B-Instruct | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/05_Llama_Examples#llama-31-8b-instruct) |
+| Agentic | Kimi K3 | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/10_Agentic_Inference#kimi-k3) |
+| Agentic | DeepSeek-V4.1-Flash | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/10_Agentic_Inference#deepseek-v41-flash) |
+| Agentic | Qwen3.6-35B-A3B | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/10_Agentic_Inference#qwen36-35b-a3b) |
+
+
+**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the listed checkpoints are approved with them and need not appear on the list ([§2.9.4](#294-speculative-decoding)).
 
 ### 3.3 Weight Transformations
 
