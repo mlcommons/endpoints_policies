@@ -434,6 +434,8 @@ Memory footprint is a legitimate dimension of a serving configuration, and the a
 
 **v1.0 change.** Speculative decoding is now governed by a **curated approved-drafter-list model, per benchmark**, rather than a single fixed drafter designated by the benchmark definition. Speculative decoding is permitted for any benchmark for which the benchmark task force has approved one or more drafters, following the process below, or whose approved checkpoint ships a native head (see *Native heads* below). Benchmarks with no approved drafter continue to disallow speculative decoding entirely.
 
+List of approved drafter list is available [here](https://github.com/mlcommons/endpoints-submission-cli/blob/main/src/submission_checker/data/approved_drafters.yaml).
+
 **Approved drafter list.** Each benchmark's set of eligible drafters (MTP head, EAGLE-style head, or analogous module) is a **curated, published list**, not a single fixed drafter:
 
 - The benchmark task force seeds the list with ≥ 1 approved head/drafter per benchmark model where feasible.
