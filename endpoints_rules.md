@@ -2556,7 +2556,7 @@ submission pipeline assigns all three, so submitters do not set them:
 - The submission ID ([§8.5](#85-result-id)) is recorded only as the `[submission_id]/` directory
   level ([§8.1](#81-directory-structure)).
 - The submission date is set when the bundle is submitted
-  ([Submission Rules §5.2](endpoints_submission_rules.md#52-how-to-submit)).
+  ([Submission Rules §4.1](endpoints_submission_rules.md#41-rolling-submission-model)).
 - The publication date is set by the publication cohort or embargo
   ([Submission Rules §4.2](endpoints_submission_rules.md#42-publication-cohorts-and-embargo)).
 
