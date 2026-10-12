@@ -2467,6 +2467,7 @@ An Endpoints submission must follow this directory structure:
               └── <model_name>/        # e.g. deepseek-r1/, gpt-oss-120b/. MLC maintains a list of canonical model names for each benchmark.
                   └── r<N>/                 # one PARETO POINT per concurrency level (r1, r32, r256, …)
                       ├── point.yaml              # §8.3 — includes shared_src / shared_docs pointers
+                      ├── config.yaml             # Loadgen configuration file.
                       ├── result_summary.json     # aggregate metrics (QPS, TPS, TTFT, TPOT, ISL, %iles)
                       ├── accuracy_results.json   # §6.6
                       ├── system_desc.json       # framework/parallelism/precision for this point
