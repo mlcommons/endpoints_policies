@@ -1257,7 +1257,12 @@ The list of benchmarks, models, and reference implementation for MLPerf Endpoint
 | Agentic | Qwen3.6-35B-A3B | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/10_Agentic_Inference#qwen36-35b-a3b) |
 
 
-**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the listed checkpoints are approved with them and need not appear on the list ([§2.9.4](#294-speculative-decoding)).
+**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter
+list is published in the reference repository alongside the model list, versioned per submission
+round. The approval process, eligibility criteria, and the lead time required before a newly
+approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the
+listed checkpoints are approved with them and need not appear on the list
+([§2.9.4](#294-speculative-decoding)).
 
 ### 3.3 Weight Transformations
 
