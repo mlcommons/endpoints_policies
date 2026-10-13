@@ -976,7 +976,7 @@ For submissions that have not opted in to provisional publication (see
 ### 6.11 Withdrawing Results
 
 A submission may be withdrawn at any time up until finalization. Post-finalization withdrawals are
-handled per [§8.3 Withdrawal](#83-withdrawal).
+handled per [§8.2 Withdrawal](#82-withdrawal).
 
 ---
 
