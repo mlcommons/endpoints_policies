@@ -965,6 +965,14 @@ Meeting requests must include a written agenda and specific questions to be addr
 For submissions that have not opted in to provisional publication (see
 [§6.2](#623-provisional-publication)), the public has no visibility until results are finalized.
 
+> [!NOTE]
+> All submissions under peer review are available in a shared review repository.
+>
+> Submitters who are not review committee members have read access to other submissions under review, but may not conduct peer review, raise objections, or file issues against them. They may only file issues related to their own submissions. If you have serious concerns about another submission, please raise them with the Review Chairs or an MLCommons representative.
+> Once you join the review committee, there is also a mechanism for raising Late Objections after the review period closes ([§6.6](#66-late-objections-post-week-6)).
+>
+> We expect all submitters to act in good faith and respect the confidentiality and results embargo of the peer review process. Submitters who make dummy, deliberately faulty, or unserious submissions to gain access to the results review repository — or who otherwise attempt to subvert or abuse the review process — will be subject to disciplinary action by MLCommons.
+
 ### 6.11 Withdrawing Results
 
 A submission may be withdrawn at any time up until finalization. Post-finalization withdrawals are
@@ -1373,13 +1381,10 @@ Corrections to published results are **not permitted**. Errors in finalized resu
 
 ### 8.2 Withdrawal
 
-A submitter may voluntarily withdraw their submission at any time.
-
-- **Before finalization** (while results still carry the "peer review pending" tag): The submission
+- **Before finalization**  A submitter may voluntarily withdraw their submission at any time before finalization of results, including while results still carry the "peer review pending" tag. The submission
   is removed entirely from both the active results page and the historical archive. No record of the
   provisional publication is retained.
-- **After finalization:** Results are removed from the active results page but remain in the
-  historical archive with a "Withdrawn" designation.
+- **After finalization:** Results may only be removed in accordance to the rules listed in this document. Such cases may include failing an audit, fraudulent submissions, failing to qualify a preview submission etc. In such cases, results are removed from the active results page but remain in the historical archive with an appropriate designation that describes the reason for the removal of results.
 
 ### 8.3 Terms of Use
 
