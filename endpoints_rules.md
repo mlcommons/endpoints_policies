@@ -1257,7 +1257,12 @@ The list of benchmarks, models, and reference implementation for MLPerf Endpoint
 | Agentic | Qwen3.6-35B-A3B | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/10_Agentic_Inference#qwen36-35b-a3b) |
 
 
-**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the listed checkpoints are approved with them and need not appear on the list ([§2.9.4](#294-speculative-decoding)).
+**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter
+list is published in the reference repository alongside the model list, versioned per submission
+round. The approval process, eligibility criteria, and the lead time required before a newly
+approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the
+listed checkpoints are approved with them and need not appear on the list
+([§2.9.4](#294-speculative-decoding)).
 
 ### 3.3 Weight Transformations
 
@@ -1964,8 +1969,10 @@ performance across a region.
 #### Submitter's-Choice Points
 
 The 3 submitter’s-choice points may be placed in any of the Low, Medium, or High Concurrency 
-regions, including regions that already have a required point. Submissions that declare a `c_min_override` 
-may also place them in the Ultra Low Concurrency region. For example, a submitter could place all 3 additional points 
+regions, including regions that already have a required point. Submissions that declare a
+`c_min_override`
+may also place them in the Ultra Low Concurrency region. For example, a submitter could place all 3
+additional points
 in the High Concurrency region to demonstrate scaling behavior, or distribute them to show 
 overall consistency. All seven concurrency points MUST be distinct. 
 
@@ -1985,11 +1992,14 @@ The concurrency space is divided into four distinct regions.
 | Required points | 1 |
 | Concurrency range | 1–32; If submitters set `c_min_override`, the range is 1–$C_{min}$. Range is inclusive. |
 
-By default, submitters are required to submit a single point in the region, and $C_{min}$ is derived from the lowest concurrency submission point. 
-Alternatively, submitters may choose to set `c_min_override` in their `system_desc.json`, which allows them to define $C_{min}$ and submit additional points in the region.
+By default, submitters are required to submit a single point in the region, and $C_{min}$ is derived
+from the lowest concurrency submission point.
+Alternatively, submitters may choose to set `c_min_override` in their `system_desc.json`, which
+allows them to define $C_{min}$ and submit additional points in the region.
 
 *Rationale:* Low-concurrency operation is critical for interactive applications (chatbots, coding
-assistants, real-time translation). Addtionally, the override option distinguishes the region boundary from the lowest
+assistants, real-time translation). Additionally, the override option distinguishes the region
+boundary from the lowest
 measurement while retaining at least one point in the 1–32 range for cross-submission comparability.
 
 > [!NOTE]
@@ -2013,7 +2023,8 @@ Rules:
 - Submitters may alternatively choose to set $C_{min}$ using top-level `c_min_override`
   in `system_desc.json`. It MUST be a JSON integer in `[1,32]` equal to the
   concurrency of a submitted point on that curve. All other values, including `null`, are rejected.
-- Either every point of a submission curve MUST omit the field `c_min_override`, or every point MUST declare
+- Either every point of a submission curve MUST omit the field `c_min_override`, or every point MUST
+  declare
   the same value. Different pareto curves may choose different values.
 - $C_{max}$ >> $C_{min}$.
 - There is no compliance test to force a particular value of $C_{max}$.
@@ -2067,7 +2078,8 @@ point distribution.
 **Worked Examples**
 
 **Override example:** With a lowest measurement at 16, another at 32, and `"c_min_override": 32`, both
-are in the Ultra Low Concurrency region and either may supply its one required accuracy result. With $C_{max}=1024$, the
+are in the Ultra Low Concurrency region and either may supply its one required accuracy result. With
+$C_{max}=1024$, the
 remaining regions are Low 33–42, Medium 43–131, and High 132–1024. If the override is not set, then 
 $C_{min}=16$ and the boundaries follow Example C.
 
@@ -2078,7 +2090,7 @@ $C_{min}=16$ and the boundaries follow Example C.
 I = log2(8192 - 32) / 3 = log2(8160) / 3 = 12.994 / 3 = 4.331
 
 Region boundaries:
-  Low Latency placement:   concurrency 1 – 32
+  Ultra Low Concurrency: concurrency 1 – 32
   Low Concurrency:    concurrency   33 –   52  (round(32 + 2^4.331) = round(32 + 20.1) = 52)
   Med Concurrency:    concurrency   53 –  437  (round(32 + 2^8.663) = round(32 + 405.2) = 437)
   High Concurrency:   concurrency  438 – 8192
@@ -2094,7 +2106,7 @@ Minimum 7-point example: {32, 40, 200, 500, 1000, 2000, 4096}
 I = log2(256 - 1) / 3 = log2(255) / 3 = 7.994 / 3 = 2.665
 
 Region boundaries:
-  Low Latency placement:  concurrency 1 – 1
+  Ultra Low Concurrency: concurrency 1 – 1 with override; 1 – 32 without override
   Low Concurrency:   concurrency 2 –  7  (round(1 + 2^2.665) = round(1 + 6.34) = 7)
   Med Concurrency:   concurrency 8 –  41  (round(1 + 2^5.33) = round(1 + 40.21) = 41)
   High Concurrency:  concurrency 42 – 256
@@ -2110,7 +2122,7 @@ Minimum 7-point example: {1, 4, 16, 32, 64, 128, 256}
 I = log2(1024 - 16) / 3 = log2(1008) / 3 = 9.977 / 3 = 3.326
 
 Region boundaries:
-  Low Latency placement:  concurrency 1 – 16
+  Ultra Low Concurrency: concurrency 1 – 16 with override; 1 – 32 without override
   Low Concurrency:   concurrency  17 –   26
   Med Concurrency:   concurrency  27 –  117
   High Concurrency:  concurrency 118 – 1024
@@ -2138,13 +2150,9 @@ The following pseudocode defines the authoritative computation. Submitters must 
 implementation in the MLCommons Endpoints repository to compute their boundaries and validate their
 submitted points.
 
-Select $C_{min}$ under §5.4 before computing boundaries. Derivation includes recoverable
-concurrencies from points with invalid metadata. Ultra Low Concurrency region uses §5.4's range, which
-may differ from `low_latency` when no override is declared.
-
 ```python
 def compute_regions(C_max: int, C_min: int) -> dict:
-    assert 1 <= C_min <= 32, "Lower region boundary must be between 1 and 32 (inclusive)"
+    assert 1 <= C_min <= 32, "Ultra low concurrency region boundary must be between 1 and 32 (inclusive)"
     assert C_max > 32, "Maximum Supported Concurrency must be > 32"
 
     # Ultra Low placement; coverage follows §5.4.
