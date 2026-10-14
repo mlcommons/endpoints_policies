@@ -1384,7 +1384,11 @@ Corrections to published results are **not permitted**. Errors in finalized resu
 - **Before finalization**  A submitter may voluntarily withdraw their submission at any time before finalization of results, including while results still carry the "peer review pending" tag. The submission
   is removed entirely from both the active results page and the historical archive. No record of the
   provisional publication is retained.
-- **After finalization:** Results may only be removed in accordance to the rules listed in this document. Such cases may include failing an audit, fraudulent submissions, failing to qualify a preview submission etc. In such cases, results are removed from the active results page but remain in the historical archive with an appropriate designation that describes the reason for the removal of results.
+- **After finalization:** Results may be removed only in accordance with the rules in this
+  document, including a removal remedy following a failed audit, a finding of fraud or
+  misrepresentation, or expiration of a Preview result. Unless the applicable rule requires complete
+  removal (for example, [§7.3.5](#735-preview-tracker-and-expiration)), removed results remain in the
+  historical archive with a designation describing the reason for removal.
 
 ### 8.3 Terms of Use
 
