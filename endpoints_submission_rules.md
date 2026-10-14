@@ -1435,7 +1435,7 @@ Corrections to published results are **not permitted**. Errors in finalized resu
   finalization of results, including while results still carry the "peer review pending" tag. The
   submission is removed entirely from both the active results page and the historical archive. No
   record of the provisional publication is retained.
-  
+
 - **After finalization:** Results may be removed only in accordance with the rules in this
   document, including a removal remedy following a failed audit, a finding of fraud or
   misrepresentation, or expiration of a Preview result. Unless the applicable rule requires complete
