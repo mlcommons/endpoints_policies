@@ -1362,10 +1362,10 @@ accuracy validation run.
 For both single-turn and multi-turn benchmarks, accuracy validation runs are required at exactly
 those `N` points. Their results are gated as follows:
 
-- **Single-turn (per-point):** Each of the `N` required validation results MUST meet the quality
+- **Single-turn (per-point):** Each of the `N` required accuracy validation results MUST meet the quality
   threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after
   the corresponding performance run.
-- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required validation results MUST meet the
+- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy validation results MUST meet the
   quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn
   accuracy runs are time- and resource-intensive.
 
