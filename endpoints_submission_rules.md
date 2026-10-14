@@ -58,11 +58,10 @@
    - [7.5 Open Question: Custom SKU Classification](#75-open-question-custom-sku-classification-custom-sku)
    - [7.6 Results Table Content](#76-results-table-content)
 8. [Post-Publication](#8-post-publication)
-   - [8.1 Pareto Updates](#81-pareto-updates)
-   - [8.2 Corrections](#82-corrections)
-   - [8.3 Withdrawal](#83-withdrawal)
-   - [8.4 Terms of Use](#84-terms-of-use)
-   - [8.5 Issues Discovered After Publication](#85-issues-discovered-after-publication)
+   - [8.1 Corrections](#81-corrections)
+   - [8.2 Withdrawal](#82-withdrawal)
+   - [8.3 Terms of Use](#83-terms-of-use)
+   - [8.4 Issues Discovered After Publication](#84-issues-discovered-after-publication)
 9. [Dispute Resolution](#9-dispute-resolution)
    - [9.1 Scope](#91-scope)
    - [9.2 Escalation Path](#92-escalation-path)
@@ -999,10 +998,26 @@ Meeting requests must include a written agenda and specific questions to be addr
 For submissions that have not opted in to provisional publication (see
 [§6.2](#623-provisional-publication)), the public has no visibility until results are finalized.
 
+> [!NOTE]
+> All submissions under peer review are available in a shared review repository.
+>
+> Submitters who are not review committee members have read access to other submissions under
+review, but may not conduct peer review, raise objections, or file issues against them. They may
+only file issues related to their own submissions. If you have serious concerns about another
+submission, please raise them with the Review Chairs or an MLCommons representative.
+> Review committee members for the cohort in question may raise Late Objections after finalization;
+submitters without that standing may bring a concern to a committee member
+([§6.6](#66-late-objections-post-week-6)).
+>
+> We expect all submitters to act in good faith and respect the confidentiality and results embargo
+of the peer review process. Submitters who make dummy, deliberately faulty, or unserious submissions
+to gain access to the results review repository — or who otherwise attempt to subvert or abuse the
+review process — will be subject to disciplinary action by MLCommons.
+
 ### 6.11 Withdrawing Results
 
 A submission may be withdrawn at any time up until finalization. Post-finalization withdrawals are
-handled per [§8.3 Withdrawal](#83-withdrawal).
+handled per [§8.2 Withdrawal](#82-withdrawal).
 
 ---
 
@@ -1412,13 +1427,16 @@ Corrections to published results are **not permitted**. Errors in finalized resu
 
 ### 8.2 Withdrawal
 
-A submitter may voluntarily withdraw their submission at any time.
-
-- **Before finalization** (while results still carry the "peer review pending" tag): The submission
+- **Before finalization:** A submitter may voluntarily withdraw their submission at any time before
+  finalization of results, including while results still carry the "peer review pending" tag. The
+  submission
   is removed entirely from both the active results page and the historical archive. No record of the
   provisional publication is retained.
-- **After finalization:** Results are removed from the active results page but remain in the
-  historical archive with a "Withdrawn" designation.
+- **After finalization:** Results may be removed only in accordance with the rules in this
+  document, including a removal remedy following a failed audit, a finding of fraud or
+  misrepresentation, or expiration of a Preview result. Unless the applicable rule requires complete
+  removal (for example, [§7.3.5](#735-preview-tracker-and-expiration)), removed results remain in the
+  historical archive with a designation describing the reason for removal.
 
 ### 8.3 Terms of Use
 
