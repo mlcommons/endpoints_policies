@@ -128,14 +128,25 @@ The review committee for a submission consists of representatives from organizat
 participated in MLPerf Endpoints within the preceding **6 months or 12 cohorts, whichever is
 longer**, counting backward from the first day of the publication month.
 
-"Participated" means the organization has at least one MLPerf Endpoints result that has completed the full review process and been published without a "peer review pending" tag (i.e., finalized results). Results that were published but are still carrying the "peer review pending" tag do not count toward participation eligibility. Organizations whose only finalized results within the lookback period were subsequently withdrawn are not eligible for committee membership. Members may opt-out of the review committee, but will only be invited again once they have successfully published finalized results once more. 
+"Participated" means the organization has at least one MLPerf Endpoints result that has completed
+the full review process and been published without a "peer review pending" tag (i.e., finalized
+results). Results that were published but are still carrying the "peer review pending" tag do not
+count toward participation eligibility. Organizations whose only finalized results within the
+lookback period were subsequently withdrawn are not eligible for committee membership. Members may
+opt-out of the review committee, but will only be invited again once they have successfully
+published finalized results once more.
 
 > **Example:** A submission published in the 2026-12-C1 cohort draws its review committee from
 > organizations that submitted results published on or after 2026-06-01.
 
 ### 2.2 Review Chair
 
-A standing review chair is selected every quarter. The chair does not need to be a member of the review committee and does not need to have participated in MLPerf Endpoints — they should be knowledgeable about MLPerf benchmarking processes and preferably neutral (i.e., not affiliated with an active Endpoints submitter). One co-chair is elected or nominated from the review committee every 3 months on a rotating basis. Both chairs must be MLCommons members and are expected to respect the confidentiality of the review process and all applicable NDAs. 
+A standing review chair is selected every quarter. The chair does not need to be a member of the
+review committee and does not need to have participated in MLPerf Endpoints — they should be
+knowledgeable about MLPerf benchmarking processes and preferably neutral (i.e., not affiliated with
+an active Endpoints submitter). One co-chair is elected or nominated from the review committee every
+3 months on a rotating basis. Both chairs must be MLCommons members and are expected to respect the
+confidentiality of the review process and all applicable NDAs.
 
 
 Responsibilities of the chair and co-chair include:
@@ -548,7 +559,9 @@ A submission must contain the following:
 - Metadata for the system under test (`system_desc.json`).
 - Pareto curve YAML configuration files (one per measurement point).
 - Run result artifacts for each measurement point (log files, metric summaries).
-- Accuracy validation run artifacts.
+- Accuracy validation run artifacts and, for agentic benchmarks, inline accuracy results from every
+  submitted performance point, as required by
+  [Endpoints Rules §4.3](endpoints_rules.md#43-accuracy-metric).
 - Code that implements the benchmark endpoint interface.
 - Metadata describing the system-implementation combination tested.
 
@@ -586,7 +599,9 @@ depending on submission size and queue depth. These checks verify:
 - The pareto curve satisfies minimum point count and region coverage requirements (minimum 7 points
   structured as 1 + 3 + 3; maximum 32 points total).
 - Run durations, minimum query counts, load patterns, and streaming configuration meet requirements.
-- Accuracy validation results are included and pass the quality target.
+- Accuracy validation results are included and pass the applicable quality gate. For agentic
+  benchmarks, the four SWE-bench results pass the mean-of-four gate, and every performance point
+  reports a passing inline score ([Endpoints Rules §4.3](endpoints_rules.md#43-accuracy-metric)).
 - Metric consistency: the valid per-response TPOT distribution is non-empty with a finite, strictly
   positive P90 and its normalized millisecond value is used to derive
   `tps_per_user = 1000 / tpot_p90_ms`.
@@ -682,10 +697,27 @@ process (see [§6.6](#66-late-objections-post-week-6)).
 
 **Response timelines within the peer review window:**
 
-- Once an objection is filed, the **submitter must post an initial response within 3 business days (by 11:59PM PT on the 3rd business day)**, counting from the day the objection is filed. Business day counting accounts for local public holidays in the submitter's primary operating jurisdiction — days falling on a local holiday do not count against the window. The response must either acknowledge the issue and include a reasonable **schedule for resolution** — which may extend into the objection resolution window if needed — or contest the objection with a counter-argument and supporting evidence.  If the submitter requires more time than initially forecasted in their response, they must provide an updated schedule which must not extend beyond the objection resolution window.
-- After the submitter responds, the **objecting party has 2 business days (by 11:59PM PT on the 2nd business day)** to acknowledge the response, retract the objection, or indicate that the issue remains unresolved and will carry into the objection resolution window. The objecting party may also provide a **schedule or timeline** for testing and validating the proposed resolution, in which case the objection remains open until that validation is complete or the stated timeline has elapsed.
+- Once an objection is filed, the **submitter must post an initial response within 3 business days
+  (by 11:59PM PT on the 3rd business day)**, counting from the day the objection is filed. Business
+  day counting accounts for local public holidays in the submitter's primary operating jurisdiction
+  — days falling on a local holiday do not count against the window. The response must either
+  acknowledge the issue and include a reasonable **schedule for resolution** — which may extend into
+  the objection resolution window if needed — or contest the objection with a counter-argument and
+  supporting evidence.  If the submitter requires more time than initially forecasted in their
+  response, they must provide an updated schedule which must not extend beyond the objection
+  resolution window.
+- After the submitter responds, the **objecting party has 2 business days (by 11:59PM PT on the 2nd
+  business day)** to acknowledge the response, retract the objection, or indicate that the issue
+  remains unresolved and will carry into the objection resolution window. The objecting party may
+  also provide a **schedule or timeline** for testing and validating the proposed resolution, in
+  which case the objection remains open until that validation is complete or the stated timeline has
+  elapsed.
 
-**Submitter non-response penalties.** Failure to respond to a filed objection triggers automatic penalties based on elapsed business days since the objection was filed. Business day counting follows the same local holiday rule as the response window. These penalties apply throughout both the peer review and objection resolution windows and are enforced by the review chair without requiring a separate motion.
+**Submitter non-response penalties.** Failure to respond to a filed objection triggers automatic
+penalties based on elapsed business days since the objection was filed. Business day counting
+follows the same local holiday rule as the response window. These penalties apply throughout both
+the peer review and objection resolution windows and are enforced by the review chair without
+requiring a separate motion.
 
 | Business days elapsed without submitter response | Penalty |
 |---|---|
@@ -693,9 +725,15 @@ process (see [§6.6](#66-late-objections-post-week-6)).
 | 6 business days | Delay increases to **2 cohort dates** after finalization. |
 | 10 business days | The submission is **withdrawn**. The submitter may correct the issues and resubmit as a new submission. |
 
-Penalties are non-reversible — responding after a penalty threshold has been crossed does not remove the penalty, though subsequent response may prevent further escalation. The review chair must notify the submitter and all review committee members when a penalty threshold is crossed. 
+Penalties are non-reversible — responding after a penalty threshold has been crossed does not remove
+the penalty, though subsequent response may prevent further escalation. The review chair must notify
+the submitter and all review committee members when a penalty threshold is crossed.
 
-Penalties are assessed per objection independently per submission. When multiple objections each carry a penalty, only the most severe applies — penalties across objections are not additive. For example, if a submitter was non-responsive for 5 business days on one objection (1 cohort delay) and 7 business days on another (2 cohort delay), the resulting penalty for the submission is a 2 cohort date delay, not 3.
+Penalties are assessed per objection independently per submission. When multiple objections each
+carry a penalty, only the most severe applies — penalties across objections are not additive. For
+example, if a submitter was non-responsive for 5 business days on one objection (1 cohort delay) and
+7 business days on another (2 cohort delay), the resulting penalty for the submission is a 2 cohort
+date delay, not 3.
 
 **Early finalization.** Objections may be fully resolved during the peer review window. If all
 objections are resolved or retracted before the end of Week 3, the submission is eligible for
