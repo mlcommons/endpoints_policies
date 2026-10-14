@@ -558,7 +558,9 @@ A submission must contain the following:
 - Metadata for the system under test (`system_desc.json`).
 - Pareto curve YAML configuration files (one per measurement point).
 - Run result artifacts for each measurement point (log files, metric summaries).
-- Accuracy validation run artifacts.
+- Accuracy validation run artifacts and, for agentic benchmarks, inline accuracy results from every
+  submitted performance point, as required by
+  [Endpoints Rules §4.3](endpoints_rules.md#43-accuracy-metric).
 - Code that implements the benchmark endpoint interface.
 - Metadata describing the system-implementation combination tested.
 
@@ -596,7 +598,9 @@ depending on submission size and queue depth. These checks verify:
 - The pareto curve satisfies minimum point count and region coverage requirements (minimum 7 points
   structured as 1 + 3 + 3; maximum 32 points total).
 - Run durations, minimum query counts, load patterns, and streaming configuration meet requirements.
-- Accuracy validation results are included and pass the quality target.
+- Accuracy validation results are included and pass the applicable quality gate. For agentic
+  benchmarks, the four SWE-bench results pass the mean-of-four gate, and every performance point
+  reports a passing inline score ([Endpoints Rules §4.3](endpoints_rules.md#43-accuracy-metric)).
 - Metric consistency: the valid per-response TPOT distribution is non-empty with a finite, strictly
   positive P90 and its normalized millisecond value is used to derive
   `tps_per_user = 1000 / tpot_p90_ms`.
@@ -1002,17 +1006,17 @@ For submissions that have not opted in to provisional publication (see
 > All submissions under peer review are available in a shared review repository.
 >
 > Submitters who are not review committee members have read access to other submissions under
-review, but may not conduct peer review, raise objections, or file issues against them. They may
-only file issues related to their own submissions. If you have serious concerns about another
-submission, please raise them with the Review Chairs or an MLCommons representative.
+> review, but may not conduct peer review, raise objections, or file issues against them. They may
+> only file issues related to their own submissions. If you have serious concerns about another
+> submission, please raise them with the Review Chairs or an MLCommons representative.
 > Review committee members for the cohort in question may raise Late Objections after finalization;
-submitters without that standing may bring a concern to a committee member
-([§6.6](#66-late-objections-post-week-6)).
+> submitters without that standing may bring a concern to a committee member
+> ([§6.6](#66-late-objections-post-week-6)).
 >
 > We expect all submitters to act in good faith and respect the confidentiality and results embargo
-of the peer review process. Submitters who make dummy, deliberately faulty, or unserious submissions
-to gain access to the results review repository — or who otherwise attempt to subvert or abuse the
-review process — will be subject to disciplinary action by MLCommons.
+> of the peer review process. Submitters who make dummy, deliberately faulty, or unserious submissions
+> to gain access to the results review repository — or who otherwise attempt to subvert or abuse the
+> review process — will be subject to disciplinary action by MLCommons.
 
 ### 6.11 Withdrawing Results
 
@@ -1429,9 +1433,9 @@ Corrections to published results are **not permitted**. Errors in finalized resu
 
 - **Before finalization:** A submitter may voluntarily withdraw their submission at any time before
   finalization of results, including while results still carry the "peer review pending" tag. The
-  submission
-  is removed entirely from both the active results page and the historical archive. No record of the
-  provisional publication is retained.
+  submission is removed entirely from both the active results page and the historical archive. No
+  record of the provisional publication is retained.
+  
 - **After finalization:** Results may be removed only in accordance with the rules in this
   document, including a removal remedy following a failed audit, a finding of fraud or
   misrepresentation, or expiration of a Preview result. Unless the applicable rule requires complete

@@ -1330,6 +1330,10 @@ Each benchmark defines a quality target expressed as a minimum acceptable score 
 accuracy metric (e.g., ROUGE score, exact match, perplexity). The accuracy metric and quality target
 are specified in the benchmark definition.
 
+An **accuracy validation run** evaluates the benchmark's accuracy dataset; for the agentic
+benchmarks, this is the SWE-bench evaluation. **Inline accuracy** is scored on the performance
+run itself. It is a separate per-point requirement and is not an accuracy validation run, even
+when both results are stored in the same `accuracy_results.json` file.
 
 **Exactly one** accuracy validation run is required, and **exactly one may be submitted**, for each
 of the mandatory points defined in [§5.3](#53-minimum-submission-requirements) — one in the Ultra
@@ -1337,30 +1341,40 @@ Low Concurrency region, one in each of the Low, Medium, and High Concurrency reg
 non-agentic benchmarks, one at the Offline point. Accuracy and performance runs MUST use the same
 server endpoint configuration, model weights, and software stack.
 
-| Benchmark type | Required accuracy runs (`N`) | Composition |
+| Benchmark type | Required accuracy validation runs (`N`) | Composition |
 |---|---|---|
 | Non-agentic | **5** | 4 concurrency regions + Offline |
-| Agentic | **4** | 4 concurrency regions; the Offline point does not apply ([§5.7](#57-offline-point)) |
+| Agentic | **4** | One SWE-bench evaluation per concurrency region; the Offline point does not apply ([§5.7](#57-offline-point)) |
 
-`N` is a fixed count, not a floor. A submission carrying more than one accuracy result for a region,
-or any accuracy result at a submitter's-choice point, is non-conforming and is rejected at automated
-compliance ([§9.1](#91-automated-checks)).
+`N` is a fixed count, not a floor. A submission carrying results from more than one accuracy
+validation run for a region, or from any accuracy validation run at a submitter's-choice point, is
+non-conforming and is rejected at automated compliance ([§9.1](#91-automated-checks)). Inline
+accuracy scores are excluded from this count; an inline-only result neither fills a mandatory
+accuracy point nor counts as an extra accuracy validation run.
 
 *Rationale:* the multi-turn criterion below is a **mean** over the `N` results. If the number of
-accuracy runs were at the submitter's discretion, that mean could be shifted by adding runs at
-favourable operating points, and the threshold would no longer mean the same thing across
+accuracy validation runs were at the submitter's discretion, that mean could be shifted by adding
+runs at favourable operating points, and the threshold would no longer mean the same thing across
 submissions. Fixing `N` — and fixing *which* points it covers — keeps the accuracy criterion
 comparable. The three submitter's-choice performance points characterize the curve; they carry no
-accuracy run.
+accuracy validation run.
 
-For both single-turn and multi-turn benchmarks, accuracy is required at exactly those `N` points.
+For both single-turn and multi-turn benchmarks, accuracy validation runs are required at exactly
+those `N` points. Their results are gated as follows:
 
-- **Single-turn (per-point):** Each of the `N` required accuracy results MUST meet the quality
+- **Single-turn (per-point):** Each of the `N` required accuracy validation results MUST meet the quality
   threshold. Each accuracy run MUST use matching concurrency on the same instance, immediately after
   the corresponding performance run.
-- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy results MUST meet the
-  quality threshold; individual results need not. Accuracy concurrency may differ because multi-turn
-  accuracy runs are time- and resource-intensive.
+- **Multi-turn (mean-of-N):** The arithmetic mean of the `N` required accuracy validation results
+  MUST meet the quality threshold; individual results need not. Accuracy concurrency may differ
+  because multi-turn accuracy runs are time- and resource-intensive.
+
+For agentic benchmarks, the mean-of-`N` gate applies to the four SWE-bench validation results.
+Inline scores MUST NOT be included in that mean. Every submitted agentic performance point,
+including all submitter's-choice points, MUST report an inline accuracy score from that point's
+performance run and individually meet the model-specific inline threshold defined by the
+[reference implementation](#291-reference-implementation). A missing, null, or below-threshold
+inline score is non-conforming. Scores at other points cannot compensate for a failing point.
 
 Select one Ultra Low accuracy result from any point in its [§5.4](#54-regions-of-interest) coverage
 band. No result may fill two concurrency bands; use the same assignment for coverage and the
@@ -1953,11 +1967,13 @@ Offline point does not apply to them ([§5.7](#57-offline-point)):
 | 3 submitter's-choice points | Three additional distinct points, placed as specified [below](#submitters-choice-points). |
 | 1 mandatory **Offline** point | The unconstrained-throughput point defined in [§5.7](#57-offline-point). Required for every non-agentic submission; not applicable to agentic benchmarks. Where the submitter elects the $C_{max}$ point as the Offline result ([§5.7.2](#572-relationship-to-maximum-supported-concurrency)), no separate run is required and the minimum is 7. |
 
-Accuracy results are required at exactly `N` points, and at no others: the four mandatory
+Accuracy validation runs are required at exactly `N` points, and at no others: the four mandatory
 concurrency points — one low-latency point in the Ultra Low Concurrency region and one point in each
 of the Low Concurrency, Medium Concurrency, and High Concurrency regions — plus the Offline point
 for non-agentic benchmarks. `N` is therefore **5** for non-agentic benchmarks and **4** for agentic
-benchmarks. The three submitter's-choice points carry no accuracy run ([§4.3](#43-accuracy-metric)).
+benchmarks. Submitter's-choice points carry no accuracy validation run. Every agentic performance
+point, including all submitter's-choice points, still requires its own inline accuracy score;
+these scores are excluded from `N` ([§4.3](#43-accuracy-metric)).
 
 #### No Spacing Requirements
 
@@ -2454,10 +2470,15 @@ the dataset size.
 
 *(Example constraint — subject to ratification.)*
 
-Accuracy validation is required at the points defined in
+Accuracy validation runs are required at the points defined in
 [§5.3](#53-minimum-submission-requirements). The accuracy runs verify that the system meets the
 benchmark's quality target and MUST follow the applicable single-turn or multi-turn requirements in
 [§4.3](#43-accuracy-metric).
+
+Agentic benchmarks additionally require inline accuracy from every submitted performance run,
+including submitter's-choice points. Each score MUST meet the per-point inline requirement in
+[§4.3](#43-accuracy-metric) and be included in the point's `accuracy_results.json`
+([§8.1](#81-directory-structure)).
 
 ---
 
@@ -2507,6 +2528,13 @@ An Endpoints submission must follow this directory structure:
                                                   #   KV cache %, TP/EP/PP). Non-standard — layout is
                                                   #   submitter-defined. May include its own README.md.
 ```
+
+For agentic benchmarks, every point MUST include `accuracy_results.json` with the inline score
+from its performance run (the client's `dataset_type: performance` entry). At each of the four
+mandatory accuracy points, the same file MUST also include the SWE-bench validation result.
+When performance and accuracy validation are executed separately, retain both results in that
+point's file. An inline-only file at another point is required and does not count toward the
+fixed number of accuracy validation runs ([§4.3](#43-accuracy-metric)).
 
 The tree separates content that can be shared across the submission from content that is genuinely
 per-measurement-point:
@@ -2762,6 +2790,8 @@ performs the following checks:
 | **Metric consistency** | The valid per-response TPOT distribution must be non-empty with a finite, strictly positive P90; the normalized P90 value in milliseconds is `tpot_p90_ms` and `tps_per_user = 1000 / tpot_p90_ms`. The authoritative result schema defines TPOT serialization and units. | Flag inconsistent points. |
 | **Agentic metric consistency** | Reported agentic metrics are derivable from their §4 definitions. | Flag inconsistent points. |
 | **Accuracy** | Required results satisfy §4.3's band assignment and single-turn or multi-turn gate. | Reject submission. |
+| **Accuracy validation** | Validation results are present for all points required by §5.3 and satisfy the applicable single-turn or multi-turn gate in §4.3. For agentic benchmarks, the mean is over the four SWE-bench results only. | Reject submission. |
+| **Agentic inline accuracy** | Every submitted agentic performance point, including all submitter's-choice points, reports an inline score from its performance run and individually meets the model-specific threshold (§4.3). Missing, null, or below-threshold scores are non-conforming. | Reject submission. |
 | **Seed-set validity** | For an initial submission, every point must record the same seed set, and that set must have been published for `target_cohort` or one of the three immediately preceding cohorts. For an amendment, every new or replacement point must match the original submission's bound seed set; the four-cohort adoption test is not reapplied using the amendment's later cohort. See [Submission Rules §4.6](endpoints_submission_rules.md#46-seed-rotation). | Reject submission. |
 | **Configuration consistency** | Same model, endpoint configuration, software stack, and seed set across all measurement points. | Flag inconsistencies. |
 | **Approved drafter** | For points using speculative decoding, the disclosed drafter matches an entry on the benchmark's published approved drafter list — by weight checksum, or by target checksum plus configuration for a configuration-identified entry — or is a native head, identified by the model ID and checksum of an approved checkpoint that ships it ([§2.9.4](#294-speculative-decoding)/[§3.2](#32-supported-models)). | Reject non-conforming points. |
