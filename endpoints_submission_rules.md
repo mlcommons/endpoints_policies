@@ -1350,6 +1350,11 @@ Corrections to non-result content are permitted and encouraged:
   that does not match the actual run settings).
 - Software version information and calibration writeups may be amended.
 
+Once peer review starts, adding, removing, or changing `c_min_override` requires a new submission
+([Endpoints Rules §5.4](endpoints_rules.md#54-regions-of-interest)). Withdrawing points does not
+relax this restriction; the remaining curve must retain a point at the declared $C_{min}$ and
+satisfy coverage.
+
 **Results may not be changed** during the peer review window. If a measurement point is found to be
 incorrect:
 
