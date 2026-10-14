@@ -1381,7 +1381,7 @@ Corrections to published results are **not permitted**. Errors in finalized resu
 
 ### 8.2 Withdrawal
 
-- **Before finalization**  A submitter may voluntarily withdraw their submission at any time before finalization of results, including while results still carry the "peer review pending" tag. The submission
+- **Before finalization:** A submitter may voluntarily withdraw their submission at any time before finalization of results, including while results still carry the "peer review pending" tag. The submission
   is removed entirely from both the active results page and the historical archive. No record of the
   provisional publication is retained.
 - **After finalization:** Results may be removed only in accordance with the rules in this
