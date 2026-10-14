@@ -1257,7 +1257,12 @@ The list of benchmarks, models, and reference implementation for MLPerf Endpoint
 | Agentic | Qwen3.6-35B-A3B | [Reference](https://github.com/mlcommons/endpoints/tree/main/examples/10_Agentic_Inference#qwen36-35b-a3b) |
 
 
-**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the listed checkpoints are approved with them and need not appear on the list ([§2.9.4](#294-speculative-decoding)).
+**Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter
+list is published in the reference repository alongside the model list, versioned per submission
+round. The approval process, eligibility criteria, and the lead time required before a newly
+approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding). Native heads of the
+listed checkpoints are approved with them and need not appear on the list
+([§2.9.4](#294-speculative-decoding)).
 
 ### 3.3 Weight Transformations
 
@@ -2551,6 +2556,20 @@ Endpoints submissions must include the following metadata:
 | `config_summary_notes` | Free form field from the submitter to contain information not captured by other fields that concatenate into config_summary. |
 | `tps_utilization` | reported_system_tps / (max of all reported_system_tps for all runs) |
 
+`system_desc.json` does not carry `submission_id`, `submission_date`, or `publish_date`. The
+submission pipeline assigns all three, so submitters do not set them:
+
+- The submission ID ([§8.5](#85-result-id)) is recorded only as the `[submission_id]/` directory
+  level ([§8.1](#81-directory-structure)).
+- The submission date is set when the bundle is submitted
+  ([Submission Rules §4.1](endpoints_submission_rules.md#41-rolling-submission-model)).
+- The publication date is set by the publication cohort or embargo
+  ([Submission Rules §4.2](endpoints_submission_rules.md#42-publication-cohorts-and-embargo)).
+
+Any of these keys left over from an earlier round's template is not a defect: the submission
+tooling drops it when it assembles the bundle, and the compliance validator
+([§9.1](#91-automated-checks)) does not flag it.
+
 #### 8.2.1 Template Structure
 
 `results/<system>/<model_name>/r<N>/system_desc.json` contains the fields defined in the table above.
@@ -2663,7 +2682,9 @@ Two identifiers are attached to every submission, and they serve different purpo
 
 The **submission ID** is generated automatically by the submission pipeline as a hash. It is opaque,
 carries no meaning, and exists so the lifecycle tooling can track a bundle through upload, review,
-and amendment.
+and amendment. It is not a submitter-provided field: it appears in the bundle only as the
+`[submission_id]/` directory ([§8.1](#81-directory-structure)), never in `system_desc.json`
+([§8.2](#82-system-description-system_descjson)).
 
 The **result ID** identifies a single published result and is human-readable. A result is one
 published Pareto curve: one system, one benchmark model, one dataset. It is constructed as:
