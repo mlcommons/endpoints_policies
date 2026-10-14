@@ -1963,10 +1963,12 @@ performance across a region.
 
 #### Submitter's-Choice Points
 
-The 3 choice points may be in Low, Medium, or High Concurrency. Curves declaring `c_min_override`
-may also place them in Ultra Low. All seven concurrency points MUST be distinct.
-The minimum point count, accuracy-run count, Offline requirement, and 32-point cap are
-unchanged.
+The 3 submitter’s-choice points may be placed in any of the Low, Medium, or High Concurrency 
+regions, including regions that already have a required point. Submissions that declare a `c_min_override` 
+may also place them in the Ultra Low Concurrency region. For example, a submitter could place all 3 additional points 
+in the High Concurrency region to demonstrate scaling behavior, or distribute them to show 
+overall consistency. All seven concurrency points MUST be distinct. 
+
 
 ### 5.4 Regions of Interest
 
@@ -1974,40 +1976,45 @@ unchanged.
 > Regions of Interest (ROIs) are named for either latency or concurrency, and in both cases they are
 > constrained by concurrency. Please read the methodology carefully before proceeding.
 
-The concurrency space is divided into four regions for point placement.
+The concurrency space is divided into four distinct regions.
 
 #### Ultra Low Concurrency Region <a id="low-latency-region"></a>
 
 | Property | Value |
 |---|---|
-| Coverage and accuracy band | 1–32 without `c_min_override`; 1–$C_{min}$ with it. Both ranges are inclusive. |
-| Computed placement (`low_latency`) | 1–$C_{min}$ (inclusive). |
-| Required points | A submitted point at $C_{min}$; additional points in the coverage band are allowed. |
+| Required points | 1 |
+| Concurrency range | 1–32; If submitters set `c_min_override`, the range is 1–$C_{min}$. Range is inclusive. |
+
+By default, submitters are required to submit a single point in the region, and $C_{min}$ is derived from the lowest concurrency submission point. 
+Alternatively, submitters may choose to set `c_min_override` in their `system_desc.json`, which allows them to define $C_{min}$ and submit additional points in the region.
 
 *Rationale:* Low-concurrency operation is critical for interactive applications (chatbots, coding
-assistants, real-time translation). An override separates the region boundary from the lowest
-measurement while retaining at least one point in the 1–32 range.
+assistants, real-time translation). Addtionally, the override option distinguishes the region boundary from the lowest
+measurement while retaining at least one point in the 1–32 range for cross-submission comparability.
 
 > [!NOTE]
-> Submitters are encouraged, but not required, to include concurrency 1 as a single-user baseline.
-
-Without an override, the existing overlap between the 1–32 coverage band and computed Low or
-Medium regions is preserved; accuracy assignment follows §4.3. With an override, Ultra Low and
-Low are disjoint.
+> Submitters are encouraged — but not required — to include a measurement at concurrency 1 (the
+> single-user baseline).
+> Concurrency 1 represents the best-case per-user experience and is commonly cited in
+> performance comparisons, but any concurrency level in the 1–32
+> range satisfies the single point region requirement.
 
 #### Maximum Supported Concurrency
 
-The concurrency regions use a **lower region boundary** $C_{min}$ and a **maximum supported
-concurrency** $C_{max}$, the upper bound of High Concurrency before its 10% margin.
+The concurrency regions are defined using the **Ultra Low Concurrency Region bound** 
+$C_{min}$ and a **maximum supported concurrency** value $C_{max}$ (this is the highest 
+concurrency level at which the submitter chooses to benchmark their system). 
+$C_{max}$ is the upper bound of the **High Concurrency Region**. 
 
 Rules:
 
-- By default, $C_{min}$ is the lowest submitted concurrency, preserving existing submissions.
-- Submitters may instead set $C_{min}$ using top-level `c_min_override` in `system_desc.json`.
-  It MUST be a JSON integer in `[1,32]` equal to the concurrency of a submitted point on that
-  curve. All other values, including `null`, are rejected.
-- Either every point of a system/model curve MUST omit the field, or every point MUST declare
-  the same value. Different model curves may choose different values.
+- By default, $C_{min}$ is derived from the submission points, and $C_{max}$ is defined by the
+  submitter as the upper bound of the High Throughput region.
+- Submitters may alternatively choose to set $C_{min}$ using top-level `c_min_override`
+  in `system_desc.json`. It MUST be a JSON integer in `[1,32]` equal to the
+  concurrency of a submitted point on that curve. All other values, including `null`, are rejected.
+- Either every point of a submission curve MUST omit the field `c_min_override`, or every point MUST declare
+  the same value. Different pareto curves may choose different values.
 - $C_{max}$ >> $C_{min}$.
 - There is no compliance test to force a particular value of $C_{max}$.
 - Submitters are incentivized to choose well: $C_{max}$ defines the extent of their published pareto
@@ -2019,7 +2026,7 @@ Override declarations are fixed once peer review starts; see
 
 #### Concurrency Regions <a id="concurrency-regions"></a>
 
-Above the computed `low_latency` placement region (concurrency > $C_{min}$), the concurrency space
+Beyond the `Ultra Low Concurrency` region (concurrency > $C_{min}$), the concurrency space
 up to $C_{max}$ is divided into **three equal regions in logarithmic space (base 2)**.
 
 **Region Boundary Computation**
@@ -2060,8 +2067,8 @@ point distribution.
 **Worked Examples**
 
 **Override example:** With a lowest measurement at 16, another at 32, and `"c_min_override": 32`, both
-are Ultra Low and either may supply its one required accuracy result. With $C_{max}=1024$, the
-remaining regions are Low 33–42, Medium 43–131, and High 132–1024. Without the override,
+are in the Ultra Low Concurrency region and either may supply its one required accuracy result. With $C_{max}=1024$, the
+remaining regions are Low 33–42, Medium 43–131, and High 132–1024. If the override is not set, then 
 $C_{min}=16$ and the boundaries follow Example C.
 
 <details>
@@ -2132,8 +2139,8 @@ implementation in the MLCommons Endpoints repository to compute their boundaries
 submitted points.
 
 Select $C_{min}$ under §5.4 before computing boundaries. Derivation includes recoverable
-concurrencies from points with invalid metadata. Ultra Low coverage uses §5.4's band, which
-can differ from `low_latency` when no override is declared.
+concurrencies from points with invalid metadata. Ultra Low Concurrency region uses §5.4's range, which
+may differ from `low_latency` when no override is declared.
 
 ```python
 def compute_regions(C_max: int, C_min: int) -> dict:
