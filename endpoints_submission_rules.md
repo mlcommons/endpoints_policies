@@ -969,7 +969,7 @@ For submissions that have not opted in to provisional publication (see
 > All submissions under peer review are available in a shared review repository.
 >
 > Submitters who are not review committee members have read access to other submissions under review, but may not conduct peer review, raise objections, or file issues against them. They may only file issues related to their own submissions. If you have serious concerns about another submission, please raise them with the Review Chairs or an MLCommons representative.
-> Once you join the review committee, there is also a mechanism for raising Late Objections after the review period closes ([§6.6](#66-late-objections-post-week-6)).
+> Review committee members for the cohort in question may raise Late Objections after finalization; submitters without that standing may bring a concern to a committee member ([§6.6](#66-late-objections-post-week-6)).
 >
 > We expect all submitters to act in good faith and respect the confidentiality and results embargo of the peer review process. Submitters who make dummy, deliberately faulty, or unserious submissions to gain access to the results review repository — or who otherwise attempt to subvert or abuse the review process — will be subject to disciplinary action by MLCommons.
 
