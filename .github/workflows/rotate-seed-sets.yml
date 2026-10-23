@@ -1,0 +1,224 @@
+name: "Rotate seed sets"
+
+# Publishes a new seed set into seedset.yaml on the §4.6 schedule — one set every
+# two cohorts, each adoptable for four — one week BEFORE the cohort it becomes
+# adoptable in, so the working group has a review window rather than being asked to
+# merge a rules artifact on the morning it takes effect. The rules set no lead time
+# (§4.6 is silent); the week is an operational convention.
+#
+# The schedule fires every Wednesday; tools/rotate_seed_sets.py works out which
+# cohort is a week away (§4.2's 1st and 3rd Wednesday) and exits without changes on
+# the Wednesdays that lead to no cohort, and on the cohorts where no set is due.
+# Running weekly rather than encoding the cadence in cron means a missed or
+# rescheduled publication date costs nothing.
+#
+# Nothing is ever pushed to main: a due rotation opens a DRAFT pull request for the
+# working group, because a seed set is a rules artifact.
+on:
+  schedule:
+    # 8:05 AM Pacific, mirroring the 8:00 AM moment that opens a cohort a week later.
+    - cron: "5 8 * * 3"
+      timezone: "America/Los_Angeles"
+  workflow_dispatch:
+    inputs:
+      cohort:
+        description: "Publish for this cohort (YYYY-MM-C0/C1). Blank = whichever cohort is a week away."
+        required: false
+        type: string
+      force:
+        description: "Publish even if fewer than two cohorts have passed since the last set."
+        required: false
+        type: boolean
+        default: false
+      ready:
+        description: "Open the PR ready for review instead of as a draft."
+        required: false
+        type: boolean
+        default: false
+      dry_run:
+        description: "Render the result to the log and open no PR."
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: rotate-seed-sets
+  cancel-in-progress: false # never leave a half-written registry behind
+
+permissions:
+  contents: write # push the rotation branch
+  pull-requests: write # open the draft PR and comment on an overdue one
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install "pyyaml==6.0.2"
+
+      - name: Check the publication schedule
+        # Stands in for a unit test: this repo carries no pytest. Replays a year of
+        # Wednesdays and asserts each publication lands exactly one week before its
+        # cohort opens, so a calendar regression fails here rather than in a PR that
+        # dates a seed set wrongly.
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "tools")
+          from datetime import date, timedelta
+          from rotate_seed_sets import Cohort, LEAD_DAYS, REFRESH_EVERY, cohort_for, nth_wednesday
+
+          newest = Cohort.parse("2026-10-C1")
+          day, published = date(2026, 10, 28), 0
+          assert day.weekday() == 2, "the walk must start on a Wednesday"
+          for _ in range(52):
+              target = cohort_for(day + timedelta(days=LEAD_DAYS))
+              if target.ordinal() - newest.ordinal() >= REFRESH_EVERY:
+                  opens = nth_wednesday(target.year, target.month, 1 if target.index == 0 else 3)
+                  lead = (opens - day).days
+                  assert lead == LEAD_DAYS, f"{day}: published {lead}d before {target}, want {LEAD_DAYS}d"
+                  newest, published = target, published + 1
+              day += timedelta(days=7)
+          assert published >= 11, f"only {published} publications in a year; the cadence stalled"
+          print(f"schedule ok: {published} publications, each exactly {LEAD_DAYS} days early")
+          PY
+
+      - name: Audit the registry as it stands
+        # Runs before the rotation so a pre-existing problem is reported on its own
+        # terms rather than as a confusing failure of the rotation.
+        run: python tools/rotate_seed_sets.py --path seedset.yaml --check
+
+      - name: Work out the target cohort
+        id: target
+        env:
+          COHORT_INPUT: ${{ inputs.cohort }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, sys
+          sys.path.insert(0, "tools")
+          from datetime import date, timedelta
+          from rotate_seed_sets import Cohort, LEAD_DAYS, cohort_for
+
+          override = os.environ.get("COHORT_INPUT", "").strip()
+          today = date.today()
+          target = Cohort.parse(override) if override else cohort_for(today + timedelta(days=LEAD_DAYS))
+          print(f"cohort={target}")
+          # True once the cohort has actually opened — i.e. the lead week has run out.
+          print(f"open={str(cohort_for(today) == target).lower()}")
+          PY
+
+      - name: Look for an existing rotation PR
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: seed-rotation/${{ steps.target.outputs.cohort }}
+        run: |
+          set -euo pipefail
+          # A second set for a cohort that already has one open would collide on the
+          # branch and publish different seeds for the same cohort.
+          number=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --state open \
+                     --json number --jq '.[0].number // empty')
+          echo "number=${number}" >> "$GITHUB_OUTPUT"
+          if [ -n "$number" ]; then
+            echo "A PR for ${BRANCH} is already open: #${number}"
+          fi
+
+      - name: Nudge an overdue PR
+        # The lead week has run out and the set is still unmerged: say so on the PR
+        # rather than publishing a duplicate.
+        if: steps.existing.outputs.number != '' && steps.target.outputs.open == 'true' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COHORT: ${{ steps.target.outputs.cohort }}
+          NUMBER: ${{ steps.existing.outputs.number }}
+        run: |
+          set -euo pipefail
+          marker="<!-- seed-rotation-overdue:${COHORT} -->"
+          if gh pr view "$NUMBER" --repo "$GITHUB_REPOSITORY" --json comments \
+               --jq '.comments[].body' | grep -qF "$marker"; then
+            echo "Already nudged for ${COHORT}."
+            exit 0
+          fi
+          gh pr comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "${marker}
+          ⚠️ Cohort \`${COHORT}\` opened today and this seed set is not merged.
+          Submissions in this cohort cannot adopt it until it lands."
+
+      - name: Rotate
+        id: rotate
+        if: steps.existing.outputs.number == ''
+        run: |
+          set -uo pipefail
+          ARGS=(--path seedset.yaml)
+          [ -n "${{ inputs.cohort }}" ] && ARGS+=(--cohort "${{ inputs.cohort }}")
+          [ "${{ inputs.force }}" = "true" ] && ARGS+=(--force)
+          [ "${{ inputs.dry_run }}" = "true" ] && ARGS+=(--dry-run)
+          python tools/rotate_seed_sets.py "${ARGS[@]}"
+          RC=$?
+          # 0 = nothing due, 1 = a set was published, 2 = error.
+          [ "$RC" -gt 1 ] && exit "$RC"
+          echo "published=$([ "$RC" = 1 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Open a draft PR
+        if: steps.rotate.outputs.published == 'true' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COHORT: ${{ steps.target.outputs.cohort }}
+          DRAFT: ${{ inputs.ready == true && ' ' || '--draft' }}
+        run: |
+          set -euo pipefail
+          BRANCH="seed-rotation/${COHORT}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add seedset.yaml
+          git commit -m "Publish the seed set for cohort ${COHORT}
+
+          Generated by .github/workflows/rotate-seed-sets.yml per Submission Rules
+          §4.6: one set every two cohorts, adoptable for four, published a week
+          before the cohort opens. Earlier sets are kept so submissions already
+          bound to them still validate."
+          git push --set-upstream origin "$BRANCH"
+          gh pr create $DRAFT \
+            --title "Publish the seed set for cohort ${COHORT}" \
+            --body-file - <<EOF
+          Automated §4.6 seed rotation for cohort \`${COHORT}\`, opened a week before
+          that cohort opens so there is time to review it.
+
+          **Before merging, please confirm:**
+
+          - The new set's seeds are fresh and in the uint64 range (the job's \`--check\`
+            step asserts this, but the values are worth a human glance).
+          - The sets now adoptable in \`${COHORT}\` are the two §4.6 expects.
+          - No previously published set was removed — submissions stay bound to their
+            set for the full Pareto-update window, and the checker rejects a submission
+            whose set is missing from this file.
+
+          ---
+
+          **\`cla-check\` will not have run on this PR.** GitHub suppresses workflow runs
+          for events triggered by \`GITHUB_TOKEN\`, and the CLA workflow fires on
+          \`pull_request_target\`. Since \`cla-check\` is a required status on \`main\`,
+          close and reopen this PR (or push an empty commit) to fire it from a human
+          account before merging.
+
+          **After merge**, mirror this file into \`endpoints-submission-cli\`
+          (\`src/submission_checker/data/seed_sets.yaml\`) — the checker reads its own
+          bundled copy, so until that happens it rejects any submission adopting the new
+          set.
+
+          **Note for the working group.** §4.6 on \`main\` keys a set by the cohort it is
+          *published* in; the \`feat/change-cohort-selection\` branch keys it to the first
+          cohort that may *adopt* it. Publishing a week early is only coherent under the
+          second reading, which is also what the checker implements. Worth settling the
+          prose.
+          EOF
