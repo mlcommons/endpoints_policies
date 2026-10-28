@@ -251,7 +251,22 @@ All review timelines are anchored to the first date that the submission passes a
 
 ### 4.4 Benchmark Roadmap
 
-*Inherits from [General Submission Rules §4.3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#benchmark-roadmap-schedule) without modification.*
+The approval process follows
+[General Submission Rules §4.3](https://github.com/mlcommons/policies/blob/master/submission_rules.adoc#benchmark-roadmap-schedule).
+The following dates apply to rolling model intake.
+
+For a new model, the owner publishes one versioned readiness record with:
+
+- The owner, working-group approval, and first eligible submission date.
+- Model, tokenizer, dataset, and reference-code revisions.
+- Run modes, accuracy targets, and approved-drafter references.
+- Setup commands, completed reference runs, and a valid example bundle with its checker report.
+
+**Day zero** is the publication date of this complete record. The first eligible submission date
+must be at least 42 calendar days later. A missing artifact delays day zero. A change to weights,
+datasets, run modes, or accuracy targets starts a new record and lead time. Keep prior records.
+
+This date governs submission intake. Publication still requires the review process in §6.
 
 ### 4.5 Review Cycle Example
 

@@ -661,13 +661,18 @@ A benchmark in MLPerf Endpoints is defined by a specific model, task, and qualit
 
 ### 3.2 Supported Models
 
-The set of supported benchmark models is defined per submission round and maintained in the MLPerf Endpoints reference repository. The full per-model specification — canonical weights, dataset, chat template, server parameters, accuracy target, and (if applicable) drafter configuration — is given by the [reference implementation](#291-reference-implementation). Each supported model is identified by:
+The supported model list is versioned in the MLPerf Endpoints reference repository.
+The full per-model specification — canonical weights, dataset, chat template, server parameters,
+accuracy target, and drafter configuration — is given by the
+[reference implementation](#291-reference-implementation). Each supported model is identified by:
 
 - A Hugging Face model ID (or equivalent checksummed source).
 - The task category (text generation, summarization, reasoning, etc.) and the input/output modality (text, token IDs, streaming, non-streaming).
 
 > [!NOTE]
-> The model list for each submission round is published in the MLPerf Endpoints reference repository at least 6 weeks before the submission round opens. New models may be proposed to the working group per the benchmark roadmap process defined in the MLPerf General Submission Rules §4.3.
+> Publish each new model's complete readiness record at least 6 weeks before its first eligible
+> submission date. Model intake follows
+> [Submission Rules §4.4](endpoints_submission_rules.md#44-benchmark-roadmap).
 
 **Approved drafter lists.** For benchmarks that support speculative decoding, the approved drafter list is published in the reference repository alongside the model list, versioned per submission round. The approval process, eligibility criteria, and the lead time required before a newly approved drafter may be used are defined in [§2.9.4](#294-speculative-decoding).
 
