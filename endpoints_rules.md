@@ -227,9 +227,9 @@ treatment of sparse and approximate execution, and
 - Retraining, fine-tuning, LoRA, adapter layers, RLHF, or any gradient-based weight update — applied
   to the canonical model or to any draft model used in speculative decoding (see
   [§2.9.4](#294-speculative-decoding)).
-- **Speculative decoding** with a drafter not approved for the benchmark, or with verification that
-  is not exact — see [§2.9.4](#294-speculative-decoding). (The drafting and verification
-  *configuration* of an approved drafter may vary per point; see §2.9.4.)
+- **Speculative decoding** with a drafter not approved for the benchmark, or that changes the
+  target's output distribution — see [§2.9.4](#294-speculative-decoding). (Per-point
+  *configuration* of an approved drafter may vary; see §2.9.4.)
 - Response caching: returning a cached response *verbatim* to a request that matches a previous
   request, bypassing the forward pass. Every request must execute the forward pass. (Note: this is
   distinct from cross-query KV-cache reuse, which still executes the forward pass on a per-query,
@@ -678,8 +678,7 @@ re-run the submission with the component enabled.
 
 Declining to *use* a component at run time is a separate matter, governed by
 [§2.9.4](#294-speculative-decoding): a submission MAY disable speculative decoding at some or all
-measurement points, provided the drafter remains present in the submitted checkpoint and the
-per-point configuration is declared in the submission YAML.
+measurement points, provided the drafter remains present in the submitted checkpoint.
 
 Statically removing weights that *do* participate in the forward pass for some inputs is pruning,
 and is disallowed above and in [§2.9.6.5](#2965-disallowed).
@@ -787,42 +786,31 @@ A list entry identifies a drafter in one of two ways:
   by the target checksum together with the exit-layer and any other configuration defining the draft
   pass. See [§2.9.9 Q7](#299-qa-model-equivalence-clarifications).
 
-**Exact verification.** Verification MUST preserve the target's output distribution exactly: given
-the same context, emitted tokens are distributed as the unspeculated target would sample them under
-the benchmark's sampling parameters ([§2.9.1](#291-reference-implementation)).
+**Exact verification.** Speculative decoding MUST NOT change the target's output distribution under
+the benchmark's sampling parameters ([§2.9.1](#291-reference-implementation)). Under greedy decoding
+this means token-for-token identical output; under sampling (temperature > 0), identical in
+distribution, not token for token.
 
-- Under greedy decoding (temperature = 0) this means token-for-token identical output, up to the
-  floating-point differences the unspeculated target itself shows across batch shapes.
-- Under stochastic sampling (temperature > 0) it means identical in distribution, not token for
-  token. Speculation consumes random draws differently, so a seeded run need not repeat the tokens
-  of an unspeculated run.
-- Exact procedures include argmax match (greedy), sample-and-match, token-wise speculative sampling
-  ([Leviathan et al.](https://arxiv.org/abs/2211.17192),
-  [Chen et al.](https://arxiv.org/abs/2302.01318)), block verification
-  ([Sun et al.](https://arxiv.org/abs/2403.10444)), and tree or multi-draft verification with a
-  proof of exactness (e.g., [SpecInfer](https://arxiv.org/abs/2305.09781)). A submission MUST cite
-  the proof for the procedure it uses. Where the procedure uses draft probabilities, they MUST be
-  the ones each draft token was sampled from.
-- How drafts are proposed is configuration: draft length, tree shape, and greedy or sampled drafts.
-  So is how many drafted tokens to verify in a step (e.g., confidence-based adaptive verification),
-  provided the decision for a position does not depend on the token drafted there or later
-  ([DSpark](https://arxiv.org/abs/2607.05147), App. A). Unverified drafts are discarded.
+- Exact procedures include, but are not limited to, speculative (rejection) sampling
+  ([Leviathan et al.](https://arxiv.org/abs/2211.17192), [Chen et al.](https://arxiv.org/abs/2302.01318)),
+  block verification ([Sun et al.](https://arxiv.org/abs/2403.10444)), and sample-and-match. For any
+  procedure, the submitter must be able to show exactness on review (e.g., by citing a proof).
+- How drafts are proposed (length, tree shape, greedy or sampled) and how many are verified per step
+  are configuration, provided that choice for a position does not depend on the token drafted there
+  or later ([DSpark](https://arxiv.org/abs/2607.05147), App. A).
 
 The following are **also disallowed** at run time:
 
-- **Lossy acceptance.** Any acceptance or resampling rule that is not exact — e.g., probability or
-  entropy thresholds, typical acceptance, top-k membership, or relaxed acceptance — including
-  re-drawing or choosing among random draws to raise acceptance.
-- **Verifying against a different distribution.** Target probabilities computed with sampling
-  parameters other than the benchmark's (e.g., argmax match or a lower temperature when the
-  benchmark samples), or by any model other than the target — the canonical model with the
-  permitted transformations of [§2.9.3](#293-model-weight-rules) — such as a secondary drafter.
-- **Emitting unverified tokens.** Skipping or approximating verification, forcing an acceptance
-  count or rate, or accepting on drafter confidence alone.
-- **Cross-request drafter state.** A draft may draw only on its own request's context, the target's
-  state for that request, and the approved drafter. N-gram, suffix, or retrieval caches built from
-  other requests, earlier responses, or the benchmark dataset are not permitted, beyond the
-  cross-query prefix reuse that [§2.9.5](#295-kv-cache-rules) permits for the target.
+- **Lossy acceptance.** Any acceptance rule that is not exact (e.g., probability thresholds, typical
+  acceptance, top-k membership), including re-drawing random numbers to raise acceptance.
+- **Verifying against a different distribution.** Sampling parameters other than the benchmark's
+  (e.g., greedy match when the benchmark samples), or a verifier other than the target with the
+  permitted transformations of [§2.9.3](#293-model-weight-rules).
+- **Emitting unverified tokens.** Skipping verification, forcing an acceptance count or rate, or
+  accepting on drafter confidence alone.
+- **Cross-request drafter state.** Drafts built from other requests, earlier responses, or the
+  benchmark dataset (e.g., shared n-gram or suffix caches), beyond the prefix reuse that
+  [§2.9.5](#295-kv-cache-rules) permits.
 - **Modifying an approved drafter.** Fine-tuning, LoRA, adapter layers, RLHF, continued
   pre-training, or any other gradient-based update to a drafter by the submitter. The drafter is
   used as published on the approved list; a modified drafter is no longer that drafter, and is
@@ -831,14 +819,13 @@ The following are **also disallowed** at run time:
 
 **Disclosure and run-time requirements:**
 
-- The drafter identity (name, version, source URL), precision, drafting and verification
-  procedure, and per-point configuration MUST be declared in the submission YAML.
+- The drafter (approved-list entry or native head) and its precision MUST be declared in the
+  submission YAML.
 - All measurement points on a submission's pareto curve for a given benchmark MUST use the same
-  drafter (same weights, or the same configuration-identified entry). Drafting and verification
-  **configuration** may vary across points (e.g., `speculative-num-steps`, `speculative-eagle-topk`,
-  the verification procedure, or adaptive verification), including disabling speculation entirely
-  at some points. The values used at each point MUST be declared in the submission YAML; a policy
-  that varies them within a run (e.g., adaptive verification) is declared with its settings.
+  drafter. Its **configuration** (e.g., draft length, verification procedure, adaptive
+  verification) may vary across points, including disabling speculation. It is disclosed with the
+  point's deployment configuration ([§2.7](#27-transparency-requirements)); no separate
+  declaration is required.
 
 **PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same
 conditions as the canonical model ([§2.9.3](#293-model-weight-rules)): calibration-only, using only
@@ -1241,12 +1228,10 @@ establishes this. It must still appear on the benchmark's approved drafter list,
 configuration that defines the draft pass, rather than a separate weight checksum. The approval
 process and eligibility criteria of [§2.9.4](#294-speculative-decoding) apply to it unchanged.
 
-**Q8: Is DSpark-style speculation permitted — sampled block drafts, block verification, and
-confidence-based adaptive verification?**
-A: Yes. Sampling drafts from the drafter's own distribution and choosing per step how many drafted
-tokens to verify are drafting configuration; block verification is an exact procedure. The
-conditions and run-time deny-list of [§2.9.4](#294-speculative-decoding) still apply. Under
-temperature > 0, outputs match the unspeculated target in distribution, not token for token.
+**Q8: Is DSpark-style speculation (sampled drafts, block verification, confidence-based verify
+length) permitted?**
+A: Yes, under the conditions of [§2.9.4](#294-speculative-decoding). Under temperature > 0, outputs
+match the unspeculated target in distribution, not token for token.
 
 ---
 
