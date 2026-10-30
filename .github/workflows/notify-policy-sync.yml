@@ -1,0 +1,53 @@
+# Copy to .github/workflows/notify-policy-sync.yml in the policies repo.
+# On every merged PR into main, start the syncs in mlcommons/endpoints-automations:
+# - policy-docs-sync.yml updates the submitter docs (staging or production, picked by this repo);
+# - policy-infra-sync.yml files spec issues in the infra repos, from the real policies repo only.
+# Each sync decides relevance itself (a README-only PR stops before any model call).
+name: notify-policy-sync
+
+on:
+  # pull_request_target so PRs merged from forks can use the app secret; no PR code is checked out.
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  dispatch:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    # Holds the app secrets and is limited to main, so a workflow pushed on another branch can't read
+    # the app's private key. No reviewers: the syncs start as soon as a PR merges.
+    environment: AI workflow
+    steps:
+      # Short-lived token that can only start workflows in endpoints-automations (Actions: write).
+      - uses: actions/create-github-app-token@v3
+        id: app
+        with:
+          client-id: ${{ secrets.ENDPOINTS_AUTOMATION_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.ENDPOINTS_AUTOMATION_APP_PVT_KEY }}
+          owner: mlcommons
+          repositories: endpoints-automations
+          permission-actions: write
+
+      - name: Start the docs sync
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          gh workflow run policy-docs-sync.yml -R mlcommons/endpoints-automations --ref main \
+            -f mode=pr -f repo="$GITHUB_REPOSITORY" -f pr="$PR" -f merge_commit_sha="$SHA"
+
+      # Started even if the docs dispatch failed: the two syncs don't depend on each other.
+      - name: Start the infra sync
+        if: ${{ !cancelled() && github.repository == 'mlcommons/endpoints_policies' }}
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          gh workflow run policy-infra-sync.yml -R mlcommons/endpoints-automations --ref main \
+            -f target=production -f policies_repo="$GITHUB_REPOSITORY" -f pr="$PR" \
+            -f merge_commit_sha="$SHA" -f file_issues=true
