@@ -1,4 +1,3 @@
-# Copy to .github/workflows/notify-policy-sync.yml in the policies repo.
 # On every merged PR into main, start the syncs in mlcommons/endpoints-automations:
 # - policy-docs-sync.yml updates the submitter docs (staging or production, picked by this repo);
 # - policy-infra-sync.yml files spec issues in the infra repos, from the real policies repo only.
