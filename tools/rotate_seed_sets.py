@@ -43,6 +43,7 @@ import argparse
 import re
 import secrets
 import sys
+import traceback
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
@@ -310,7 +311,8 @@ def rotate(
         raise RotationError(f"{path}: {len(blocking)} problem(s) above must be fixed by hand")
 
     for entry in entries:
-        entry.setdefault("cohorts", file_cohort.window())
+        if entry.get("cohorts") is None:
+            entry["cohorts"] = file_cohort.window()
 
     newest = max(Cohort.parse(e["cohorts"][0]) for e in entries)
     # Look `lead_days` ahead so a run lands on the Wednesday *before* the cohort it
@@ -426,4 +428,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception:
+        # Python's default exit 1 would read as "published" to the workflow.
+        traceback.print_exc()
+        sys.exit(2)

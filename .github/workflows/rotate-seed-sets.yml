@@ -112,33 +112,39 @@ jobs:
           today = date.today()
           target = Cohort.parse(override) if override else cohort_for(today + timedelta(days=LEAD_DAYS))
           print(f"cohort={target}")
-          # True once the cohort has actually opened — i.e. the lead week has run out.
-          print(f"open={str(cohort_for(today) == target).lower()}")
           PY
 
-      - name: Look for an existing rotation PR
+      - name: Look for a pending rotation PR
         id: existing
         env:
           GH_TOKEN: ${{ github.token }}
-          BRANCH: seed-rotation/${{ steps.target.outputs.cohort }}
         run: |
           set -euo pipefail
-          # A second set for a cohort that already has one open would collide on the
-          # branch and publish different seeds for the same cohort.
-          number=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --state open \
-                     --json number --jq '.[0].number // empty')
+          # Any open rotation PR blocks a new one, whatever its cohort.
+          number="" cohort=""
+          read -r number cohort < <(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+              --limit 100 --json number,headRefName --jq '
+                [.[] | select(.headRefName | test("^seed-rotation/[0-9]{4}-[0-9]{2}-C[01]$"))]
+                | sort_by(.number) | .[0] // empty
+                | "\(.number) \(.headRefName | ltrimstr("seed-rotation/"))"') || true
           echo "number=${number}" >> "$GITHUB_OUTPUT"
+          echo "cohort=${cohort}" >> "$GITHUB_OUTPUT"
           if [ -n "$number" ]; then
-            echo "A PR for ${BRANCH} is already open: #${number}"
+            echo "A rotation PR for ${cohort} is already open: #${number}"
+            open=$(PENDING="$cohort" python -c 'import os, sys; sys.path.insert(0, "tools")
+          from datetime import date
+          from rotate_seed_sets import Cohort, cohort_for
+          print(str(cohort_for(date.today()) >= Cohort.parse(os.environ["PENDING"])).lower())')
+            echo "open=${open}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Nudge an overdue PR
         # The lead week has run out and the set is still unmerged: say so on the PR
         # rather than publishing a duplicate.
-        if: steps.existing.outputs.number != '' && steps.target.outputs.open == 'true' && inputs.dry_run != true
+        if: steps.existing.outputs.number != '' && steps.existing.outputs.open == 'true' && inputs.dry_run != true
         env:
           GH_TOKEN: ${{ github.token }}
-          COHORT: ${{ steps.target.outputs.cohort }}
+          COHORT: ${{ steps.existing.outputs.cohort }}
           NUMBER: ${{ steps.existing.outputs.number }}
         run: |
           set -euo pipefail
@@ -149,7 +155,7 @@ jobs:
             exit 0
           fi
           gh pr comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "${marker}
-          ⚠️ Cohort \`${COHORT}\` opened today and this seed set is not merged.
+          ⚠️ Cohort \`${COHORT}\` has opened and this seed set is not merged.
           Submissions in this cohort cannot adopt it until it lands."
 
       - name: Rotate
@@ -161,8 +167,8 @@ jobs:
           [ -n "${{ inputs.cohort }}" ] && ARGS+=(--cohort "${{ inputs.cohort }}")
           [ "${{ inputs.force }}" = "true" ] && ARGS+=(--force)
           [ "${{ inputs.dry_run }}" = "true" ] && ARGS+=(--dry-run)
-          python tools/rotate_seed_sets.py "${ARGS[@]}"
-          RC=$?
+          RC=0 # `|| RC=$?` keeps bash -e from ending the step on exit 1
+          python tools/rotate_seed_sets.py "${ARGS[@]}" || RC=$?
           # 0 = nothing due, 1 = a set was published, 2 = error.
           [ "$RC" -gt 1 ] && exit "$RC"
           echo "published=$([ "$RC" = 1 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
@@ -187,7 +193,9 @@ jobs:
           §4.6: one set every two cohorts, adoptable for four, published a week
           before the cohort opens. Earlier sets are kept so submissions already
           bound to them still validate."
-          git push --set-upstream origin "$BRANCH"
+          # Replace a branch left by a failed run or a PR closed unmerged.
+          stale=$(git ls-remote --heads origin "refs/heads/${BRANCH}" | cut -f1)
+          git push --force-with-lease="refs/heads/${BRANCH}:${stale}" --set-upstream origin "$BRANCH"
           gh pr create $DRAFT \
             --title "Publish the seed set for cohort ${COHORT}" \
             --body-file - <<EOF
