@@ -123,8 +123,8 @@ jobs:
           # Any open rotation PR blocks a new one, whatever its cohort.
           number="" cohort=""
           read -r number cohort < <(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
-              --limit 100 --json number,headRefName --jq '
-                [.[] | select(.headRefName | test("^seed-rotation/[0-9]{4}-[0-9]{2}-C[01]$"))]
+              --limit 100 --json number,headRefName,isCrossRepository --jq '
+                [.[] | select(.isCrossRepository == false) | select(.headRefName | test("^seed-rotation/[0-9]{4}-[0-9]{2}-C[01]$"))]
                 | sort_by(.number) | .[0] // empty
                 | "\(.number) \(.headRefName | ltrimstr("seed-rotation/"))"') || true
           echo "number=${number}" >> "$GITHUB_OUTPUT"
