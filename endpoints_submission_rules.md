@@ -584,6 +584,27 @@ Submitters must run the automated compliance validator prior to submission. The 
 checks pareto structure, run requirements, accuracy, and metadata as described in
 [MLPerf Endpoints Rules §9](endpoints_rules.md#9-compliance-validation).
 
+
+## 5.9 Joint Submissions
+
+A submission may be made jointly by multiple organizations working together. Joint submissions are subject to the following provisions:
+
+### 5.9.1 Eligibility and Designation
+
+A joint submission may be entered on behalf of two or more organizations that collaborated on the submitted results. All participating organizations must be identified at the time of submission and must be MLCommons members or have a status allowing them to make a submission. The individual making the submission must satisfy the CLA requirement of [§5.1](https://github.com/mlcommons/endpoints_policies/blob/main/endpoints_submission_rules.md#51-registration); this requirement applies to the submitting individual and need not be met by every member of every participating organization.
+
+### 5.9.2 Individual Submitter Status
+
+Upon submission and upon publication, each participating organization in a joint submission is considered a submitter individually. All participating organizations are afforded the same rights, responsibilities, and attribution as any single-organization submitter, and each is individually bound by the MLPerf Endpoints Rules and the General Submission Rules.
+
+### 5.9.3 Addition to the Reviewer Pool
+
+Upon publication, all organizations participating in a joint submission are added to the pool of reviewers. Each such organization is thereafter eligible to participate in peer review of submissions in accordance with [§6](https://github.com/mlcommons/endpoints_policies/blob/main/endpoints_submission_rules.md#6-review), subject to the same conflict-of-interest and recusal provisions that apply to all reviewers.
+
+### 5.9.4 Review Repository Access
+
+When a joint submission's peer-review PR is opened per [§5.2[(https://github.com/mlcommons/endpoints_policies/blob/main/endpoints_submission_rules.md#52-how-to-submit), each participating organization is granted access to the submission in the private MLCommons review repository as a submitting organization. Objections and their resolution proceed per [§6[(https://github.com/mlcommons/endpoints_policies/blob/main/endpoints_submission_rules.md#6-review), with all participating organizations treated as the submitting party.
+
 ---
 
 ## 6. Review
