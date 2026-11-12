@@ -665,6 +665,9 @@ in:
 - **Peer review begins at provisional publication**, not when automated compliance passes. Reviewers
   and the public see the result at the same time. In this case, the review eligibility date is now
   defined as the date of provisional publication.
+- Each result receives a result ID ending in `p` when it first becomes publicly visible. The `p` is
+  dropped when the "peer review pending" tag is removed; the rest of the ID does not change
+  ([MLPerf Endpoints Rules §8.5](endpoints_rules.md#85-result-id)).
 
 
 **Embargo under provisional publication.** A submitter who opts in may additionally declare an
@@ -1364,7 +1367,8 @@ are met:
 
 Each results publication includes:
 
-- Result ID, as defined in [MLPerf Endpoints Rules §8.5](endpoints_rules.md#85-result-id).
+- Result ID, as defined in [MLPerf Endpoints Rules §8.5](endpoints_rules.md#85-result-id). The ID
+  of a result still carrying the "peer review pending" tag ends in `p`.
 - Submitter organization and system description.
 - Benchmark model.
 - Division (`Standardized` / `Serviced` / `RDI`).
@@ -1434,7 +1438,9 @@ Corrections to published results are **not permitted**. Errors in finalized resu
 - **Before finalization:** A submitter may voluntarily withdraw their submission at any time before
   finalization of results, including while results still carry the "peer review pending" tag. The
   submission is removed entirely from both the active results page and the historical archive. No
-  record of the provisional publication is retained.
+  record of the provisional publication is retained, except that any result ID issued at provisional
+  publication is retired and never issued again
+  ([MLPerf Endpoints Rules §8.5](endpoints_rules.md#85-result-id)).
 
 - **After finalization:** Results may be removed only in accordance with the rules in this
   document, including a removal remedy following a failed audit, a finding of fraud or
