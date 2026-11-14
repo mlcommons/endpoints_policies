@@ -2606,7 +2606,7 @@ Endpoints submissions must include the following metadata:
 | `other_software_stack` | Describes any other performance relevant software in the node, freeform field. |
 | `sw_notes` | Submitter software notes to supplement other information, freeform field. |
 | `node_config` | Describes the configuration of nodes or processors in the SUT (as described by system_size) for this run. Should be provided by submitter and contain sufficient detail to enable reproducing the submission (e.g., describing configuration of inference server for all nodes). |
-| `config_summary` | Describes the configuration options for the SUT for this run — a concatenation of `disaggregated`, `tensor_parallel`, `pipeline_parallel`, `expert_parallel`, `data_parallel` (where these fields are > 1) and `config_summary_notes`. Should be provided by submitter and contain sufficient detail to enable reproducing the submission. |
+| `config_summary` | Describes the configuration options for this node type for this run — a concatenation of that node type's `disaggregated`, `tensor_parallel`, `pipeline_parallel`, `expert_parallel`, `data_parallel` (where these fields are > 1) and the SUT's `config_summary_notes`. Should be provided by submitter and contain sufficient detail to enable reproducing the submission. |
 | `disaggregated` | Indicates whether the system is disaggregated (disaggregated > 1). If disaggregated <!-- TODO: definition is truncated in the source data dictionary, verify full text with the data dictionary owner. --> |
 | `expert_parallel` | Expert parallel partitioning of the model for the run. Only applies to Mixture-of-Expert models. EP=N means that the experts are split into N separate groups that reside on different processors/accelerators, and tokens are routed to the appropriate group. EP=1 means no partitioning. |
 | `tensor_parallel` | Parallel partitioning of the model weight matrices for the run. TP=N means the weight matrices are split N ways and each partition contains 1/N of the weights of each layer and computes 1/N of the layer. Generally the number of attention heads in the model must be divisible by N. TP=1 means no partitioning. |
@@ -2668,17 +2668,17 @@ The template omits the optional `c_min_override`; its declaration rules are in �
       "filesystem": "",
       "container_link": "",
       "other_software_stack": "",
-      "sw_notes": ""
+      "sw_notes": "",
+      "disaggregated": 0,
+      "expert_parallel": 0,
+      "tensor_parallel": 0,
+      "pipeline_parallel": 0,
+      "data_parallel": 0,
+      "config_summary": ""
     }
   ],
   "node_config": "",
-  "disaggregated": 0,
-  "expert_parallel": 0,
-  "tensor_parallel": 0,
-  "pipeline_parallel": 0,
-  "data_parallel": 0,
   "batch": 0,
-  "config_summary": "",
   "config_summary_notes": "",
   "tps_utilization": 0
 }
