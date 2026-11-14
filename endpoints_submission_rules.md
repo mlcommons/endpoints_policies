@@ -665,7 +665,7 @@ in:
 - **Peer review begins at provisional publication**, not when automated compliance passes. Reviewers
   and the public see the result at the same time. In this case, the review eligibility date is now
   defined as the date of provisional publication.
-- Each result receives a result ID ending in `p` when it first becomes publicly visible. The `p` is
+- Each result receives a result ID ending in `.p` when it first becomes publicly visible. The `.p` is
   dropped when the "peer review pending" tag is removed; the rest of the ID does not change
   ([MLPerf Endpoints Rules §8.5](endpoints_rules.md#85-result-id)).
 
@@ -1368,7 +1368,7 @@ are met:
 Each results publication includes:
 
 - Result ID, as defined in [MLPerf Endpoints Rules §8.5](endpoints_rules.md#85-result-id). The ID
-  of a result still carrying the "peer review pending" tag ends in `p`.
+  of a result still carrying the "peer review pending" tag ends in `.p`.
 - Submitter organization and system description.
 - Benchmark model.
 - Division (`Standardized` / `Serviced` / `RDI`).

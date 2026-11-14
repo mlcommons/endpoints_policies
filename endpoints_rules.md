@@ -2739,6 +2739,8 @@ published Pareto curve: one system, one benchmark model, one dataset. It is cons
 <major-version>.<minor-version>.<cohort-number>.<model_id>.<dataset_id>.<entry-number>
 ```
 
+The ID of a provisionally published result also ends in `.p` (see Provisional results below).
+
 | Component | Description |
 |---|---|
 | `major-version` | Major version of the MLPerf Endpoints rules under which the result was submitted (e.g., `1` for v1.0). |
@@ -2753,13 +2755,13 @@ the first v1.0 cohort.
 
 **Provisional results.** A result published provisionally
 ([Submission Rules §6.2.3](endpoints_submission_rules.md#623-provisional-publication)) receives its
-result ID when it first becomes publicly visible, with `p` appended to the entry number — for
-example `1.0.1.deepseek-r1.mmlu-pro.2p`. When the "peer review pending" tag is removed, the `p` is
-dropped and the rest of the ID is unchanged: `1.0.1.deepseek-r1.mmlu-pro.2`. The ID with `p` is kept
+result ID when it first becomes publicly visible, with `.p` appended to the entry number — for
+example `1.0.1.deepseek-r1.mmlu-pro.2.p`. When the "peer review pending" tag is removed, the `.p` is
+dropped and the rest of the ID is unchanged: `1.0.1.deepseek-r1.mmlu-pro.2`. The ID with `.p` is kept
 in the historical record and continues to refer to the same result. Its `cohort-number` is that of
 the first cohort date on or after the day it first became public, so it is earlier than the cohort
 of its official publication. Withdrawing points or updating the submission during review does not
-change the ID. Any citation of an ID ending in `p` carries the footnote required by
+change the ID. Any citation of an ID ending in `.p` carries the footnote required by
 [Submission Rules §6.2.3](endpoints_submission_rules.md#623-provisional-publication).
 
 Result IDs are assigned by MLCommons at publication, including provisional publication; they are not
