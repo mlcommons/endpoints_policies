@@ -12,6 +12,9 @@ name: "Rotate seed sets"
 # Running weekly rather than encoding the cadence in cron means a missed or
 # rescheduled publication date costs nothing.
 #
+# Pushes, PRs and comments use a token from the endpoints automation app (secrets in
+# the `AI workflow` environment), so the PR's own checks run, cla-check included.
+#
 # Nothing is ever pushed to main: a due rotation opens a DRAFT pull request for the
 # working group, because a seed set is a rules artifact.
 on:
@@ -45,16 +48,31 @@ concurrency:
   group: rotate-seed-sets
   cancel-in-progress: false # never leave a half-written registry behind
 
-permissions:
-  contents: write # push the rotation branch
-  pull-requests: write # open the draft PR and comment on an overdue one
+# Every write goes through the app token minted below, so GITHUB_TOKEN needs nothing.
+permissions: {}
 
 jobs:
   rotate:
     runs-on: ubuntu-latest
+    # Holds the endpoints automation app's secrets and is limited to main, so the job
+    # runs only from main (the schedule always does; a manual run must pick main).
+    environment: AI workflow
     steps:
+      # Pushes and PRs made with GITHUB_TOKEN start no workflows, so cla-check never ran
+      # on a rotation PR. The app's token does start them. Scoped to this repo only.
+      - name: Mint app token
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.ENDPOINTS_AUTOMATION_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.ENDPOINTS_AUTOMATION_APP_PVT_KEY }}
+          permission-contents: write # push the rotation branch
+          permission-pull-requests: write # open the draft PR and comment on an overdue one
+
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          token: ${{ steps.app.outputs.token }}
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -117,7 +135,7 @@ jobs:
       - name: Look for a pending rotation PR
         id: existing
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app.outputs.token }}
         run: |
           set -euo pipefail
           # Any open rotation PR blocks a new one, whatever its cohort.
@@ -143,7 +161,7 @@ jobs:
         # rather than publishing a duplicate.
         if: steps.existing.outputs.number != '' && steps.existing.outputs.open == 'true' && inputs.dry_run != true
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app.outputs.token }}
           COHORT: ${{ steps.existing.outputs.cohort }}
           NUMBER: ${{ steps.existing.outputs.number }}
         run: |
@@ -177,14 +195,17 @@ jobs:
       - name: Open a draft PR
         if: steps.rotate.outputs.published == 'true' && inputs.dry_run != true
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app.outputs.token }}
           COHORT: ${{ steps.target.outputs.cohort }}
           DRAFT: ${{ inputs.ready == true && ' ' || '--draft' }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
         run: |
           set -euo pipefail
           BRANCH="seed-rotation/${COHORT}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Commit as the app's bot account, so the commit and the PR have the same author.
+          BOT_ID=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${BOT_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add seedset.yaml
           git commit -m "Publish the seed set for cohort ${COHORT}
@@ -212,12 +233,6 @@ jobs:
             whose set is missing from this file.
 
           ---
-
-          **\`cla-check\` will not have run on this PR.** GitHub suppresses workflow runs
-          for events triggered by \`GITHUB_TOKEN\`, and the CLA workflow fires on
-          \`pull_request_target\`. Since \`cla-check\` is a required status on \`main\`,
-          close and reopen this PR (or push an empty commit) to fire it from a human
-          account before merging.
 
           **After merge**, mirror this file into \`endpoints-submission-cli\`
           (\`src/submission_checker/data/seed_sets.yaml\`) — the checker reads its own
