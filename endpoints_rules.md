@@ -36,7 +36,7 @@
      - [4.5.3 Normalized Metric](#453-normalized-metric)
 5. [Pareto Collection Methodology](#5-pareto-collection-methodology)
    - [5.1 What Is Measured](#51-what-is-measured)
-   - [5.2 Pareto Curve Representation](#52-pareto-curve-representation)
+   - [5.2 Pareto Frontier Representation](#52-pareto-frontier-representation)
    - [5.3 Minimum Submission Requirements](#53-minimum-submission-requirements)
    - [5.4 Regions of Interest](#54-regions-of-interest)
    - [5.5 Region Boundary Reference Algorithm](#55-region-boundary-reference-algorithm)
@@ -87,7 +87,7 @@ The submission, review, and publication *process* are defined separately in the 
 MLPerf Endpoints measures the performance of *inference endpoints* serving generative AI models.
 Unlike traditional MLPerf Inference benchmarks — which measure latency or throughput at a single
 operating point — MLPerf Endpoints characterizes the full performance *envelope* of a serving system
-as a Pareto curve across a range of concurrency levels.
+as a Pareto frontier across a range of concurrency levels.
 
 The benchmark is designed to be:
 
@@ -284,7 +284,7 @@ list permits *empirical performance and accuracy tuning based on the performance
 while its disallowed list prohibits *incorporating explicit statistical information about the
 performance or accuracy sets*. Endpoints resolves that tension toward the prohibition. Upstream's
 allowance is workable where a benchmark's accuracy is a pass/fail threshold on a fixed task.
-Endpoints reports a curve across concurrency, and [§2.9.6.4](#2964-dynamic-approximate-sparsity)
+Endpoints reports a frontier across concurrency, and [§2.9.6.4](#2964-dynamic-approximate-sparsity)
 admits approximations whose aggressiveness is set by a tunable threshold. Permitting that threshold
 to be tuned against the benchmark's own accuracy set would let a submitter walk the approximation
 right up to the pass line on the data it is scored against, which is a materially different rule
@@ -809,11 +809,11 @@ The following are **also disallowed** at run time:
 
 - The drafter identity (name, version, source URL), precision, algorithm, and per-point
   configuration MUST be declared in the submission YAML.
-- All measurement points on a submission's pareto curve for a given benchmark MUST use the same
+- All measurement points on a submission's Pareto frontier for a given benchmark MUST use the same
   drafter (same head, same algorithm). Different **configurations** of the same drafter (e.g.,
   varying `speculative-num-steps` or `speculative-eagle-topk`) are permitted across pareto points,
   including disabling speculation entirely at some points. The drafter itself is fixed across the
-  curve. The configuration values used at each point MUST be declared in the submission YAML, and
+  frontier. The configuration values used at each point MUST be declared in the submission YAML, and
   any dynamic variation within a single point's run MUST be reported as a distribution.
 
 **PTQ on drafter weights.** The drafter weights MAY be post-training quantized under the same
@@ -1281,7 +1281,7 @@ transformations is defined in [§2.9.3 Model Weight Rules](#293-model-weight-rul
 > **`[TENTATIVE — Subject to change after 2026-10-12]`** TTFT framing — see note below the table on
 > percentile selection.
 
-Each measurement point on the pareto curve captures the following metrics at a specific concurrency
+Each measurement point on the Pareto frontier captures the following metrics at a specific concurrency
 level:
 
 | Metric | Symbol | Definition |
@@ -1318,8 +1318,8 @@ charts use the percentile metric defined in [§4.1](#41-primary-metrics):
 
 | Metric | Description |
 |---|---|
-| **Pareto curve (System TPS vs. TPS/User)** | The primary publication chart for single-turn benchmarks. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
-| **Agentic Pareto curve (System TPS vs. E2E Average Interactivity)** | The primary publication chart for agentic benchmarks. **Y-axis:** `system_tps`. **X-axis:** `e2e_avg_interactivity`. Each point corresponds to a different concurrency level. Higher values are better on both axes. |
+| **Pareto frontier (System TPS vs. TPS/User)** | The primary publication chart for single-turn benchmarks. **Y-axis:** `system_tps`. **X-axis:** `tps_per_user`. Each point corresponds to a different concurrency level. Represents the fundamental tradeoff between aggregate system capacity and per-user experience. |
+| **Agentic Pareto frontier (System TPS vs. E2E Average Interactivity)** | The primary publication chart for agentic benchmarks. **Y-axis:** `system_tps`. **X-axis:** `e2e_avg_interactivity`. Each point corresponds to a different concurrency level. Higher values are better on both axes. |
 | **System TPS vs. Concurrency** | **Y-axis:** `system_tps`. **X-axis:** `concurrency`. Shows aggregate throughput scaling with load. Each point annotated with its region. |
 | **TTFT (P90) vs. Concurrency** | **Y-axis:** `ttft_p90_ms`. **X-axis:** `concurrency`. Shows how first-token latency degrades with load. P90 is the default and the only percentile plotted for v1.0; additional percentiles are deferred to a later version (see [§4.1](#41-primary-metrics)). |
 | **Interactivity vs. Concurrency** | **Y-axis:** `tps_per_user`. **X-axis:** `concurrency`. Shows how per-user output rate degrades with load. |
@@ -1356,7 +1356,7 @@ accuracy point nor counts as an extra accuracy validation run.
 accuracy validation runs were at the submitter's discretion, that mean could be shifted by adding
 runs at favourable operating points, and the threshold would no longer mean the same thing across
 submissions. Fixing `N` — and fixing *which* points it covers — keeps the accuracy criterion
-comparable. The three submitter's-choice performance points characterize the curve; they carry no
+comparable. The three submitter's-choice performance points characterize the frontier; they carry no
 accuracy validation run.
 
 For both single-turn and multi-turn benchmarks, accuracy validation runs are required at exactly
@@ -1768,7 +1768,7 @@ smaller configuration.
 > fixed for the whole submission. In [§4.5.3](#453-normalized-metric) the same `× (Y / N)` scaling
 > is applied again, **per measurement point**, to the nodes a given point engages. The linearity
 > argument above is what licenses both. Keep the two distinct: `N` and the provisioned `Y` describe
-> the system; the per-point `Y_s` describes one point on its curve.
+> the system; the per-point `Y_s` describes one point on its frontier.
 
 **`Y` is a whole number of nodes, rounded up.** Any fractional node counts as a whole one. A
 submitter using 4.5 nodes — because a node is shared or virtualized — declares `Y = 5`. Provisioned
@@ -1849,9 +1849,9 @@ divides by the power of the nodes holding the 48. The two rules are complements:
 stops a submitter *choosing* to under-deploy, and per-point normalization stops them being charged
 for capacity that genuinely cannot be used.
 
-*Rationale:* a submission's pareto curve characterizes the system the submitter provisioned. Without
+*Rationale:* a submission's Pareto frontier characterizes the system the submitter provisioned. Without
 this rule, per-point normalization would let a submitter report every point from whatever small
-slice happens to be most efficient, and publish it as a curve for the full system. Maximal
+slice happens to be most efficient, and publish it as a frontier for the full system. Maximal
 engagement is what keeps `system_tps` and `point_power_kw` descriptions of the *same* machine at
 every point.
 
@@ -1894,8 +1894,8 @@ point_power_kw = provisioned_power_kw × (Y / N)
 ```
 
 **Single-node submissions are unaffected.** With `Y = N = 1` the ratio is 1 at every point, so
-`point_power_kw = provisioned_power_kw` across the whole pareto curve and the normalized curve is
-the throughput curve scaled by a single constant, exactly as before.
+`point_power_kw = provisioned_power_kw` across the whole Pareto frontier and the normalized
+frontier is the throughput frontier scaled by a single constant, exactly as before.
 
 | Submission | Denominator |
 |---|---|
@@ -1928,7 +1928,7 @@ nodes than the deployment actually spans is a misrepresentation under
 
 Provisioned power itself remains a property of the *system*: two otherwise identical systems that
 differ in provisioned power — because of power capping, for example — are **different systems**, and
-`P_s` and `N_s` are the same for every point on a submission's pareto curve. Only `Y_s` varies.
+`P_s` and `N_s` are the same for every point on a submission's Pareto frontier. Only `Y_s` varies.
 
 
 ---
@@ -1941,19 +1941,19 @@ Each measurement point is a benchmark run at a specific target concurrency using
 benchmark-defined fixed-concurrency load pattern. Replacement queries and dependent turns are issued
 according to benchmark-defined timing.
 
-### 5.2 Pareto Curve Representation
+### 5.2 Pareto Frontier Representation
 
-The pareto curve is represented exclusively as a **step-function** plot. Each submitted measurement
-point defines a discrete step at its concurrency level; between submitted points, the curve holds
+The Pareto frontier is represented exclusively as a **step-function** plot. Each submitted measurement
+point defines a discrete step at its concurrency level; between submitted points, the frontier holds
 constant at the last measured value. No interpolation, curve fitting, or smoothing is applied to the
-official curve.
+official frontier.
 
-Visualization tools may optionally overlay interpolated or smoothed curves for readability, but
+Visualization tools may optionally overlay interpolated or smoothed lines for readability, but
 these must be clearly labeled as **"interpolated (not official)"** and must not replace the
 step-function representation in official publications.
 
-The Offline point ([§5.7](#57-offline-point)) appears on the curve as the throughput ceiling and is
-labelled separately; it does not define a step in the fixed-concurrency step function.
+The Offline point ([§5.7](#57-offline-point)) appears on the frontier as the throughput ceiling and
+is labelled separately; it does not define a step in the fixed-concurrency step function.
 
 ### 5.3 Minimum Submission Requirements
 
@@ -2045,13 +2045,13 @@ Rules:
   $C_{max}$ is defined by the submitter as the upper bound of the High Concurrency region.
 - Submitters may alternatively choose to set $C_{min}$ using top-level `c_min_override`
   in `system_desc.json`. It MUST be a JSON integer in `[1,32]` equal to the
-  concurrency of a submitted point on that curve. All other values, including `null`, are rejected.
-- Either every point of a submission curve MUST omit the field `c_min_override`, or every point MUST
-  declare the same value. Different pareto curves may choose different values.
+  concurrency of a submitted point on that frontier. All other values, including `null`, are rejected.
+- Either every point of a submission frontier MUST omit the field `c_min_override`, or every point MUST
+  declare the same value. Different Pareto frontiers may choose different values.
 - $C_{max}$ >> $C_{min}$.
 - There is no compliance test to force a particular value of $C_{max}$.
 - Submitters are incentivized to choose well: $C_{max}$ defines the extent of their published pareto
-  curve, while $C_{min}$ determines how its concurrency regions are divided.
+  frontier, while $C_{min}$ determines how its concurrency regions are divided.
 - The value of $C_{max}$ defines the upper bound of the High Concurrency region.
 
 Override declarations are fixed once peer review starts; see
@@ -2321,10 +2321,10 @@ why it is permitted on the submitter's word.
 
 #### 5.7.3 Presentation
 
-A **dedicated** Offline run is plotted on the pareto curve as the system's **throughput ceiling** —
-the highest `system_tps` the submission reports. It is labelled **"Offline"** and is visually
-distinguished from the fixed-concurrency points, because it is measured under a different load
-pattern and carries no meaningful latency coordinate.
+A **dedicated** Offline run is plotted on the Pareto frontier as the system's **throughput
+ceiling** — the highest `system_tps` the submission reports. It is labelled **"Offline"** and is
+visually distinguished from the fixed-concurrency points, because it is measured under a different
+load pattern and carries no meaningful latency coordinate.
 
 An **elected** Offline result adds no separate marker: the $C_{max}$ point is plotted as the
 fixed-concurrency point it is, and additionally labelled as the Offline result.
@@ -2733,7 +2733,7 @@ carries no meaning, and exists so the lifecycle tooling can track a bundle throu
 and amendment.
 
 The **result ID** identifies a single published result and is human-readable. A result is one
-published Pareto curve: one system, one benchmark model, one dataset. It is constructed as:
+published Pareto frontier: one system, one benchmark model, one dataset. It is constructed as:
 
 ```
 <major-version>.<minor-version>.<cohort-number>.<model_id>.<dataset_id>.<entry-number>
@@ -2806,7 +2806,7 @@ performs the following checks:
 
 Human reviewers should focus on aspects that automation cannot easily verify:
 
-- Whether the pareto curve shape is physically plausible (throughput should generally increase with
+- Whether the Pareto frontier shape is physically plausible (throughput should generally increase with
   concurrency up to saturation, then plateau or decrease).
 - Whether metric distributions suggest artificial manipulation (e.g., suspiciously uniform TTFT
   values across very different concurrency levels).
@@ -3087,7 +3087,7 @@ An 18-node rack, each node carrying 2 CPUs and 4 accelerators, with 9 rack-level
 | 512 | 5,400 | 13.05 | 413.8 |
 | 4,096 | 7,830 | 13.05 | 600.0 |
 
-The normalized curve is the throughput curve scaled by a single constant. A single-node submitter
+The normalized frontier is the throughput frontier scaled by a single constant. A single-node submitter
 need not declare `nodes_used` at all.
 
 **Rack-scale — the denominator tracks the nodes engaged.** Take the C.2 rack at 152.10 kW, built from
@@ -3107,13 +3107,13 @@ divides into 72 four times with **8 accelerators left over** — two nodes that 
 replica. Those two nodes are excluded from that point's denominator. The other two points use a
 replica size that divides 72 exactly, so `DP` consumes the rack and `Y = N`.
 
-**Why maximal engagement is about the curve, not the ratio.** Had the submitter run that first point
+**Why maximal engagement is about the frontier, not the ratio.** Had the submitter run that first point
 at `DP = 1` on a single 16-accelerator replica, they would have engaged 4 nodes and divided by
 `152.10 × 4/18 = 33.80 kW`. Throughput would fall roughly in proportion — about 1,500 `system_tps` —
 giving ≈ 44.4 `system_tps_per_kw`, essentially the same ratio. What changes is the **position of the
-point on the pareto curve**: 1,500 TPS instead of 6,000, from a system the submission describes as a
-72-accelerator rack. Maximal engagement is what stops a submitter publishing a curve measured on a
-slice and labelled with the whole machine ([§4.5.3](#453-normalized-metric)).
+point on the Pareto frontier**: 1,500 TPS instead of 6,000, from a system the submission describes
+as a 72-accelerator rack. Maximal engagement is what stops a submitter publishing a frontier
+measured on a slice and labelled with the whole machine ([§4.5.3](#453-normalized-metric)).
 
 Had the submitter omitted `nodes_used` entirely, every point would divide by the full 152.10 kW —
 giving 39.4 at the first point instead of 44.4. **The conservative figure is the default**; the

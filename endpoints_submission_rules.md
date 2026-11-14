@@ -109,7 +109,7 @@ The review process is designed to:
   results to appear. The rolling model targets rapid, bi-weekly publication.
 - **Align publication to embargo dates.** Submitters may wish to have results become public on
   particular dates to align with launches, conferences, and other events.
-- **Scale with workload.** Each submission may contain tens of measurement points (pareto curves),
+- **Scale with workload.** Each submission may contain tens of measurement points (Pareto frontiers),
   significantly more than a single-number inference submission. The process must handle this without
   proportionally increasing reviewer burden.
 - **Avoid dedicated review meetings.** Reviews are conducted asynchronously via GitHub issues.
@@ -556,7 +556,7 @@ will be Apache 2 compatible. Third party libraries need not be Apache 2 licensed
 A submission must contain the following:
 
 - Metadata for the system under test (`system_desc.json`).
-- Pareto curve YAML configuration files (one per measurement point).
+- Pareto frontier YAML configuration files (one per measurement point).
 - Run result artifacts for each measurement point (log files, metric summaries).
 - Accuracy validation run artifacts and, for agentic benchmarks, inline accuracy results from every
   submitted performance point, as required by
@@ -595,7 +595,7 @@ within **one calendar week (Week 0)**, but may complete much sooner — as quick
 depending on submission size and queue depth. These checks verify:
 
 - All required submission materials are present (YAML configurations, result artifacts, system descriptions).
-- The pareto curve satisfies minimum point count and region coverage requirements (minimum 7 points
+- The Pareto frontier satisfies minimum point count and region coverage requirements (minimum 7 points
   structured as 1 + 3 + 3; maximum 32 points total).
 - Run durations, minimum query counts, load patterns, and streaming configuration meet requirements.
 - Accuracy validation results are included and pass the applicable quality gate. For agentic
@@ -1230,7 +1230,7 @@ better performance compared to the Preview result.
 
 **Throughput metrics.** For `system_tps` and `tps_per_user`, a degradation of up to **5%** is
 accepted, to account for variance inherent to endpoints workloads — the high-interactivity region of
-the throughput–latency curve is sensitive to load-generation noise, and large-scale systems exhibit
+the throughput–latency frontier is sensitive to load-generation noise, and large-scale systems exhibit
 higher run-to-run variance than traditional batch inference. The tolerance applies to each such
 metric independently.
 
@@ -1369,7 +1369,7 @@ Each results publication includes:
 - Benchmark model.
 - Division (`Standardized` / `Serviced` / `RDI`).
 - Publication status (`Available` / `Preview` / `RDI`).
-- Pareto curve in step-function representation.
+- Pareto frontier in step-function representation.
 - Key metrics at each submitted concurrency level: **System Tokens/Second** (`system_tps`),
   **TPS/User** (`tps_per_user`), **TTFT P90** (`ttft_p90_ms`).
 - "Peer review pending" tag where applicable.
@@ -1380,10 +1380,10 @@ Each results publication includes:
 
 #### Versioning and Historical Record
 
-MLCommons maintains a complete historical record of all versions of every pareto curve. Each version
+MLCommons maintains a complete historical record of all versions of every Pareto frontier. Each version
 corresponds to the state of the submission at a given cohort.
 
-- The **active results page** always displays the latest finalized version of each pareto curve.
+- The **active results page** always displays the latest finalized version of each Pareto frontier.
 - **Older versions** of the pareto (prior to a point being superseded by a newer measurement) remain
   accessible and can be displayed on request, allowing users to compare performance across time.
 - All historical versions are aligned to cohorts: the record shows which points were active in each
@@ -1405,7 +1405,7 @@ Corrections to non-result content are permitted and encouraged:
 
 Once peer review starts, adding, removing, or changing `c_min_override` requires a new submission
 ([Endpoints Rules §5.4](endpoints_rules.md#54-regions-of-interest)). Withdrawing points does not
-relax this restriction; the remaining curve must retain a point at the declared $C_{min}$ and
+relax this restriction; the remaining frontier must retain a point at the declared $C_{min}$ and
 satisfy coverage.
 
 **Results may not be changed** during the peer review window. If a measurement point is found to be
