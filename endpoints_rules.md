@@ -2534,6 +2534,13 @@ An Endpoints submission must follow this directory structure:
                                                   #   submitter-defined. May include its own README.md.
 ```
 
+**Organization directory.** `<submitting_organization>` is the `submitter_org_names` declared in
+`system_desc.json` ([§8.2](#82-system-description-system_descjson)), in directory form: every
+character other than a letter, digit, `_`, or `-` becomes `_`, runs of `_` collapse to one, leading
+and trailing `_` are dropped, and the result is cut to 64 characters. For example, `ACME Corp` is
+filed under `ACME_Corp/`. A submission under any other directory is non-conforming under
+[§9.1](#91-automated-checks).
+
 For agentic benchmarks, every point MUST include `accuracy_results.json` with the inline score
 from its performance run (the client's `dataset_type: performance` entry). At each of the four
 mandatory accuracy points, the same file MUST also include the SWE-bench validation result.
@@ -2565,6 +2572,7 @@ Endpoints submissions must include the following metadata:
 | Field | Description |
 |---|---|
 | `division` | `Standardized`, `Serviced`, or `RDI`. |
+| `submitter_org_names` | Name of the submitting organization. Must not be empty. It names the `<submitting_organization>/` directory the submission is filed under ([§8.1](#81-directory-structure)). |
 | `system_name` | Submitter selected string to describe the system under test (SUT). |
 | `shortened_system_name` |  Shortened `system_name` that's at most 20 characters. |
 | `system_availability_status` | `Available` , `Preview`, or `RDI` (not available for purchase soon) at submission time. |
@@ -2625,6 +2633,7 @@ The template omits the optional `c_min_override`; its declaration rules are in �
 ```json
 {
   "division": "",
+  "submitter_org_names": "",
   "system_name": "",
   "shortened_system_name": "",
   "system_availability_status": "",
@@ -2787,6 +2796,7 @@ performs the following checks:
 |---|---|---|
 | **Submission completeness** | All required files, YAML configurations, result artifacts, and system descriptions are present. | Reject submission. |
 | **Shared path resolution** | Each point's `shared_src` and `shared_docs` resolve to an existing directory under the submission root. | Reject submission. |
+| **Organization directory** | The directory above `[submission_id]/` is `submitter_org_names` from `system_desc.json`, in the directory form defined in [§8.1](#81-directory-structure). | Reject submission. |
 | **Power descriptor** | A `system_power.json` conforming to the [Appendix E](#appendix-e-system_powerjson-field-reference) schema is present for each system, and passes the validation rules of [E.7](#e7-validation). Required for all Standardized submissions, CoP and CoN. | Reject submission. |
 | **Per-point node declaration** | Where a point declares `nodes_used` ([§8.3](#83-measurement-point-yaml)): every `system_node_ensemble_id` resolves to a node set in `system_power.json`; each `nodes` value is a positive integer not exceeding that set's provisioned `N_s`; and the implied accelerator count is consistent with the parallelism configuration in `system_desc.json` ([§4.5.3](#453-normalized-metric)). | Reject submission. |
 | **Per-point denominator** | `system_tps_per_kw` at each point equals `system_tps / point_power_kw` recomputed by the checker, with `Y_s = N_s` for any point not declaring `nodes_used`. | Reject submission. |
