@@ -839,9 +839,9 @@ drafter — no list entry and no native head of an approved checkpoint
 ([§2.9.1](#291-reference-implementation)) — speculative decoding is not available for that benchmark
 at all.
 
-**Model equivalence for drafters.** No drafter-specific equivalence standard applies. A
-speculative-decoding submission is model equivalent on the same two general tests as any other
-optimization:
+**Model equivalence for drafters.** No drafter-specific equivalence standard applies. When using
+speculative-decoding in a submission, the drafter must comply with all model equivalence rules specified in this section. 
+In addition:
 
 - The **submission** must meet the accuracy quality target ([§2.9.8](#298-accuracy-gate)) with its
   speculative-decoding configuration in force. Because exact verification preserves the target's
